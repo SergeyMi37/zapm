@@ -1,0 +1,1843 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26">
+<Routine name="%ZAPM.ext" type="INC"><![CDATA[
+#Include %occMessages
+#include %occReference
+
+#; Escape sequence for coloring the font in terminal do ##class(apptools.core.msg).EscColor()
+#define escClear $c(27)_"[0m"
+#define escBg $Case(##class(%ZAPM.ext.zpm).ZPMColorScheme(),"white":47,"dark":40,:0)
+#define escGreen(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;32;"_$$$escBg_"m"_%t_$$$escClear)
+#define escBlue(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;36;"_$$$escBg_"m"_%t_$$$escClear)
+#define escDefault(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;3"_$Select($$$escBg:0,1:7)_";"_$$$escBg_"m"_%t_$$$escClear)
+#define escYellow(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;33;"_$$$escBg_"m"_%t_$$$escClear)
+#define escViolet(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;35;"_$$$escBg_"m"_%t_$$$escClear)
+#define escSeq(%e,%t) $Select($$$escBg=0:%t,1:$c(27)_"["_%e_"m"_%t_$$$escClear)
+#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
+
+
+#;Include %msql $$$MaxStringLength
+#;		;2016.2<= set title={}.%FromJSON(json).title 
+#;		;2016.1 set title={}.$fromJSON(json).title
+#;		set title={}.$$$jsonFromJSON(json).title
+#define R(%property) %request.Content.##Expression(%property)
+#define RG(%property) %request.Get(%property)
+#define StackPlace 		$st($st(-1),"PLACE")
+#define CurrentClass 	##Expression($$$quote(%classname))
+#define CurrentMethod 	##Expression($$$quote(%methodname))
+#define slash $s($zversion(1)=3:"/",1:"\")
+
+#define formatJSON 		"aelotwc"
+#define formatJSONSQL	"tw"
+#define formatDate		3
+#define formatTime		7
+
+#define toJSONClassMethod "toJSON"
+#define updateClassMethod "updateIdFromObject"
+#define IsNewJSON ##Expression($$$comClassDefined("%Library.DynamicAbstractObject"))
+
+#if $$$IsNewJSON
+    #define NewDynObj {}
+    #define NewDynDTList []
+    #define NewDynObjList $$$NewDynDTList
+    #define Insert(%obj,%element) do %obj.%Push(%element)
+    #define DynObjToJSON(%obj) w %obj.%ToJSON()
+    #define ListToJSON(%obj) $$$DynObjToJSON(%obj)
+    #define ListSize(%obj) %obj.%Size()
+    #define ListGet(%obj,%i) %obj.%Get(%i-1)
+    #define jsonClassIsLatestVersion %ClassIsLatestVersion 	
+    						//usage: obj.$$$jsonClassIsLatestVersion()
+    #define jsonExtends %Extends							
+    						//usage: {}.$$$jsonExtends(classname) 
+    #define jsonFromJSON %FromJSON							
+    						//usage: {}.$$$jsonFromJSON(string) 
+    #define jsonGetIterator %GetIterator 					
+    						//usage: obj.$$$jsonGetIterator()
+	#define jsonGetNext %GetNext 					
+    						//usage: iterator.$$$jsonGetNext(.key, .value)
+	#define jsonIsA %IsA									
+    						//usage: obj.$$$jsonIsA(className)
+    #define jsonToJSON %ToJSON								
+    						//usage: obj.$$$jsonToJSON()
+    #define jsonGet %Get									
+    #define jsonNew %New									
+    						//usage: obj.$$$jsonGet(key)
+    #define jsonIsDefined %IsDefined						
+    						//usage: obj.$$$jsonIsDefined(key) 
+    #define jsonRemove %Delete								
+    						//usage: obj.$$$jsonRemove(key)
+    #define jsonSet %Set									
+    						//usage: obj.$$$jsonSet(key, val)
+    #define jsonSize %Size									
+    						//usage: obj.$$$jsonSize()
+    #define jsonPop %Pop									
+    						//usage: obj.$$$jsonPop()
+    #define jsonPush %Push									
+    						//usage: obj.$$$jsonPush(val) 
+	#define jsonAbstractClass %Library.AbstractDynamicObject
+	#define jsonObjectClass %Library.DynamicObject
+	#define jsonArrayClass %Library.DynamicArray
+	
+	#define jsonInitialArrayIndex 1
+	
+	#define jsonGetTypeOf %GetTypeOf
+    						//usage: obj.$$$jsonGgetTypeOf()
+#else
+    #define NewDynObj ##class(%ZEN.proxyObject).%New()
+    #define NewDynDTList ##class(%ListOfDataTypes).%New()
+    #define NewDynObjList ##class(%ListOfObjects).%New()
+    #define Insert(%obj,%element) do %obj.Insert(%element)
+    #define DynObjToJSON(%obj) do %obj.%ToJSON()
+    #define ListToJSON(%obj) do ##class(%ZEN.Auxiliary.jsonProvider).%ObjectToJSON(%obj)
+    #define ListSize(%obj) %obj.Count()
+    #define ListGet(%obj,%i) %obj.GetAt(%i)
+
+   #define jsonClassIsLatestVersion $classIsLatestVersion 	
+    						//usage: obj.$$$jsonClassIsLatestVersion()
+    #define jsonExtends $extends							
+    						//usage: {}.$$$jsonExtends(classname) 
+    #define jsonFromJSON $fromJSON							
+    						//usage: {}.$$$jsonFromJSON(string) 
+    #define jsonGetIterator $getIterator 					
+    						//usage: obj.$$$jsonGetIterator()
+    #define jsonGetNext $getNext 					
+    						//usage: iterator.$$$jsonGetNext(.key, .value)
+    #define jsonIsA $isA									
+    						//usage: obj.$$$jsonIsA(classname)
+    #define jsonToJSON $toJSON								
+    						//usage: obj.$$$jsonToJSON()
+    #define jsonGet $get									
+    #define jsonNew $new									
+    						//usage: obj.$$$jsonGet(key)
+    #define jsonIsDefined $isDefined						
+    						//usage: obj.$$$jsonIsDefined(key) 
+    #define jsonRemove $remove								
+    						//usage: obj.$$$jsonRemove(key)
+    #define jsonSet $set									
+    						//usage: obj.$$$jsonSet(key, val)
+    #define jsonSize $size									
+    						// usage: obj.$$$jsonSize()
+    #define jsonPop $pop									
+    						//usage: obj.$$$jsonPop()
+    #define jsonPush $push									
+    						//usage: obj.$$$jsonPush(val) 
+ 	#define jsonAbstractClass %Library.AbstractObject
+	#define jsonObjectClass %Library.Object
+	#define jsonArrayClass %Library.Array
+	#define jsonInitialArrayIndex 0
+	#define jsonGetTypeOf $getTypeOf
+    						//usage: obj.$$$jsonGgetTypeOf()
+#endif
+
+
+#def1arg jsonIsAbstract %IsA(##Quote($$$jsonAbstractClass))
+							//usage: obj.$$$jsonIsAbstract
+#def1arg jsonIsObject %IsA(##Quote($$$jsonObjectClass))
+							//usage: obj.$$$jsonIsObject
+#def1arg jsonIsArray %IsA(##Quote($$$jsonArrayClass))
+							//usage: obj.$$$jsonIsArray
+
+#define MethodArguments ##Expression(##class(apptools.core.Log).GetMethodArguments(%classname,%methodname))
+
+#define LogEvent(%type, %message) Do ##class(apptools.core.Log).AddRecord($$$CurrentClass,$$$CurrentMethod,$$$StackPlace,%type,$$$MethodArguments,%message)
+#define LogNone(%message) 		$$$LogEvent("NONE", %message)
+#define LogError(%message) 		$$$LogEvent("ERROR", %message)
+#define LogFatal(%message) 		$$$LogEvent("FATAL", %message)
+#define LogWarn(%message) 		$$$LogEvent("WARN", %message)
+#define LogInfo(%message) 		$$$LogEvent("INFO", %message)
+#define LogStat(%message) 		$$$LogEvent("STAT", %message)
+#define LogDebug(%message) 		$$$LogEvent("DEBUG", %message)
+#define LogRaw(%message) 		$$$LogEvent("RAW", %message)
+
+#; To obtain the date and time in $h
+#define LoggedDT(%h) $s(%h[",":$tr($zd(%h,4),"/",".")_" "_$zt(+$p(%h,",",2),1),1:"")
+
+#; the macro saves the node in the global call stack and all local variables 
+#; Example of usage: /apptools/apptools.core.LogInfo.cls?WHAT=?
+#; If you need a trap for a particular process, to assign s ^logFIO(0)=Number of process
+#define LogEventAddGN(%debubGN, %message) s %AppLogId=##class(apptools.core.Log).AddRecord($$$CurrentClass,$$$CurrentMethod,$$$StackPlace,"DEBUG",%debubGN,%message)
+#define logdevGN 	"^log"
+#define MgtPortalSettings 	"^CacheTemp.MgtPortalSettings"
+#define AppLogTab(%type,%message,%desc) Do ##class(apptools.core.Log).AddRecord($$$CurrentClass,$$$CurrentMethod,$$$StackPlace,%type,%desc,%message)
+#define AppLog(%dev,%node,%list,%mode) s zsr=$zr,zsG=$$$logdevGN_%dev  if $g(@zsG@(0))=$j||($g(@zsG@(0))="") { s @zsG@(1,$i(@zsG),%node)=%list,zsGzr=$zr if %mode["t" { $$$LogEventAddGN(zsGzr,%list) } if %mode["s" {s zsG=$na(@($qs(zsGzr,0)_"stack")@($qs(zsGzr,2))),@zsG=$lb($ze,$h,$tl,$io,$j,$zu(110),##class(apptools.core.LogInfoPane).GetPathStack(),##class(apptools.core.Log).GetClientAddress()) S zs1="",zsG=$na(@zsG@("varList")),zsii=0 k @zsG s:%mode["e" @zsG@("%%%$$LOG^%ETN")=$$LOG^%ETN  if %mode["v" { f { s zs1=$O(@zs1) q:zs1=""  continue:$e(zs1,1,2)="zs"&&(zs1'="zs")  if $d(@zs1)'["0",$isobject(@zs1) { s @zsG@(zs1)=##class(apptools.core.Log).SerializeObject(@zs1,$na(@zsG@(zs1))),zsii=zsii+1 } elseif $d(@zs1)>9 {s:$d(@zs1)=11 @zsG@(zs1)=@zs1,zsii=zsii+1 MERGE @zsG@(zs1)=@zs1 if zs1="%zlog" {s zs2="" for {s zs2=$o(@zs1@(zs2)) q:zs2=""   s @zsG@(zs1,zs2)=##class(apptools.core.Log).SerializeObject($G(@zs1@(zs2)),$na(@zsG@(zs1,zs2)),%mode)   }}}	 elseif $d(@zs1)=1 {s @zsG@(zs1)=@zs1,zsii=zsii+1}} s @zsG=zsii KILL zsii,zsG,zs1,zs2}else{KILL zsii,zsG,zs1,zs2,zsGzr}} try{ if $d(@zsr) KILL zsr} catch e { KILL zsr}}
+#; To add an active link to the panel
+#define addAppLog(%text,%title,%input,%target) "<a title='"_%title_"' "_$g(%target)_" href=""apptools.core.LogInfo.cls?NSP="_$zu(5)_"&WHAT="_$zconvert(%input,"O","URL")_""">"_%text_"</a>"
+#define addAppL(%text) "<a target="""_$ZCRC(%text,7)_""" href=""apptools.core.LogInfo.cls?NSP="_$zu(5)_"&WHAT="_$zconvert(%text,"O","URL")_""">"_%text_"</a>"
+
+#; To obtain the date and time YYYY-MM-DD HH:MM:SS
+#define AppDT(%h) $zd(+%h,3)_" "_##class(apptools.core.type).GetValidZT(%h)
+#define AppObJs(%ob)  $s($isobject(%ob):##class(apptools.core.Log).WriteJSONFromObject(%ob),1:%ob)
+#define ApplogGN(%fio) ("^log"_$zconvert($e(%fio,1,3),"U"))
+#;define AppL(%fio,%node) @$$$ApplogGN(%fio)@($i(@$$$ApplogGN(%fio)),$$$AppDT($h)_" "_%node)
+#define AppL(%fio,%node) @$$$ApplogGN(%fio)@($i(@$$$ApplogGN(%fio)),$$$AppDT($h)_" ("_$classname()_")."_%node)
+
+#define forAll(%in,%gn) s gn%in=$na(%gn) s %in="" f { s %in=$o(@gn%in@(%in)) q:%in=""
+#define forAllk(%in,%kn,%gn) s gn%in=$na(%gn) s %in="" f %kn=1:1 { s %in=$o(@gn%in@(%in)) q:%in=""
+#define forEnd  }
+
+#; keep the name of the current region
+#define NspGoto(%cur,%ns)  s %cur=$zu(5) try {zn %ns} catch e {} 
+#; to return to the current region
+#define NspReturn(%cur)  zn %cur
+#;---------- layout
+#;
+#define appStyleInput " style='border: none;	background: none;	color: inherit;	padding: .222em 0;	margin: .2em 0;	vertical-align: middle;	margin-left: .4em;	margin-right: .4em;' "
+#define appInputHidden(%id,%attr,%val) "<input type=hidden "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'>"
+#define appText(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" type=text "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
+#define appAutocomplete(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input id='"_%id_"' name='"_%id_"' "_%attr_" "_$$$appStyleInput_" autocomplete='off' value='"_%val_"'>"
+#define appAutocomplete2(%id,%attr,%val) "<input id='"_%id_"' name='"_%id_"' "_%attr_" class='ui-autocomplete-input' autocomplete='off' value='"_%val_"'>"
+#define appInput(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
+#define appButton(%id,%attr,%val) $s($g(%ui):"<button class='uk-button uk-button-default uk-margin-small-right' type='button' "_%attr_" id='"_%id_"' name='"_%id_"' >"_%val_"</button>",1:"<input class='ui-button ui-corner-all ui-widget' type=button id='"_%id_"' name='"_%id_"' "_%attr_" value='"_%val_"'>")
+#define appTextarea(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><textarea autocomplete='off' "_$$$appStyleInput_" "_%attr_" id='"_%id_"' name='"_%id_"' >"_%val_"</textarea></span>"
+#define appDate(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" type=date "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
+#define appDateTime(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" type=datetime-local "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
+#;define appCheck(%id,%attr,%val) "<input class='ui-button ui-corner-all ui-widget' type=checkbox id='"_%id_"' name='"_%id_"' "_%attr_" value='"_%val_"'>"
+#define appCheck(%id,%attr,%val) "<input class='bigbox' type=checkbox id='"_%id_"' name='"_%id_"' "_%attr_" value='"_%val_"'>"
+#define appSelect(%id,%attr,%val) ""
+#define appError(%val) "<div class='ui-widget'><div class='ui-state-error ui-corner-all' style='margin-top: 20px; padding: 1em;'><p><span class='ui-icon ui-icon-alert' style='float: left; margin-right: 3em;'></span>"_%val_"</p></div></div>"
+#define appMsg(%val) "<div class='ui-widget'><div class='ui-state-highlight ui-corner-all' style='margin-top: 20px; padding: 1em;'><p><span class='ui-icon ui-icon-info' style='float: left; margin-right: 3em;'></span>"_%val_"</p></div></div>"
+
+#define appTableAttr "style=""border-radius: 10px; border: 1px solid #72a7cf"" cellpadding=2 cellspacing=0 class=""DetailTable"" bgcolor=""#c4d6d6"" width=""90%"""
+#define appTable1(%n1) "<table "_$$$appTableAttr_"><tbody><tr><th>"_%n1_"</th></tr>"
+#define appTableTrTd1(%n1) "<tr class=""trs"" ><td align=""center"" >"_%n1_"</td></tr>"
+#define appTableEnd1 "</tbody></table>"_$s('$d(%DrawArray):"<script language='javascript'>$('.trs').hover(function(){ $(this).toggleClass( 'ui-widget-content' ) });</script>",1:"")
+
+#define appTable2(%n1,%n2) "<table "_$$$appTableAttr_"><tbody><tr><th align=""left"" width=""5px"">"_%n1_"</th><th align=""left"" width=""50px"">"_%n2_"</th></tr>"
+#define appTableTrTd2(%n1,%n2) "<tr class=""trs"" ><td align=""left"" >"_%n1_"</td><td>"_%n2_"</td></tr>"
+#define appTableEnd2 "</tbody></table>"_$s('$d(%DrawArray):"<script language='javascript'>$('.trs').hover(function(){ $(this).toggleClass( 'ui-widget-content' ) });</script>",1:"")
+
+#define appTable3(%n1,%n2,%n3) "<table "_$$$appTableAttr_"><tbody><tr><th align=""left"" width=""5px"">"_%n1_"</th><th align=""left"" width=""50px"">"_%n2_"</th><th align=""left"" width=""50px"">"_%n3_"</th></tr>"
+#define appTableTrTd3(%n1,%n2,%n3) "<tr class=""trs"" ><td style=""text-align:left"" >"_%n1_"</td><td style=""text-align:left"" >"_%n2_"</td><td style=""text-align:left"" >"_%n3_"</td></tr>"
+#define appTableEnd3 "</tbody></table>"_$s('$d(%DrawArray):"<script language='javascript'>$('.trs').hover(function(){ $(this).toggleClass( 'ui-widget-content' ) });</script>",1:"")
+
+#define appTab3(%n1,%n2,%n3) "<table cellpadding=2 cellspacing=0 border=1 class=""DetailTable"" width=""90%""><tbody><tr><th align=""left"" width=""5px"">"_%n1_"</th><th align=""left"" width=""50px"">"_%n2_"</th><th align=""left"" width=""50px"">"_%n3_"</th></tr>"
+
+#define jsstart w "<script language='javascript'>"
+#define jsstop w "</script>"
+#define styleurl "text-decoration:underline; color:blue; cursor:hand;"
+#define blockui(%msg)  "$.blockUI( { message: '"_%msg_"' , css: { border: 'none', padding: '15px', backgroundColor: '#000', '-webkit-border-radius': '10px','-moz-border-radius': '10px', opacity: .5, color: '#fff' }} );"
+
+#;	Localization
+#define GNLangDOMAIN "AppTools"
+
+#define GNEnsConf "^%apptools.Setting"
+#define EnsProductStatusRun $g(@$$$GNEnsConf@("EnsProductStatusRun"),"Running")
+
+/// Global history of command
+#define HISTORYGN "^%apptools.History"
+/// Global tempory data
+#define TEMPORYGN "^mtempAppData"
+/// Global projects in the system
+#define PROJGN "^%apptools.Proj"
+#define GNExtentions "^%apptools.Exten"
+/// Global tempory data for Journals
+#define TEMPJRNL "^%apptools.JRNL"
+/// Limiting the number of nodes in a global or query result for output
+#define MAXSHOW 10000
+
+#;;; Parameters dependent on the installation server
+#define GNLang "^%AppCacheMsg"
+#; Path to CSP apps "/apptools/"
+#define  PATHCSP $GET(@$$$GNEnsConf@("PATHCSP")) 
+#; Mail Server Settings
+#define  EMAILSERVERIP $GET(@$$$GNEnsConf@("EMAILSERVERIP"))
+#define  EMAILSERVERPORT $GET(@$$$GNEnsConf@("EMAILSERVERPORT"))
+#; Authorization in the mail server
+#define  EMAILAUTH $GET(@$$$GNEnsConf@("EMAILAUTH")) 
+#define  EMAILAUTHPASS $GET(@$$$GNEnsConf@("EMAILAUTHPASS"))
+#; Technical support admin address
+#define  EMAILSUPPORT $G(@$$$GNEnsConf@("EMAILSUPPORT")) 
+#; Path for temporary xls file before sending to mail
+#define  EMAILXLSPATH $G(@$$$GNEnsConf@("EMAILXLSPATH"))
+#; Path to storing project sources
+#define  EXPORTPROJPATH $G(@$$$GNEnsConf@("EXPORTPROJPATH")) 
+#; List of databases to monitor free space in apptools..Chart.cls?panel=class(apptools.Chart.ChartPanel).ChartDbSize
+#define DBCACHESizeMon $G(@$$$GNEnsConf@("DBCACHESizeMon"))
+
+#; --------------- Application section
+#define GNmessages "^%apptools.cconsolelog"
+#define DubledQuote(%s)	$replace(%s,"'","''")
+
+
+#If $DATA(^%apptools.Proj("infoservice-focus"))
+#define  TESTSERVER "-test"
+#define DEVELOPER "mihaylenko_sv"
+#; The module display links to the administrative application panel
+#define  DRAWAllApp ##class(apptools.MVK.docbook).GetAllApp(0)
+#define SDNum if $g(SDNum)'="" write:##class(apptools.core.sys).ClassExist("apptools.MVK.docbook") "<br>"_##class(apptools.MVK.docbook).FindSDRef(SDNum)
+#define aText(%en,%ru) ##Expression(##class(apptools.core.msg).AddLangMsg(%en,%ru))
+#define  MultiLang 1
+#define  JSLibLocal 1
+
+#Else 
+#define  TESTSERVER " "
+#define DEVELOPER "admin"
+#; The module display links to the administrative application panel
+#define  DRAWAllApp " "
+#define SDNum  
+#define aText(%en,%ru) %en
+#define  MultiLang 0
+#define  JSLibLocal 0
+
+#EndIf
+
+
+
+]]></Routine>
+
+
+<Class name="%ZAPM.ext.commands">
+<IncludeCode>%ZAPM.ext</IncludeCode>
+<Super>%Persistent</Super>
+<TimeCreated>65607,76509.946449</TimeCreated>
+
+<Property name="Command">
+<Description>
+Command</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="CommandName">
+<Description>
+Commands name</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Partition">
+<Description>
+Partition </Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Description">
+<Description>
+Description</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Prompt">
+<Description>
+Prompt (yes, no, never run - show only)</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Namespace">
+<Description>
+Namespace</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="TimeStamp">
+<Description>
+Date and time</Description>
+<Type>%TimeStamp</Type>
+<InitialExpression>$zdt($h, 3, 1)</InitialExpression>
+</Property>
+
+<Index name="idxCommand">
+<Properties>Command</Properties>
+</Index>
+
+<Index name="idxCommandName">
+<Properties>CommandName</Properties>
+</Index>
+
+<Method name="GetList">
+<Description>
+Get List commands
+do ##class(%ZAPM.ext.commands).GetList(.list)
+do $CLASSMETHOD("%ZAPM.ext.commands", "%KillExtent")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&list,Command:%String="",CommandName="",Partition="",Prompt="",Description="",Namespace=""]]></FormalSpec>
+<Implementation><![CDATA[
+	Set tQuery = "select * from %ZAPM_ext.commands where (1=1) "
+	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
+	
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		set part=tRes.%Get("Partition")
+		if part="" set part="Other"
+		Set list(part,$i(list))=$lb(tRes.%Get("Command"),tRes.%Get("Prompt"),tRes.%Get("CommandName"),tRes.%Get("Description"),tRes.%Get("Partition"))
+	}
+]]></Implementation>
+</Method>
+
+<Method name="GetCmd">
+<Description>
+Get command
+do ##class(%ZAPM.ext.commands).GetCmd("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","help",.cmd,.id) </Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Command="",CommandName="",cmd,id</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tQuery = "select * from %ZAPM_ext.commands where (1=1) "
+	if CommandName="" set tQuery=tQuery_" and CommandName is null "
+	else  set tQuery=tQuery_" and CommandName='"_CommandName_"'"
+	if Command'="" set tQuery=tQuery_" and Command='"_Command_"'"
+	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
+	set cmd="",id=""
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		Set cmd=$lb(tRes.%Get("Command"),tRes.%Get("Prompt"),tRes.%Get("CommandName"),tRes.%Get("Description"),tRes.%Get("Partition"))
+		set id=tRes.%Get("ID")
+	}
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="AddUpdate">
+<Description>
+Add new command
+write $System.Status.GetErrorText(##class(%ZAPM.ext.commands).AddUpdate("new $namespace zn ""zpmshow"" do ^zpmshow","zshow","zpm","n","Show a zpm modules with extention description"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Command:%String="",CommandName="",Partition="",moderun="",Description="",Namespace=""</FormalSpec>
+<Implementation><![CDATA[
+	#dim obj As %ZAPM.ext.commands = ""
+	Set tQuery = "select * %ZAPM_ext.commands where (1=1) "
+	if Command="" $$$ThrowOnError($$$ERROR($$$GeneralError,"Command is empty"))
+	do ..GetCmd(Command,CommandName,.cmd,.id)
+	;w !,Command,!,CommandName,!,"id = "_$g(id)
+	if cmd'="" set obj=..%OpenId(id)
+	if '$iso(obj) Set obj = ..%New()
+	set obj.Command=Command
+	set obj.CommandName=CommandName
+	set obj.Partition=Partition
+	set obj.Description=Description
+	set obj.Prompt=moderun
+	set obj.Namespace=Namespace
+	quit obj.%Save()
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DataLocation>^%ZAPM.ext.commandsD</DataLocation>
+<DefaultData>commandsDefaultData</DefaultData>
+<IdLocation>^%ZAPM.ext.commandsD</IdLocation>
+<IndexLocation>^%ZAPM.ext.commandsI</IndexLocation>
+<StreamLocation>^%ZAPM.ext.commandsS</StreamLocation>
+<Data name="commandsDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>Command</Value>
+</Value>
+<Value name="3">
+<Value>CommandName</Value>
+</Value>
+<Value name="4">
+<Value>Partition</Value>
+</Value>
+<Value name="5">
+<Value>Namespace</Value>
+</Value>
+<Value name="6">
+<Value>TimeStamp</Value>
+</Value>
+<Value name="7">
+<Value>Prompt</Value>
+</Value>
+<Value name="8">
+<Value>Description</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="%ZAPM.ext.database">
+<Description>
+Utility for creating and deleting databases with one command 
+Create DataBase and Namespace with CSP, REST application 
+Forked from https://openexchange.intersystems.com/package/isc-generate-db
+
+Added resource and role creation for the database. (Many modules ZPM require MatchRoles=":{$dbrole}")
+Added deletion of DataBases, role resources and Namespace.
+Adding rest application is optional.
+
+example:
+write $System.Status.GetErrorText(##class(%ZAPM.ext.database).CreateDBNS("TESTDB2"))
+write $System.Status.GetErrorText(##class(%ZAPM.ext.database).DeleteDBNS("TESTDB2"))
+create db and namespace without resource and role
+write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).CreateNamespace("testdb14"))
+write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace("testdb14"))</Description>
+<Abstract>1</Abstract>
+<TimeCreated>65687,72123.672838</TimeCreated>
+
+<Parameter name="LIBRARY">
+<Expression>$Select($Select($ZVersion["IRIS":1,1:0):"IRISLIB",1:"CACHELIB")</Expression>
+</Parameter>
+
+<Parameter name="SYSGLOBALS">
+<Expression>$Select($Select($ZVersion["IRIS":1,1:0):"IRISSYS",1:"CACHESYS")</Expression>
+</Parameter>
+
+<Parameter name="TEMPGLOBALS">
+<Expression>$Select($Select($ZVersion["IRIS":1,1:0):"IRISTEMP",1:"CACHETEMP")</Expression>
+</Parameter>
+
+<Parameter name="DATABASENAME">
+<Expression>$Select($Select($ZVersion["IRIS":1,1:0):"IRIS.DAT",1:"CACHE.DAT")</Expression>
+</Parameter>
+
+<Method name="Init">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	write !,"Creating and deleting db, namespace, resource and role with one command"
+	write !,"example:"
+	write !,"write $System.Status.GetErrorText(##class(appmsw.util.database).CreateDBNS(""TESTDB2""))"
+	write !,"write $System.Status.GetErrorText(##class(appmsw.util.database).DeleteDBNS(""TESTDB2""))",!
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="CreateDBNS">
+<Description>
+write ##class(%ZAPM.ext.database).CreateDBNS("NEWNS")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String,pCodeData:%Boolean=0,pPathDataset:%String="",pInterOperability:%Boolean=1,pREST:%String=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set pNamespace=$ZCONVERT(pNamespace,"L")
+	quit ..Install(pNamespace, pCodeData, pPathDataset, pInterOperability, pREST)
+]]></Implementation>
+</Method>
+
+<Method name="Install">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String,pCodeData:%Boolean=1,pPathDataset:%String="",pInterOperability:%Boolean=0,pREST:%String=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set sc = $$$OK
+    Try {
+        Set sc = $$$ADDSC(sc,..CreateDatabase(pNamespace, pCodeData, pPathDataset)) quit:$$$ISERR(sc)
+        Set sc = $$$ADDSC(sc,..CreateNamespace(pNamespace, pCodeData, pInterOperability, pREST)) quit:$$$ISERR(sc)
+    }
+    Catch (err) {
+        Set sc = $$$ADDSC(sc,err.AsStatus())
+    }
+    Return sc
+]]></Implementation>
+</Method>
+
+<Method name="CreateDatabase">
+<Description>
+Create new database directory</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String,pCodeData:%Boolean,pPathDataset:%String=""</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set CurrNS=$Namespace
+    New $Namespace
+    Set $Namespace = "%SYS"
+    Set sc = $$$OK
+    Try {
+        Set dbList = $Listbuild("")
+        Set:(pCodeData = $$$YES) dbList= $Listbuild("-CODE","-DATA") 
+
+        For i = 1:1:$Listlength(dbList) {
+            Set dbSuffix = $Listget(dbList,i)
+            If (pPathDataset '= "") {
+                Set directory = pPathDataset_$Case($$$isWINDOWS,1:"\",:"/")_pNamespace_dbSuffix
+            }
+            Else {
+                Set directory = ..GetDatabaseDirectory(pNamespace_dbSuffix)
+            }
+
+            #; create a new directory if does not exist
+            If '..CheckDatabaseDirExists(directory) {
+                Set directory = $ZStrip(directory,"<>W")
+                Set sc = $$$ADDSC(sc,##class(%File).CreateDirectoryChain(directory))
+                If $$$ISERR(sc) {
+                    Set msg = directory_": Could not create this directory. Please check the directory and try again."
+                    Set sc = $$$ADDSC(sc,$$$ERROR($$$GeneralError,msg))				
+                }
+            }
+            Else {
+                #; abort if database is already created
+                If ..CheckDatabaseExists(directory) {
+                    Set msg = directory_": Database already existent in this directory. Please check the directory and try again."
+                    Set sc = $$$ADDSC(sc,$$$ERROR($$$GeneralError,msg))
+                }
+            }
+            Quit:$$$ISERR(sc)
+
+            #; create new Resource
+            Set dbName = pNamespace_dbSuffix
+            set $Namespace=CurrNS
+            Set sc = $$$ADDSC(sc,..CreateRole($ZCONVERT(dbName,"U")))
+            Quit:$$$ISERR(sc)
+            Set $Namespace = "%SYS"
+            
+            #; create new database
+            Write "Creating Database "_dbName_"... "
+            Set size = 1
+            Set blockSize = 8192
+            Set properties("Directory") = directory
+            Set journalState = 1
+            Set sc = $$$ADDSC(sc,##class(SYS.Database).CreateDatabase(directory,size,blockSize,0,"%DB_"_dbName,journalState,"",""))
+            Quit:$$$ISERR(sc)
+
+            #; Handle if we have dismounted then deleted the database at the O/S level,
+            #; but the CPF entry still exists with the same directory, then recreate the DB only
+            If ##class(Config.Databases).Exists(dbName,.obj) {
+                If obj.Directory '= ##class(%File).ComputeFullDBDir(directory) {
+                    Set sc = $$$ADDSC(sc,##Class(Config.Databases).Create(dbName,.properties))
+                    Quit:$$$ISERR(sc)
+                }
+            }
+            Else {
+                Set sc = $$$ADDSC(sc,##Class(Config.Databases).Create(dbName,.properties))
+                Quit:$$$ISERR(sc)
+            }
+            Write "done!",!
+        }
+    }
+    Catch (err) {
+        Set sc = $$$ADDSC(sc,err.AsStatus())
+    }
+    Return sc
+]]></Implementation>
+</Method>
+
+<Method name="CreateRole">
+<Description>
+Create new Role
+w $system.Status.GetErrorText(##class(%ZAPM.ext.database).CreateRole("SWAGGERUI-CODE"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dbName:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+   ;create new role
+   New $Namespace
+   Set $Namespace = "%SYS"
+   Set sc = $$$OK
+   s nameR="%DB_"_dbName,desc="Role for "_nameR 
+	s pResources=nameR_":RW" 
+	if '##class(Security.Resources).Exists(nameR) {
+		Set sc = $$$ADDSC(sc,##class(Security.Resources).Create(nameR,"Resources for "_nameR,"RW"))
+		Quit:$$$ISERR(sc) sc
+	}
+	s pRolesGranted=""
+	if '##class(Security.Roles).Exists(nameR) {
+		Set sc = $$$ADDSC(sc,##class(Security.Roles).Create(nameR,desc,pResources,pRolesGranted))
+		Quit:$$$ISERR(sc) sc
+		w !,"Create new role "_nameR
+	}
+	Return sc
+]]></Implementation>
+</Method>
+
+<Method name="CreateResource">
+<Description>
+Create new Resource
+w $system.Status.GetErrorText(##class(%ZAPM.ext.database).CreateResource("DSW-DATA"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dbName:%String,Permiss:%String="RW"</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+   ;create new resource
+   New $Namespace
+   Set $Namespace = "%SYS"
+    Set sc = $$$OK
+   s nameR="%DB_"_dbName,desc="Resource for "_nameR 
+	if '##class(Security.Resources).Exists(nameR) {
+		Set sc = $$$ADDSC(sc,##class(Security.Resources).Create(nameR,desc,Permiss))
+		Quit:$$$ISERR(sc) sc
+		w !,"Create new Resource "_nameR
+	}
+	Return sc
+]]></Implementation>
+</Method>
+
+<Method name="DeleteResource">
+<Description>
+Delete Resource
+w $system.Status.GetErrorText(##class(%ZAPM.ext.database).DeleteResource("DSWDATA"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dbName:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ New $Namespace
+ Set $Namespace = "%SYS"
+ Set sc = $$$OK
+   s nameR="%DB_"_dbName
+	if ##class(Security.Resources).Exists(nameR) {
+		Set sc = $$$ADDSC(sc,##class(Security.Resources).Delete(nameR))
+		Quit:$$$ISERR(sc) sc
+		w !,"Delete Resource "_nameR
+	}
+	Return sc
+]]></Implementation>
+</Method>
+
+<Method name="DeleteRole">
+<Description>
+Delete Role
+w $system.Status.GetErrorText(##class(%ZAPM.ext.database).DeleteRole("DSWDATA"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dbName:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ New $Namespace
+ Set $Namespace = "%SYS"
+ Set sc = $$$OK
+   s nameR="%DB_"_dbName
+	if ##class(Security.Roles).Exists(nameR) {
+		Set sc = $$$ADDSC(sc,##class(Security.Roles).Delete(nameR))
+		Quit:$$$ISERR(sc) sc
+		w !,"Delete role "_nameR
+	}
+	Return sc
+]]></Implementation>
+</Method>
+
+<Method name="CreateNamespace">
+<Description>
+Create new namespace</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String,pCodeData:%Boolean,pInterOperability:%Boolean,pREST:%String</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+
+    New $Namespace
+    Set $Namespace = "%SYS"
+
+    If (pCodeData = $$$YES) {
+        Set strGlobals = pNamespace_"-DATA"
+        Set strRoutine = pNamespace_"-CODE"
+    }
+    Else {
+        Set (strGlobals, strRoutine) = pNamespace
+    }
+
+    Set sc = $$$OK
+    Try {
+
+        Write "Creating Namespace "_pNamespace_"... "
+
+        Set nsProperties("Globals") = strGlobals
+        Set nsProperties("Library") = ..#LIBRARY
+        Set nsProperties("Routines") = strRoutine
+        Set nsProperties("SysGlobals") = ..#SYSGLOBALS
+        Set nsProperties("SysRoutines") = ..#SYSGLOBALS
+        Set nsProperties("TempGlobals") = ..#TEMPGLOBALS
+        Set sc = $$$ADDSC(sc,##Class(Config.Namespaces).Create(pNamespace,.nsProperties))
+
+        Write "done!",!
+
+        #; enable Interoperability
+        If (pInterOperability = $$$YES) {
+            Write "Creating Interoperability mappings ... "
+            #; create InterOperability mappings
+            Set:'$Data(^%SYS("Ensemble","InstalledNamespace",pNamespace)) ^%SYS("Ensemble","InstalledNamespace",pNamespace)=""
+            Set sc = $$$ADDSC(sc,##class(%EnsembleMgr).createMappings(pNamespace))
+            Write "done!",!
+
+            Write "Adding Interoperability SQL privileges ... "
+            #; add InterOperability SQL privileges
+            Set sc = $$$ADDSC(sc,##class(%EnsembleMgr).addEnsembleSQLPrivileges(pNamespace))	
+            Write "done!",!
+        }
+        Set sc = $$$ADDSC(sc,..CreateCSPApplication(pNamespace))
+        If (pREST '= "") {
+            Set sc = $$$ADDSC(sc,..createRESTApp(pNamespace,pREST))
+        }
+    }
+    Catch (err) {
+        Set sc = $$$ADDSC(sc,err.AsStatus())
+    }
+    Return sc
+]]></Implementation>
+</Method>
+
+<Method name="CreateCSPApplication">
+<Description>
+Create CSP application</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set sc = $$$OK
+    New $Namespace
+    Set $Namespace="%SYS"
+    Try {
+        Write "Creating CSP Application ... "
+        Set lower = $ZConvert(pNamespace,"L")
+        Set del = $Case($$$isWINDOWS,1:"\",:"/")
+        Set cspName = "/csp/"_lower
+
+        Set properties("Name") = cspName
+        Set properties("CookiePath") = "/csp/"_lower
+        Set properties("AutheEnabled") = $$$AutheUnauthenticated
+        Set properties("NameSpace") = pNamespace
+        Set properties("Path") = $System.Util.InstallDirectory()_"csp"_del_lower
+        Set properties("GroupById") = $$$IscMgtPortalId
+        Set properties("AutoCompile") = 1
+
+        // If the application exists, quit
+        If '##class(Security.Applications).Exists(cspName,.existingApp,.sc2) {
+            // Create the csp application properties	
+            Set sc = $$$ADDSC(sc,##class(Security.Applications).Create(cspName,.properties))
+        }
+        Else {
+            Set sc = $$$ADDSC(sc,sc2)
+        }
+        Write "done!",!
+    }
+    Catch (err) {
+        Set sc = $$$ADDSC(sc,err.AsStatus())
+    }
+    Return sc
+]]></Implementation>
+</Method>
+
+<Method name="createRESTApp">
+<Description>
+Create REST Application</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String,DispatchClass="REST.Dispatch"</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    #dim sc As %Status = $$$OK
+
+    New $Namespace
+    Set $Namespace = "%SYS"
+
+    Write "Creating CSP Application ... "
+
+    Set lower = $ZConvert(pNamespace,"L")
+    Set restName = "/rest/"_lower
+
+    If '##class(Security.Applications).Exists(restName) {
+        Set props("AutheEnabled") = $$$AutheUnauthenticated
+        Set props("NameSpace") = pNamespace
+        Set props("IsNameSpaceDefault") = $$$NO
+        Set props("DispatchClass") = DispatchClass
+        Set props("MatchRoles")=":%All"
+        Set sc = ##class(Security.Applications).Create(restName, .props)
+        Write "done!",!
+
+
+        Write "Creating "_DispatchClass_".cls ... "
+        Do ..CreateDispatchClass(pNamespace,DispatchClass)
+        Write "done!",!
+    }
+
+    Quit sc
+]]></Implementation>
+</Method>
+
+<Method name="CreateDispatchClass">
+<Description>
+Create a dummy REST service to populate messages</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace:%String,classname="REST.Dispatch"</FormalSpec>
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    New $Namespace
+    Set $Namespace = pNamespace
+    Set sc = $$$OK
+    Try {
+        ;Set classname = "REST.Dispatch"
+        Set class = ##class(%Dictionary.ClassDefinition).%New(classname)
+        Set class.GeneratedBy = $ClassName()
+        Set class.Super = "%CSP.REST"
+
+        Set xdata = ##class(%Dictionary.XDataDefinition).%New()
+        Set xdata.Name = "UrlMap"
+        Set xdata.XMLNamespace = "http://www.intersystems.com/urlmap"
+        Do xdata.Data.WriteLine("<Routes>")
+        Do xdata.Data.WriteLine("<Route Url=""/"" Method=""GET"" Call=""Test"" Cors=""true""/>")
+        Do xdata.Data.WriteLine("</Routes>")
+        Do class.XDatas.Insert(xdata)
+        Set sc = $$$ADDSC(sc,class.%Save())
+
+        Set method = ##class(%Dictionary.MethodDefinition).%New(classname)
+        Set method.Name = "Test"
+        Set method.ClassMethod = 1
+        Set method.ReturnType = "%Status"
+        Set stream = ##class(%Stream.TmpCharacter).%New()
+        Do stream.WriteLine("	Set %response.ContentType = ""application/json"" ")
+        Do stream.WriteLine("	Set retObj = {}")
+        Do stream.WriteLine("	Set retMessage = ""Hello World!"" ")
+        Do stream.WriteLine("	Set retObj.Message = retMessage")
+        Do stream.WriteLine("	Write retObj.%ToJSON()")
+        Do stream.WriteLine("	Quit $$$OK")
+        Set method.Implementation = stream
+        Set sc = $$$ADDSC(sc,method.%Save())
+
+        Set sc = $$$ADDSC(sc,$System.OBJ.Compile(classname,"fck-dv"))
+    }
+    Catch (err) {
+        Set sc = $$$ADDSC(sc,err.AsStatus())
+    }
+    Return sc
+]]></Implementation>
+</Method>
+
+<Method name="GetDatabaseDirectory">
+<Description>
+Get database directory</Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec>pNamespace:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[##class(%File).SubDirectoryName($System.Util.ManagerDirectory(),pNamespace)
+]]></Implementation>
+</Method>
+
+<Method name="CheckDatabaseDirExists">
+<Description>
+Checks if database directory exist</Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec>directory:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[##class(%File).DirectoryExists(directory)
+]]></Implementation>
+</Method>
+
+<Method name="CheckDatabaseExists">
+<Description>
+Checks if database directory exist</Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<FormalSpec>directory:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[##class(%File).Exists(directory_$Case($$$isWINDOWS,1:"\",:"/")_..#DATABASENAME)
+]]></Implementation>
+</Method>
+
+<Method name="DeleteDBNS">
+<Description>
+w $system.Status.GetErrorText(##class(%ZAPM.ext.database).DeleteDBNS("SWAGGERUI", 0))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pNamespace</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	if $namespace=$ZCONVERT(pNamespace,"U") set $namespace="%SYS"
+	Set sc = ##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace($ZCONVERT(pNamespace,"L"))
+	Quit:$$$ISERR(sc) sc
+	Set sc = ..DeleteResource($ZCONVERT(pNamespace,"U"))
+	;Quit:$$$ISERR(sc) sc
+	Set sc = ..DeleteRole($ZCONVERT(pNamespace,"U"))
+	;Quit:$$$ISERR(sc) sc
+	q sc
+]]></Implementation>
+</Method>
+
+<Method name="DismountListDB">
+<Description>
+zn "app" w $System.Status.GetErrorText(##class(%ZAPM.ext.database).DismountListDB("DOJO"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Database</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	s st=..DismountDB(Database)
+	if st {
+		s st1=..DismountDB(Database_"ENSTEMP")
+		if 'st1 q st1
+		s st2=..DismountDB(Database_"SECONDARY")
+		if st2 q st2
+	} else { q st }
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="DismountDB">
+<Description>
+write $System.Status.GetErrorText(##class(%ZAPM.ext.database).DismountDB("PROD"))</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Database</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	new $namespace
+	zn "%sys"
+	s st=$$$OK
+	If ##Class(Config.Databases).Get(Database,.Properties) {
+		Set Directory = $G(Properties("Directory"))
+  		Set st = ##class(SYS.Database).DismountDatabase(Directory)
+	}
+	q st
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="%ZAPM.ext.zapp">
+<Description>
+apptools favourite commands in %ZLANGC00.mac
+ZAPP(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...) 
+try { do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions() } catch ex {}</Description>
+<Abstract>1</Abstract>
+<IncludeCode>%ZAPM.ext</IncludeCode>
+<TimeCreated>65692,84099.653344</TimeCreated>
+
+<Parameter name="GN">
+<Description>
+Storage of work history</Description>
+<Default>^%ZAPM.hist</Default>
+</Parameter>
+
+<Method name="init">
+<Description>
+do ##class(%ZAPM.ext.zapp).init()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	new $namespace
+	set $namespace="%sys"
+	do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
+	do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
+	do ..favourite(.list)
+	;merge list=@..#GN@("cmd")
+	set i=""
+	for {
+		set i=$Order(list(i)) q:i=""
+		set ii="" 
+		for { 
+			set ii=$Order(list(i,ii),1,val) q:ii=""
+			do ##class(%ZAPM.ext.commands).AddUpdate($lg(val,1),$lg(val,3),i,$lg(val,2),$lg(val,4))
+		}
+	}
+	do ##class(%ZAPM.ext.zpm).SetColorScheme()
+	write !,"To work in the shell, enter 'zapp' in the terminal, and then 'cmd' or '?' "
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="prompt">
+<Description>
+do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>comm=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	for {
+		set prom=$zu(110)_$$$escGreen(">")_$p($zu(86),"*",2)_$$$escGreen(">")_$namespace_$$$escGreen(">")
+		if comm="" {
+			write !,prom," " read cmd 
+		}
+		else {
+			set cmd=comm
+		}
+		if cmd="" {
+			continue
+		}
+		elseif $lf($lb("q","Q",".","^","h","H",,"zpm","zapp"),cmd) {
+			Quit
+		}
+		elseif cmd="zpm" {
+			;quit ##class(%ZPM.PackageManager).Shell()
+			;continue
+		}
+		elseif $$iszapmcmd($p(cmd," "),.command) { 
+			;extention command
+			set %cmd=cmd
+			xecute $lg(command,1)
+			do addhist($lg(command,1),$lg(command,3),$lg(command,4))
+			quit:cmd=comm
+			continue
+		}
+		elseif $$iszpmcmd($p(cmd," ")) { 
+			;zpm command
+			write !
+			d ##class(%ZPM.PackageManager).Shell(cmd)
+			do addhist(cmd)
+			quit:cmd=comm
+			continue
+		}
+		elseif $e(cmd,1,2)="??"||($e(cmd,1,4)="hist") {
+			do ..history($p(cmd,$select(cmd["??":"??",1:"hist"),2,*)) 
+			quit:cmd=comm
+			continue
+		}
+		elseif $e(cmd,1)="?"||($e(cmd,1,3)="cmd") {
+			do ..help($p(cmd,$select(cmd["?":"?",1:"cmd"),2,*)) 
+			quit:cmd=comm
+			continue
+		}		
+		elseif (cmd'=(+cmd)) {
+			set %cmd=cmd
+			try {
+				xecute cmd
+				do addhist(cmd)
+			} catch ex {
+		  		Set sc = $g(%objlasterror, $$$OK)
+   				Set sc = $$$ADDSC(sc, ex.AsStatus())
+   				write !,"Error type   "_ex.Name
+   				write !,"Error code   "_ex.Code
+   				write !,"Error location "_ex.Location
+   				do ..write("","? or ?text",$lb("Show help"))
+			}
+			quit:cmd=comm
+			continue
+		}
+				
+		set command=$g(%zapm(cmd))
+		if $d(%zapm(cmd),command) {
+			set yes=$lg(command,2)
+			if $e(yes)="a" {
+				write !!,"  ",$lg(command,1)_" ; "_$lg(command,4)
+				write !,"     Are you sure ? [Y] " 
+				 read sure 
+				 continue:$e($zconvert(sure,"L"))'="y"||($e($zconvert(sure,"L"))'="Y")
+				 set yes="i"
+			}
+			if yes="i" {
+				write !,"Executing "_$lg(command,1),!
+				xecute $lg(command,1) 
+				do addhist($lg(command,1),$lg(command,3),$lg(command,4))
+				quit:cmd=comm
+				continue
+			}
+			else {
+				write !,"Command "_$lg(command,1),!
+				write !,"Show only"
+			}
+		}
+		else { 
+			do ..help()
+		}
+	}
+	if cmd="zpm" write ! quit ##class(%ZPM.PackageManager).Shell()
+	quit $$$OK
+addhist(cmd,namecmd="",desc="") ;add to history
+	quit:cmd=+cmd
+	quit:cmd=""
+	set gn=..#GN
+	if '$lv(cmd) s cmd=$lb(cmd,"y",namecmd,desc)
+	set @gn@("cmd",cmd)=$GET(@gn@("cmd",cmd))+1
+	quit 1
+iszpmcmd(cmd) ;If is a zpm command
+	if $lf(##class(%ZAPM.ext.zpm).cmdzpm(),cmd) q $$$OK
+	quit 0
+iszapmcmd(cmd,command) ;
+	do ##class(%ZAPM.ext.commands).GetCmd("",cmd,.comman)
+	if comman'="" set command=comman quit 1
+	quit 0
+]]></Implementation>
+</Method>
+
+<Method name="history">
+<Description>
+do ##class(%ZAPM.ext.zapp).history("dark")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>mask=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set mask=$ZStrip(mask,"<>WC")
+	kill %zapm
+	set gn=..#GN
+	set i=""
+		,ii=0
+	for {
+		set i=$Order(@gn@("cmd",i)) q:i=""
+		if mask'="",$zconvert(i,"L")'[mask continue
+		set ii=ii+1
+		write !,$$$escRed(ii)_"."_$$$escViolet($lg(i,3))_" "_$lg(i,1)_" //"_$lg(i,4)
+		set %zapm(ii)=i
+	}
+]]></Implementation>
+</Method>
+
+<Method name="help">
+<Description>
+do ##class(%ZAPM.ext.zapp).help("dark")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>mask=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set mask=$ZStrip(mask,"<>WC")
+	#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
+	kill %zapm
+	write !,$$$escViolet("Extending ZPM commands, the standard ZPM commands also work as from zpm shell.")
+		,!,"Enter the command "_$$$escRed("number")_" or "_$$$escViolet("name")_" to execute."
+	do ##class(%ZAPM.ext.commands).GetList(.list)
+	set i=""
+	for {
+		set i=$Order(list(i)) q:i=""
+		set ii="" 
+		for { 
+			set ii=$O(list(i,ii),1,val) q:ii=""
+			set vall=$zconvert($lts(val),"L")
+			set namecmd=$lg(val,3)
+			if vall[").extcmd(%cmd)" continue
+			if mask'="" {
+				if vall[mask set %zapm($i(%zapm))=val do ..write(i,%zapm,%zapm(%zapm))
+			}
+			else {
+				set %zapm($i(%zapm))=val do ..write(i,%zapm,%zapm(%zapm))
+			}
+		}
+	}
+	do ..write("","cmd or ?, cmd context",$lb("Show help"),1)
+	do ..write("","hist or ??, hist context",$lb("Show history"),1)
+	write !,$$$escBlue("A")_"-Ask before launch, "_$$$escBlue("I")_"-Launch immediately, "_$$$escBlue("N")_"-Do not run"
+	do ..write("","Q,q,^,h,H",$lb("Quit"),1)
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="write">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>part,num,cmd,noprompt=0</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	;if part="" {write !	}
+	if part'=$g(%partit) { 
+		set %partit=part
+		w !,$$$escGreen(part)	
+	}
+	set prompt=$lg(cmd,2)
+	;if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"Ask before launch",prompt="n":"Launch immediately",1:"Do not run"))
+	if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"A",prompt="n":"Launch immediately",prompt="n":"N",1:""))
+	write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
+ quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="favourite">
+<Description>
+do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&list]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
+	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "sys",     "system status")
+	set list("sys",$i(list))=$lb("zn ""%SYS"" do ^JOBEXAM","a","","job examing")
+	set list("sys",$i(list))=$lb("zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
+	set list("sys",$i(list))=$lb("zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
+	set list("sys",$i(list))=$lb("zn ""%SYS"" do ^SECURITY","i","","security utility")
+	set list("sys",$i(list))=$lb("zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
+	;zmp
+	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
+	set list("zpm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
+	;zapm
+	;set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zapp"",""i"",""zshow"",""Show a zpm modules with extention description"")","n","addzshow","")
+	
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="addcmd">
+<Description>
+do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow","zpm","i","zshow","Show a zpm modules with extention description")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>cmd="",partion="",moderun="",namecmd="",description=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	if partion="" set partion="other"
+	;set @..#GN@("cmd",partion,$i(@..#GN@("cmd")))=$lb(cmd,moderun,namecmd,description)
+	set st=##class(%ZAPM.ext.commands).AddUpdate(cmd,namecmd,partion,moderun,description)
+	if 'st write $System.Status.GetErrorText(st) quit st
+	else  write !,"added"
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="UpdateLanguageExtensionsOne">
+<Description>
+do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[RoutineName:%String,pTestOnly:%Boolean=0,*pFound:%Boolean=0,&tGenLines]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#def1arg STARTTAGQ " ;Generated by %ZAPM.ext.zapp: Start"
+	#def1arg ENDTAGQ " ;Generated by %ZAPM.ext.zapp: End"
+	#def1arg STARTTAG ##Expression($$$STARTTAGQ)
+	#def1arg ENDTAG ##Expression($$$ENDTAGQ)
+	Set tRtn = ##class(%Routine).%New(RoutineName)
+	If ##class(%Routine).Exists(RoutineName) {
+		Set tEnded = 1
+		While 'tRtn.AtEnd {
+			Set tLine = tRtn.ReadLine()
+			If (tLine = $$$STARTTAGQ) {
+				// Read through the ending tag.
+				While ('tRtn.AtEnd) && (tRtn.ReadLine() '= $$$ENDTAGQ) {}
+				
+				// Generate the lines.
+				Set pFound = 1
+				For i=1:1:tGenLines {
+					Set tRtnLines($i(tRtnLines)) = tGenLines(i)
+				}
+			} Else {
+				Set tIsZAPM = ($ZConvert($Extract(tLine,1,4),"U") = "ZAPM(")
+				If tIsZAPM {
+					Set pFound = 1
+					Set tEnded = 0
+					Set tRtnLines($i(tRtnLines)) = $$$STARTTAGQ
+				}
+				If '(tIsZAPM || tEnded) {
+					If ($ZStrip($Extract(tLine),"*W") '= "") {
+						Set tRtnLines($i(tRtnLines)) = $$$ENDTAGQ
+						Set tEnded = 1
+					}
+				}
+				Set tRtnLines($i(tRtnLines)) = tLine
+			}
+		}
+		If 'tEnded {
+			Set tRtnLines($i(tRtnLines)) = $$$ENDTAGQ
+		} ElseIf 'pFound {
+			For i=1:1:tGenLines {
+				Set tRtnLines($i(tRtnLines)) = tGenLines(i)
+			}
+		}
+	} Else {
+		Merge tRtnLines = tGenLines
+	}
+	If (pTestOnly) {
+		Quit
+	}
+	Do tRtn.Clear()
+	For i=1:1:tRtnLines {
+		Do tRtn.WriteLine(tRtnLines(i))
+	}
+	$$$ThrowOnError(tRtn.Save())
+	$$$ThrowOnError(tRtn.Compile())
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="UpdateLanguageExtensions">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pVerbose:%Boolean=0,pTestOnly:%Boolean=0,*pFound:%Boolean=0</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	#def1arg STARTTAGQ " ;Generated by %ZAPM.ext.zapp: Start"
+	#def1arg ENDTAGQ " ;Generated by %ZAPM.ext.zapp: End"
+	#def1arg STARTTAG ##Expression($$$STARTTAGQ)
+	#def1arg ENDTAG ##Expression($$$ENDTAGQ)
+
+	Set tSC = $$$OK
+	Set tInitTLevel = $TLevel
+	Try {
+		TSTART
+		// Get routine lines to generate
+		Set tOffset = 0
+		Set tStarted = 0
+		For {
+			Set tLineName = "zUpdateLanguageExtensions"_"+"_$i(tOffset)_"^"_$ZName
+			Set tExtLine = $Text(@(tLineName))
+			If (tExtLine=$$$STARTTAGQ) {
+				Set tStarted = 1
+			}
+			If (tStarted) {
+				Set tGenLines($i(tGenLines)) = tExtLine
+			}
+			Quit:(tExtLine=$$$ENDTAGQ)
+			Quit:(tExtLine="")
+		}
+
+		If '$Data(tGenLines) {
+			$$$ThrowStatus($$$ERROR($$$GeneralError,"Could not find %ZLANGC00 routine contents in "_$classname()))
+		}
+		Do ..UpdateLanguageExtensionsOne("%ZLANGC00.MAC", pTestOnly,.pFound,.tGenLines)
+		Quit:pTestOnly
+		Set i="" 
+		For { set i=$Order(tGenLines(i),1,tStr) Quit:i=""
+			If tStr[" Do ##class" Set tGenLines(i)=$Replace($Replace(tStr," Quit","")," Do "," Quit ") Quit
+		}
+		Do ..UpdateLanguageExtensionsOne("%ZLANGF00.MAC", pTestOnly,.pFound,.tGenLines)
+		TCOMMIT
+	} Catch e {
+		Set tSC = e.AsStatus()
+	}
+	While ($TLevel > tInitTLevel) {
+		TROLLBACK 1
+	}
+	Quit tSC
+#; These are the actual contents of %ZLANGC00 (to be added/updated)
+$$$STARTTAG
+ZAPM(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...) Quit
+$$$ENDTAG
+#; Need an extra line down here to avoid the end bracket being on the same line as $$$ENDTAG - a comment is just fine.
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="%ZAPM.ext.zpm">
+<Description>
+research and development ZPM</Description>
+<Abstract>1</Abstract>
+<IncludeCode>%ZAPM.ext</IncludeCode>
+<TimeCreated>65692,84099.653344</TimeCreated>
+
+<Parameter name="VERSION">
+<Default>1.0.2</Default>
+</Parameter>
+
+<Parameter name="GN">
+<Description>
+Storage of work history</Description>
+<Default>^%apptools.ZpmLoad</Default>
+</Parameter>
+
+<Method name="extcmd">
+<Description>
+extention zpm commans
+do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
+zapp "newdb spool-demo"</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>cmd=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	if $p(cmd," ")="help" q ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
+	if $p(cmd," ")="newdb" q ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
+	if $p(cmd," ")="load" q ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
+	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapp")_" "_..#VERSION,!
+]]></Implementation>
+</Method>
+
+<Method name="help">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>cmd=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	OPEN 2:$j USE 2
+	if '$lf(..cmdzpmext(),cmd) {
+		do ##class(%ZPM.PackageManager).Shell("help "_cmd)
+		do ##class(%ZAPM.ext.zpm).exthelp(cmd)
+	}
+	else { 
+		do ##class(%ZAPM.ext.zpm).exthelp(cmd)
+		}
+ 	CLOSE 2
+ 	set i=""
+ 		,help=""
+ 		,cmds=..cmdzpm()_..cmdzpmext()
+ 	for { set i=$o(^SPOOL($j,i),1,s) q:i=""
+ 		set s=" "_s
+ 		if $o(^SPOOL($j,i)) {
+	 		for cm=1:1:$ll(cmds) if s[(" "_$lg(cmds,cm)_" ") set s=$replace(s," "_$lg(cmds,cm)_" "," "_$$$escViolet($lg(cmds,cm))_" ")
+ 			set help=help_s
+ 		}
+ 	}
+ 	KILL ^SPOOL($j)
+	write !,help
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="exthelp">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>cmd=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ if cmd="" {
+	write !!,"Available commands extention:"
+	write !,"-----------------------------"
+ }
+ if cmd=""||(cmd="newdb") {
+	write !,"newdb <module>"
+ 	write !," Create a new database and an Namespace with a name derived from the name of the module and Install the module into it,"
+ }
+ if cmd=""||(cmd="load") {
+	write !!,"load http://git-repo/developer-name/repo-name"
+ 	write !," Load the module directly from the repository into the current Namespace. The 'git clone' command is applied. The git program must be installed."
+ }
+ if cmd=""||(cmd="cmd") {
+	write !!,"cmd "
+ 	write !," Alias: ?"
+ 	write !," Show all commands."
+ 	write !!,"cmd context"
+ 	write !," Show all commands including context."
+ }
+ if cmd=""||(cmd="hist") {
+	write !!,"hist "
+	write !," Alias: ??"
+ 	write !," Show all history."
+ 	write !!,"hist context"
+ 	write !," Show all history including context."
+ }
+
+ write !
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="cmdzpm">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[	quit $lb("ver","quit","help","namespace","orphans","list-dependents","list-installed","reload","compile","test","package","verify","publish","load","zn","help","install","uninstall","manage","list","find","search","version","repo","config","generate")
+]]></Implementation>
+</Method>
+
+<Method name="cmdzpmext">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[	quit $lb("newdb","cmd","hist")
+]]></Implementation>
+</Method>
+
+<Method name="SetColorScheme">
+<Description>
+do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>scheme={$s($zversion(1)=3:"dark",1:"white")}</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	write !,1,scheme,1
+	Quit ##class(%ZPM.PackageManager).Shell("config set ColorScheme "_scheme)
+]]></Implementation>
+</Method>
+
+<Method name="LoadFromRepo">
+<Description>
+w ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sms")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>path=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set sls=$$$slash
+	set st=$$$OK
+	if $e(path,1,4)="http" {
+		set dirrepo=$p($p(path,"/",*),".git")
+		set dirrnd=$tr($zts,".,")
+		Set TempDir = ##class(%File).GetDirectory(##class(%File).GetDirectory($zu(86))_"mgr"_sls_"Temp"_sls_dirrnd_sls)
+		set st=##class(%File).CreateDirectoryChain(TempDir)
+		if 'st  write !,$System.Status.GetErrorText(st) q st
+		;write !,"Create tempory directory "_TempDir
+		set filemodule=TempDir_dirrepo_sls_"module.xml"
+		set cmd="cd "_TempDir_" && git clone "_path
+		;w !,cmd,!
+		if $zf(-1,cmd)
+		h 2
+		if $zu(140,1,filemodule)>0 {
+			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo)
+		}
+		else {
+			set st=$$$ERROR($$$GeneralError,"No ZPM module file "_filemodule)
+		}
+		do ##class(%File).RemoveDirectoryTree(TempDir)
+		if 'st write !,$System.Status.GetErrorText(st)
+		Quit st
+	}
+	else {
+		Quit ##class(%ZPM.PackageManager).Shell("load "_path)
+	}
+	
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="LoadRegistrys">
+<Description>
+zpm-utility 
+repo -r -n registry -url http://127.0.0.1:52773/registry/ -user "superuser" -pass "pass"
+do ##class(%ZAPM.ext.zpm).LoadRegistrys("realworld")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>modulename="",all=0,skipZPM=1</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set currns=$namespace
+	set gn=..#GN
+	set sql="select Name, Version, Repo from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",1:"where Name=?")
+		,rs=##class(%ResultSet).%New()
+		,sc=rs.Prepare(sql)
+	set:sc sc=rs.Execute($zconvert(modulename,"L"))
+	if sc {
+		for i=1:1 {
+			quit:'rs.%Next()  
+			set name=rs.Get("Name")
+			set Version=rs.Get("Version")
+			set Repo=rs.Get("Repo")
+			set ns=$zconvert($tr(name,"-."),"U")
+			if skipZPM, name["isc-apptools"||($e(name,1,3)="zpm")||($e(name,1,6)="appmsw") w !,"Skip" continue
+			if $d(@gn@(name)) { ;already load
+				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
+					write !,ns_" Unload Removed DBNS ? Y\N " Read R   quit:"q"[R
+					if $g(R)="y" {
+						do ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS(name,,,gn)
+					}
+					continue
+				}
+				write !,"Already loaded - Skip"
+			} elseif 1 {
+				set sta=##class(%ZPM.PackageManager).Shell("find -r -d "_name) write !
+				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
+				if 'all w !,ns_" Load into a new database ? Y\N " Read R   quit:"q"[R
+				if $g(R)="y"||(all=1) {
+					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,,,,gn)
+				}
+			}
+		}
+	}
+]]></Implementation>
+</Method>
+
+<Method name="UnloadAndDeleteDBNS">
+<Description>
+d ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS("sync-dstime")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>name,Version="",Repo="",gn=..#GN</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set currns=$namespace
+	new $namespace
+	s ns=$zconvert($tr(name,"-."),"U")
+	set $Namespace=ns
+	set sta=##class(%ZPM.PackageManager).Shell("uninstall "_name)
+	if 'sta w !,$system.Status.GetErrorText(sta)
+	else  k @gn@(name)
+	set $namespace=currns
+	s st=##class(%ZAPM.ext.database).DeleteDBNS(ns)
+	i 'st w $system.Status.GetErrorText(st)
+]]></Implementation>
+</Method>
+
+<Method name="CreateDBNSAndLoad">
+<Description>
+d ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad("isc-tar")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>name,ns="",Version="",Repo="",gn=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	new $namespace
+	k err w !
+	if ns="" s ns=$zconvert($tr(name,"-."),"U")
+	s st=##class(%ZAPM.ext.database).CreateDBNS(ns)
+	i 'st s err=$System.Status.GetErrorText(st) w !,err
+	s:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
+	if st {
+		zn ns
+		;s sta=$zpm("install "_name_" -v")
+		k err
+		w !,"zpm ""install "_name_""""
+		s sta=##class(%ZPM.PackageManager).Shell("install "_name)
+		i 'sta s err=$System.Status.GetErrorText(sta) w !,err
+		s:gn'="" @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+	}
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="CompNS">
+<Description>
+Recompilation to IRIS namespace
+d ##class(%ZAPM.ext.zpm).CompNS("AAA")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ns</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	zn ns
+	d ##class(%EnsembleMgr).EnableNamespace(ns,1)
+	w !,"Compilation started, please wait..."
+	k err d $system.OBJ.CompileAll("cfk-u-d",.err) zw err
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="CollectPackage">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pPath:%String,*pList,pRoot:%String</FormalSpec>
+<Implementation><![CDATA[
+  set rs = ##class(%File).FileSetFunc(pPath)
+  WHILE rs.%Next() {
+    If rs.Type="D" {
+      do ..CollectPackage(rs.Name, .pList, pRoot)
+    } ELSE {
+      #; Set $LISTBUILD(url) = $SYSTEM.CSP.FilenameToUrls(rs.Name) 
+      Set pList($INCREMENT(pList)) = $LISTBUILD(rs.Name, $EXTRACT(rs.Name, $LENGTH(pRoot) + 1, *))
+    }
+  }
+]]></Implementation>
+</Method>
+
+<Method name="CompactPackage">
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&pList,classname=$CLASSNAME()]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+  set file = ""
+  for i=1:1:$Get(pList) {
+    Set $LISTBUILD(file, name) = pList(i)
+    
+    set tmpFile = ##class(%File).TempFilename("gz")
+
+    set stream = ##class(%Stream.FileBinary).%New()
+    set stream.Filename = file
+
+    Set gzip = ##class(%Stream.FileBinaryGzip).%New()
+    Set gzip.Filename = tmpFile
+    do gzip.CopyFromAndSave(stream)
+    
+    Set gzip = ##class(%Stream.FileBinary).%New()
+    Set gzip.Filename = tmpFile
+
+    Set xdata = ##class(%Dictionary.XDataDefinition).%New()
+    Set xdata.Name = "Data"_i
+    Set xdata.Description = name
+    Do xdata.parentSetObjectId(classname)
+    set chunkSize = 22800
+    while 'gzip.AtEnd {
+      set data = gzip.Read(chunkSize)
+      set base64 = $SYSTEM.Encryption.Base64Encode(data)
+      do xdata.Data.WriteLine(base64)
+      set data1 = $SYSTEM.Encryption.Base64Decode(base64)
+    }
+    do xdata.%Save()
+    set hash = $SYSTEM.Encryption.SHA1HashStream(gzip)
+  
+    do ##class(%File).Delete(tmpFile)
+  }
+  QUIT $$$OK
+  
+  
+  Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="ExtractPackage">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pFolder:%String,classname=$CLASSNAME()</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+  Set pFolder = ##class(%File).NormalizeDirectory($$$FileTempDir)
+
+  For i=1:1:..#FILESCOUNT {
+    Set xdata = ##class(%Dictionary.XDataDefinition).%OpenId(classname_"||Data"_i)
+    Set name = xdata.Description
+    Set fileName = pFolder_name
+
+    Set tParentFolder = ##class(%File).ParentDirectoryName(fileName)    
+    if '##class(%File).DirectoryExists(tParentFolder) {
+      Do ##class(%File).CreateDirectoryChain(tParentFolder)
+    }
+
+    set tmpFile = ##class(%File).TempFilename("gz")
+
+    set stream = ##class(%Stream.FileBinary).%New()
+    set stream.Filename = tmpFile
+    set prev = ""
+    set chunkSize = 30400
+    do {
+      set data = prev
+      if 'xdata.Data.AtEnd {
+        set data = data _ xdata.Data.Read()
+      }
+      set data = $ZSTRIP(data, "*C")
+      set prev = $EXTRACT(data, chunkSize + 1, *)
+      set data = $EXTRACT(data, 1, chunkSize)
+      set chunk = $SYSTEM.Encryption.Base64Decode(data)
+      do stream.Write(chunk)
+    } while (prev'="")||('xdata.Data.AtEnd)
+    do stream.%Save()
+
+    set gzip = ##class(%Stream.FileBinaryGzip).%New()
+    set gzip.Filename = tmpFile
+
+    set fs = ##class(%Stream.FileCharacter).%New()
+    set fs.Filename = fileName
+    do fs.CopyFromAndSave(gzip)
+
+    do ##class(%File).Delete(tmpFile)
+  }
+  Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="add2xdata">
+<Description>
+Add XDATA to another class
+ d ##class(%ZAPM.ext.zpm).add2xdata("/backup/iris/distr/apptools-task/","Test.test")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dir="d:\_proj\_zpm\appt-core\src\cls\",classname</FormalSpec>
+<Implementation><![CDATA[
+	;w $classname() q
+	Do ..CollectPackage(dir, .tList, dir)
+	zw tList
+    ;Do ##class(%ZPM.Installer).CompactPackage(.tList,"App.MSW.type")
+    Do ..CompactPackage(.tList,classname)
+]]></Implementation>
+</Method>
+
+<Method name="EscColor">
+<Description>
+Output color escape sequence
+do ##class(%ZAPM.ext.zpm).EscColor()</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>mode=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	if mode="" { //write all colors
+		write ..EscColor(0)
+		//brightness
+		for b=1,2 {
+			for f=30:1:37 {  //font
+				for i=40:1:47 {  //background
+					s code=b_";"_f_";"_i
+					s txt=" write $$$escSeq("""_code_""",""any text"")"
+					w !,$$$escSeq(code,txt)
+				}
+			}
+		}
+	
+	} elseif mode=0 { //cleaning
+		q $c(27)_"[0m"
+	} else {
+		q $c(27)_"["_mode_"m"
+	}
+]]></Implementation>
+</Method>
+
+<Method name="ZPMColorScheme">
+<Description>
+write ##class(%ZAPM.ext.zpm).ZPMColorScheme()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	try {
+		set scheme=##class(%ZPM.PackageManager.Client.Settings).GetValue("ColorScheme")
+	} 
+	catch e {
+		set scheme=0
+	}
+	quit scheme
+]]></Implementation>
+</Method>
+
+<Method name="exportXML">
+<Description>
+do ##class(%ZAPM.ext.zpm).exportXML("d:\!\_zapp.xml")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dir=""</FormalSpec>
+<Implementation><![CDATA[
+ 	s list("%ZAPM.ext.INC")=""
+	s list("%ZAPM.ext.zpm.CLS")=""
+	s list("%ZAPM.ext.zapp.CLS")=""
+	s list("%ZAPM.ext.database.CLS")=""
+	s list("%ZAPM.ext.commands.CLS")=""
+	d $SYSTEM.OBJ.Export(.list, dir)
+]]></Implementation>
+</Method>
+</Class>
+</Export>
