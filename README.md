@@ -1,4 +1,4 @@
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/prompt.ico)
+![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm.png)
 
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
@@ -44,6 +44,8 @@ USER>zapm "cmd"
 ```
 ## Command extensions zpm.
 help - coloring command description
+
+GIF shows command execution
 
 load <https...git-repo> - loading the module directly from the git-repository
 
