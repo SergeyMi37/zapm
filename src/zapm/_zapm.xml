@@ -1020,8 +1020,29 @@ do ##class(%ZAPM.ext.zapp).init()</Description>
 		}
 	}
 	do ##class(%ZAPM.ext.zpm).SetColorScheme()
-	write !,"To work in the shell, enter 'zapp' in the terminal, and then 'cmd' or '?' "
+	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
 	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="TerminalPrompt">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>comm=""</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set del=$$$escGreen(">")
+	set tp=##class(%SYSTEM.Process).TerminalPrompt()
+	set prompt=""
+	for i=1:1:$l(tp,",") {
+		if $p(tp,",",i)=1 {	set prompt=prompt_$p($system,":")_del continue}
+		elseif $p(tp,",",i)=2 {	set prompt=prompt_$namespace_del continue}
+		elseif $p(tp,",",i)=3 {	set prompt=prompt_$p($system,":",2)_del continue}
+		elseif $p(tp,",",i)=4 {	set prompt=prompt_$zt(+$p($h,",",2),1)_del continue}
+		elseif $p(tp,",",i)=5 {	set prompt=prompt_$job_del continue}
+		elseif $p(tp,",",i)=6 {	set prompt=prompt_$username_del continue}
+		;TODO elseif $p(tp,",",i)=8-7 {	set prompt=prompt_$username_del }
+	}
+	quit prompt
 ]]></Implementation>
 </Method>
 
@@ -1033,9 +1054,8 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	for {
-		set prom=$zu(110)_$$$escGreen(">")_$p($zu(86),"*",2)_$$$escGreen(">")_$namespace_$$$escGreen(">")
 		if comm="" {
-			write !,prom," " read cmd 
+			write !,..TerminalPrompt()," " read cmd 
 		}
 		else {
 			set cmd=comm
@@ -1054,7 +1074,7 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 			;extention command
 			set %cmd=cmd
 			xecute $lg(command,1)
-			do addhist($lg(command,1),$lg(command,3),$lg(command,4))
+			do addhist(command,$lg(command,3),$lg(command,4))
 			quit:cmd=comm
 			continue
 		}
@@ -1082,36 +1102,30 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 				xecute cmd
 				do addhist(cmd)
 			} catch ex {
-		  		Set sc = $g(%objlasterror, $$$OK)
-   				Set sc = $$$ADDSC(sc, ex.AsStatus())
-   				write !,"Error type   "_ex.Name
-   				write !,"Error code   "_ex.Code
-   				write !,"Error location "_ex.Location
-   				do ..write("","? or ?text",$lb("Show help"))
+   				write !,"Error "_$ze
+   				do ..write("","? or ?text",$lb("Show help"),1)
 			}
 			quit:cmd=comm
 			continue
 		}
-				
-		set command=$g(%zapm(cmd))
-		if $d(%zapm(cmd),command) {
+		elseif $d(%zapm(cmd),command) {
 			set yes=$lg(command,2)
 			if $e(yes)="a" {
 				write !!,"  ",$lg(command,1)_" ; "_$lg(command,4)
 				write !,"     Are you sure ? [Y] " 
 				 read sure 
-				 continue:$e($zconvert(sure,"L"))'="y"||($e($zconvert(sure,"L"))'="Y")
+				 continue:$e($zconvert(sure,"L"))'="y"
 				 set yes="i"
 			}
 			if yes="i" {
 				write !,"Executing "_$lg(command,1),!
 				xecute $lg(command,1) 
-				do addhist($lg(command,1),$lg(command,3),$lg(command,4))
+				do addhist(command,$lg(command,3),$lg(command,4))
 				quit:cmd=comm
 				continue
 			}
 			else {
-				write !,"Command "_$lg(command,1),!
+				write !,$lg(command,1),!
 				write !,"Show only"
 			}
 		}
@@ -1125,7 +1139,7 @@ addhist(cmd,namecmd="",desc="") ;add to history
 	quit:cmd=+cmd
 	quit:cmd=""
 	set gn=..#GN
-	if '$lv(cmd) s cmd=$lb(cmd,"y",namecmd,desc)
+	if '$lv(cmd) s cmd=$lb(cmd,"a",namecmd,desc)
 	set @gn@("cmd",cmd)=$GET(@gn@("cmd",cmd))+1
 	quit 1
 iszpmcmd(cmd) ;If is a zpm command
@@ -1148,14 +1162,14 @@ do ##class(%ZAPM.ext.zapp).history("dark")</Description>
 	set mask=$ZStrip(mask,"<>WC")
 	kill %zapm
 	set gn=..#GN
-	set i=""
-		,ii=0
+	set cmd=""
+		,num=0
 	for {
-		set i=$Order(@gn@("cmd",i)) q:i=""
-		if mask'="",$zconvert(i,"L")'[mask continue
-		set ii=ii+1
-		write !,$$$escRed(ii)_"."_$$$escViolet($lg(i,3))_" "_$lg(i,1)_" //"_$lg(i,4)
-		set %zapm(ii)=i
+		set cmd=$Order(@gn@("cmd",cmd)) q:cmd=""
+		if mask'="",$zconvert(cmd,"L")'[mask continue
+		set num=num+1
+		write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_" //"_$lg(cmd,4)
+		set %zapm(num)=cmd
 	}
 ]]></Implementation>
 </Method>
@@ -1210,7 +1224,7 @@ do ##class(%ZAPM.ext.zapp).help("dark")</Description>
 	}
 	set prompt=$lg(cmd,2)
 	;if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"Ask before launch",prompt="n":"Launch immediately",1:"Do not run"))
-	if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"A",prompt="n":"Launch immediately",prompt="n":"N",1:""))
+	if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="a":"A",prompt="i":"I",prompt="n":"N",1:"N"))
 	write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
  quit $$$OK
 ]]></Implementation>
@@ -1225,11 +1239,11 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 <Implementation><![CDATA[
 	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
 	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "sys",     "system status")
-	set list("sys",$i(list))=$lb("zn ""%SYS"" do ^JOBEXAM","a","","job examing")
-	set list("sys",$i(list))=$lb("zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
-	set list("sys",$i(list))=$lb("zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
-	set list("sys",$i(list))=$lb("zn ""%SYS"" do ^SECURITY","i","","security utility")
-	set list("sys",$i(list))=$lb("zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","","job examing")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^SECURITY","i","","security utility")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
 	;zmp
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
@@ -1398,7 +1412,7 @@ research and development ZPM</Description>
 <Parameter name="GN">
 <Description>
 Storage of work history</Description>
-<Default>^%apptools.ZpmLoad</Default>
+<Default>^%ZAPM.ZpmLoad</Default>
 </Parameter>
 
 <Method name="extcmd">
@@ -1413,7 +1427,7 @@ zapp "newdb spool-demo"</Description>
 	if $p(cmd," ")="help" q ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
 	if $p(cmd," ")="newdb" q ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
 	if $p(cmd," ")="load" q ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
-	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapp")_" "_..#VERSION,!
+	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
 ]]></Implementation>
 </Method>
 
@@ -1827,7 +1841,7 @@ write ##class(%ZAPM.ext.zpm).ZPMColorScheme()</Description>
 
 <Method name="exportXML">
 <Description>
-do ##class(%ZAPM.ext.zpm).exportXML("d:\!\_zapp.xml")</Description>
+do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\src\zapm\_zapm.xml")</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>dir=""</FormalSpec>
 <Implementation><![CDATA[
