@@ -5,6 +5,9 @@
 
 zapm is a shell - extends the zpm shell and adds any other commands.
 
+Working in the terminal I got tired of going from my shell to the zpm shell and back.
+My shell was supplied with additional specific commands and I decided to merge the two shells.
+
 ## Installation with ZPM
 
 zpm:USER>install zapm
