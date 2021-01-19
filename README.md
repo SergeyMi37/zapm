@@ -60,6 +60,8 @@ These extensions are planned to be included in the main branch of the zpm projec
 
 ### cmd - list of possible additional commands
 
+![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_4_cmd.png)
+
 ### hist - list of executed commands
 
 ![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_5_hist.png)
@@ -71,7 +73,8 @@ For example, let's execute sequentially
 
 - create a database with the area and install the zpmshow module there
 ```
-newdb zpmshow
+hp-msw>IRISZPM>USER> newdb zpmshow
+
 Creating Database zpmshow... done!
 Creating Namespace zpmshow... done!
 Creating Interoperability mappings ... done!
@@ -97,6 +100,7 @@ zpm "install zpmshow"
 do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow", "zpm", "i", "zshow", "Show a zpm modules with extention description")
 added
 ```
+![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_7_zshow.png)
 
 - check the execution of the new command from the system shell
 USER>zapm "zshow"
@@ -105,12 +109,13 @@ USER>zapm "zshow"
 ![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_6_zshow.png)
 
 ## It is planned to do:
-the ability to supplement the zapm shell with commands, the specifics of calling them are described in a special file zapm.json, which is located in the repository.
-So when deploying enterprise application instances, you can use application command systems.
 
-additional zapm commands
+additional zapm commands:
+
 cmd-add - add command
+
 cmd-del - delete command
+
 
 This solution can replace not only the zpm shell but also the main terminal shell. 
 For me it almost happened ;-)
