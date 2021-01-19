@@ -1,4 +1,4 @@
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm.png)
+![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)

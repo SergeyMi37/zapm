@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-19 16:25:08">
-<Routine name="%ZAPM.ext" type="INC" timestamp="65761,50684.677"><![CDATA[
+<Export generator="IRIS" version="26">
+<Routine name="%ZAPM.ext" type="INC"><![CDATA[
 #Include %occMessages
 #include %occReference
 
@@ -289,7 +289,6 @@
 <Class name="%ZAPM.ext.commands">
 <IncludeCode>%ZAPM.ext</IncludeCode>
 <Super>%Persistent</Super>
-<TimeChanged>65761,61816.66841</TimeChanged>
 <TimeCreated>65607,76509.946449</TimeCreated>
 
 <Property name="Command">
@@ -476,7 +475,6 @@ create db and namespace without resource and role
 write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).CreateNamespace("testdb14"))
 write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace("testdb14"))</Description>
 <Abstract>1</Abstract>
-<TimeChanged>65761,50684.677</TimeChanged>
 <TimeCreated>65687,72123.672838</TimeCreated>
 
 <Parameter name="LIBRARY">
@@ -992,7 +990,6 @@ ZAPP(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...)
 try { do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions() } catch ex {}</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext</IncludeCode>
-<TimeChanged>65762,82123.890382</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="GN">
@@ -1033,7 +1030,7 @@ do ##class(%ZAPM.ext.zapp).init()</Description>
 <FormalSpec>comm=""</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
-	set del=$$$escGreen(">")
+	set del=$$$escRed(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
 	set prompt=""
 	for i=1:1:$l(tp,",") {
@@ -1043,7 +1040,7 @@ do ##class(%ZAPM.ext.zapp).init()</Description>
 		elseif $p(tp,",",i)=4 {	set prompt=prompt_$zt(+$p($h,",",2),1)_del continue}
 		elseif $p(tp,",",i)=5 {	set prompt=prompt_$job_del continue}
 		elseif $p(tp,",",i)=6 {	set prompt=prompt_$username_del continue}
-		;TODO elseif $p(tp,",",i)=8-7 {	set prompt=prompt_$username_del }
+		;i think for zapm shell 7 and 8 do not need to be implemented
 	}
 	quit prompt
 ]]></Implementation>
@@ -1058,7 +1055,8 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 <Implementation><![CDATA[
 	for {
 		if comm="" {
-			write !,..TerminalPrompt()," " read cmd 
+			write !,..TerminalPrompt() 
+			read cmd 
 		}
 		else {
 			set cmd=comm
@@ -1076,6 +1074,7 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 		elseif $$iszapmcmd($p(cmd," "),.command) { 
 			;extention command
 			set %cmd=cmd
+			write !
 			xecute $lg(command,1)
 			do addhist(command,$lg(command,3),$lg(command,4))
 			quit:cmd=comm
@@ -1090,11 +1089,13 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 			continue
 		}
 		elseif $e(cmd,1,2)="??"||($e(cmd,1,4)="hist") {
+			write !
 			do ..history($p(cmd,$select(cmd["??":"??",1:"hist"),2,*)) 
 			quit:cmd=comm
 			continue
 		}
 		elseif $e(cmd,1)="?"||($e(cmd,1,3)="cmd") {
+			write !
 			do ..help($p(cmd,$select(cmd["?":"?",1:"cmd"),2,*)) 
 			quit:cmd=comm
 			continue
@@ -1102,6 +1103,7 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 		elseif (cmd'=(+cmd)) {
 			set %cmd=cmd
 			try {
+				write !
 				xecute cmd
 				do addhist(cmd)
 			} catch ex {
@@ -1406,7 +1408,6 @@ $$$ENDTAG
 research and development ZPM</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext</IncludeCode>
-<TimeChanged>65763,49152.841116</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
@@ -1530,7 +1531,7 @@ do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")</Description>
 
 <Method name="LoadFromRepo">
 <Description>
-w ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sms")</Description>
+write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sms")</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>path=""</FormalSpec>
 <ReturnType>%Status</ReturnType>
@@ -1854,18 +1855,6 @@ do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\src\zapm\
 	s list("%ZAPM.ext.zapp.CLS")=""
 	s list("%ZAPM.ext.database.CLS")=""
 	s list("%ZAPM.ext.commands.CLS")=""
-	d $SYSTEM.OBJ.Export(.list, dir)
-]]></Implementation>
-</Method>
-
-<Method name="exportXMLprod">
-<Description>
-do ##class(%ZAPM.ext.zpm).exportXMLprod("d:\_proj\_zapp\zpm-addition+\zapm-addcmd\src\zapm\_zapmprod.xml")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>dir=""</FormalSpec>
-<Implementation><![CDATA[
- 	s list("%ZAPM.ext.INC")=""
-	s list("%ZAPM.ext.Production.CLS")=""
 	d $SYSTEM.OBJ.Export(.list, dir)
 ]]></Implementation>
 </Method>
