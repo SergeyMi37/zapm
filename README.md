@@ -98,9 +98,5 @@ additional zapm commands
 cmd-add - add command
 cmd-del - delete command
 
-## This solution can replace not only the zpm shell but also the main terminal shell. 
+This solution can replace not only the zpm shell but also the main terminal shell. 
 For me it almost happened ;-)
-The solution for contest in the competition uses multi-model:
-- Object (
-- Relational (
-- Key-Value (
