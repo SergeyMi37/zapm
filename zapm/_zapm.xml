@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26">
-<Routine name="%ZAPM.ext" type="INC"><![CDATA[
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-19 21:43:36">
+<Routine name="%ZAPM.ext" type="INC" timestamp="65761,50684.677"><![CDATA[
 #Include %occMessages
 #include %occReference
 
@@ -289,6 +289,7 @@
 <Class name="%ZAPM.ext.commands">
 <IncludeCode>%ZAPM.ext</IncludeCode>
 <Super>%Persistent</Super>
+<TimeChanged>65763,75065.84824</TimeChanged>
 <TimeCreated>65607,76509.946449</TimeCreated>
 
 <Property name="Command">
@@ -415,7 +416,7 @@ write $System.Status.GetErrorText(##class(%ZAPM.ext.commands).AddUpdate("new $na
 	set obj.CommandName=CommandName
 	set obj.Partition=Partition
 	set obj.Description=Description
-	set obj.Prompt=moderun
+	set obj.Prompt=$zconvert($e(moderun,1),"L")
 	set obj.Namespace=Namespace
 	quit obj.%Save()
 ]]></Implementation>
@@ -475,6 +476,7 @@ create db and namespace without resource and role
 write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).CreateNamespace("testdb14"))
 write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace("testdb14"))</Description>
 <Abstract>1</Abstract>
+<TimeChanged>65761,50684.677</TimeChanged>
 <TimeCreated>65687,72123.672838</TimeCreated>
 
 <Parameter name="LIBRARY">
@@ -990,6 +992,7 @@ ZAPP(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...)
 try { do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions() } catch ex {}</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext</IncludeCode>
+<TimeChanged>65763,62462.908987</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="GN">
@@ -1408,6 +1411,7 @@ $$$ENDTAG
 research and development ZPM</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext</IncludeCode>
+<TimeChanged>65763,78209.927303</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
@@ -1846,7 +1850,7 @@ write ##class(%ZAPM.ext.zpm).ZPMColorScheme()</Description>
 
 <Method name="exportXML">
 <Description>
-do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\src\zapm\_zapm.xml")</Description>
+do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\zapm\_zapm.xml")</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>dir=""</FormalSpec>
 <Implementation><![CDATA[

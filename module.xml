@@ -4,7 +4,7 @@
 <Module>
  <Name>zapm</Name>
   <Version>1.0.0</Version>
-  <Description>zapm is a shell - extends the zpm shell and adds any other commands.</Description>
+  <Description>Zapm is a shell - extends the zpm shell and adds any other commands.</Description>
   <Packaging>module</Packaging>
   <SourcesRoot>./</SourcesRoot>
 	<Invokes>
@@ -14,7 +14,7 @@
     </Invoke>
 	<Invoke Class="%ZAPM.ext.zapp" Method="init"></Invoke>
 	</Invokes>
-  <Resource Name="src.PKG"/> 
+  <Resource Name="zapm.PKG"/> 
 </Module>
 </Document>
 </Export>
