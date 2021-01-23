@@ -1,4 +1,4 @@
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
@@ -44,12 +44,12 @@ $ docker-compose exec iris iris session iris
 USER>
 USER>zapm "cmd"
 ```
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_cmd.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_cmd.png)
 
 ## Command extensions zpm.
 ### help - coloring command description
 
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/2-help.gif)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/2-help.gif)
 
 ### load <https...git-repo> - loading the module directly from the git-repository
 
