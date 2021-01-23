@@ -63,11 +63,11 @@ These extensions are planned to be included in the main branch of the zpm projec
 
 ### cmd - list of possible additional commands
 
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_4_cmd.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_4_cmd.png)
 
 ### hist - list of executed commands
 
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_5_hist.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_5_hist.png)
 
 ### newdb <module> -creating a database with a scope and installing the module there
 
@@ -103,13 +103,13 @@ zpm "install zpmshow"
 do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow", "zpm", "i", "zshow", "Show a zpm modules with extention description")
 added
 ```
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_7_zshow.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_7_zshow.png)
 
 - check the execution of the new command from the system shell
 USER>zapm "zshow"
 - or from the zapm shell
 
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_6_zshow.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_6_zshow.png)
 
 ## It is planned to do:
 
