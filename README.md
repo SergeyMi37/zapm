@@ -1,4 +1,4 @@
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
+![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
@@ -49,11 +49,11 @@ USER>zapm "cmd"
 ## Command extensions zpm.
 ### help - coloring command description
 
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/2-help.gif)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/2-help.gif)
 
 ### load <https...git-repo> - loading the module directly from the git-repository
 
-![](https://github.com/SergeyMi37/zapm/blob/master/doc/Screenshot_3_load.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_3_load.png)
 
 These extensions are planned to be included in the main branch of the zpm project in the future.
 [101](https://github.com/intersystems-community/zpm/issues/101)
