@@ -8,6 +8,10 @@ ZAPM is a shell - extends the ZPM shell and adds any other commands.
 Working in the terminal I got tired of going from my shell to the zpm shell and back.
 My shell was supplied with additional specific commands and I decided to merge the two shells.
 
+The ZAPM checks if the command entered is a ZPM command, then sends the execution to the ZPM shell.
+Then I wanted to improve the color commands and expand the functionality.
+And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
+
 ## Installation with ZPM
 
 zpm:USER>install zapm
