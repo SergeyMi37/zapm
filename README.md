@@ -3,7 +3,7 @@
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
 
-zapm is a shell - extends the zpm shell and adds any other commands.
+ZAPM is a shell - extends the ZPM shell and adds any other commands.
 
 Working in the terminal I got tired of going from my shell to the zpm shell and back.
 My shell was supplied with additional specific commands and I decided to merge the two shells.
