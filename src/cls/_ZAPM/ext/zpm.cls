@@ -368,16 +368,5 @@ ClassMethod ZPMColorScheme() As %String
 	quit scheme
 }
 
-/// do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\zapm\_zapm.xml")
-ClassMethod exportXML(dir = "")
-{
- 	s list("%ZAPM.ext.Common.INC")=""
-	s list("%ZAPM.ext.zpm.CLS")=""
-	s list("%ZAPM.ext.zapp.CLS")=""
-	s list("%ZAPM.ext.database.CLS")=""
-	s list("%ZAPM.ext.commands.CLS")=""
-	d $SYSTEM.OBJ.Export(.list, dir)
-}
-
 }
 

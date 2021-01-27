@@ -133,6 +133,10 @@ ClassMethod prompt(comm = "") As %Status
 				write !,"Show only"
 			}
 		}
+		elseif '$data(%zapm(cmd)) {
+				quit:cmd=comm
+				continue			
+		}
 		else { 
 			do ..help()
 		}

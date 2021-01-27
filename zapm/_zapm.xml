@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-27 07:30:57">
-<Routine name="%ZAPM.ext.Common" type="INC" timestamp="65770,80471.580324"><![CDATA[
+<Export generator="IRIS" version="26">
+<Routine name="%ZAPM.ext.Common" type="INC"><![CDATA[
 #Include %occMessages
 #include %occReference
 
@@ -289,7 +289,6 @@
 <Class name="%ZAPM.ext.commands">
 <IncludeCode>%ZAPM.ext.Common</IncludeCode>
 <Super>%Persistent</Super>
-<TimeChanged>65770,80546.620874</TimeChanged>
 <TimeCreated>65607,76509.946449</TimeCreated>
 
 <Property name="Command">
@@ -476,7 +475,6 @@ create db and namespace without resource and role
 write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).CreateNamespace("testdb14"))
 write $System.Status.GetErrorText(##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace("testdb14"))</Description>
 <Abstract>1</Abstract>
-<TimeChanged>65761,50684.677</TimeChanged>
 <TimeCreated>65687,72123.672838</TimeCreated>
 
 <Parameter name="LIBRARY">
@@ -992,7 +990,6 @@ ZAPP(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...)
 try { do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions() } catch ex {}</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext.Common</IncludeCode>
-<TimeChanged>65771,26859.725994</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="GN">
@@ -1136,6 +1133,10 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 				write !,$lg(command,1),!
 				write !,"Show only"
 			}
+		}
+		elseif '$data(%zapm(cmd)) {
+				quit:cmd=comm
+				continue			
 		}
 		else { 
 			do ..help()
@@ -1411,7 +1412,6 @@ $$$ENDTAG
 research and development ZPM</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext.Common</IncludeCode>
-<TimeChanged>65771,23884.054119</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
@@ -1855,21 +1855,6 @@ write ##class(%ZAPM.ext.zpm).ZPMColorScheme()</Description>
 		set scheme=0
 	}
 	quit scheme
-]]></Implementation>
-</Method>
-
-<Method name="exportXML">
-<Description>
-do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\zapm\_zapm.xml")</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>dir=""</FormalSpec>
-<Implementation><![CDATA[
- 	s list("%ZAPM.ext.Common.INC")=""
-	s list("%ZAPM.ext.zpm.CLS")=""
-	s list("%ZAPM.ext.zapp.CLS")=""
-	s list("%ZAPM.ext.database.CLS")=""
-	s list("%ZAPM.ext.commands.CLS")=""
-	d $SYSTEM.OBJ.Export(.list, dir)
 ]]></Implementation>
 </Method>
 </Class>
