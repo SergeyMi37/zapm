@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-25 09:15:14">
-<Routine name="%ZAPM.ext" type="INC" timestamp="65761,50684.677"><![CDATA[
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-27 06:38:26">
+<Routine name="%ZAPM.ext.Common" type="INC" timestamp="65770,80471.580324"><![CDATA[
 #Include %occMessages
 #include %occReference
 
@@ -287,9 +287,9 @@
 
 
 <Class name="%ZAPM.ext.commands">
-<IncludeCode>%ZAPM.ext</IncludeCode>
+<IncludeCode>%ZAPM.ext.Common</IncludeCode>
 <Super>%Persistent</Super>
-<TimeChanged>65763,75065.84824</TimeChanged>
+<TimeChanged>65770,80546.620874</TimeChanged>
 <TimeCreated>65607,76509.946449</TimeCreated>
 
 <Property name="Command">
@@ -991,8 +991,8 @@ apptools favourite commands in %ZLANGC00.mac
 ZAPP(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...) 
 try { do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions() } catch ex {}</Description>
 <Abstract>1</Abstract>
-<IncludeCode>%ZAPM.ext</IncludeCode>
-<TimeChanged>65768,62969.714093</TimeChanged>
+<IncludeCode>%ZAPM.ext.Common</IncludeCode>
+<TimeChanged>65770,80526.771957</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="GN">
@@ -1035,7 +1035,7 @@ do ##class(%ZAPM.ext.zapp).init()</Description>
 <Implementation><![CDATA[
 	set del=$$$escRed(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
-	set prompt=""
+	set prompt=$$$escRed("<")
 	for i=1:1:$l(tp,",") {
 		if $p(tp,",",i)=1 {	set prompt=prompt_$p($system,":")_del continue}
 		elseif $p(tp,",",i)=2 {	set prompt=prompt_$namespace_del continue}
@@ -1410,8 +1410,8 @@ $$$ENDTAG
 <Description>
 research and development ZPM</Description>
 <Abstract>1</Abstract>
-<IncludeCode>%ZAPM.ext</IncludeCode>
-<TimeChanged>65763,78209.927303</TimeChanged>
+<IncludeCode>%ZAPM.ext.Common</IncludeCode>
+<TimeChanged>65771,23884.054119</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
@@ -1558,7 +1558,7 @@ write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sm
 			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo)
 		}
 		else {
-			set st=$$$ERROR($$$GeneralError,"No ZPM module file "_filemodule)
+			set urlarh=..GetUrlRepoArhive(path)
 		}
 		do ##class(%File).RemoveDirectoryTree(TempDir)
 		if 'st write !,$System.Status.GetErrorText(st)
@@ -1569,6 +1569,16 @@ write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sm
 	}
 	
 	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetUrlRepoArhive">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>tLocation</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Do ##class(%Net.URLParser).Parse(tLocation,.tComponents)
+	if
 ]]></Implementation>
 </Method>
 
@@ -1854,7 +1864,7 @@ do ##class(%ZAPM.ext.zpm).exportXML("d:\_proj\_zapp\zpm-addition+\zapm\zapm\_zap
 <ClassMethod>1</ClassMethod>
 <FormalSpec>dir=""</FormalSpec>
 <Implementation><![CDATA[
- 	s list("%ZAPM.ext.INC")=""
+ 	s list("%ZAPM.ext.Common.INC")=""
 	s list("%ZAPM.ext.zpm.CLS")=""
 	s list("%ZAPM.ext.zapp.CLS")=""
 	s list("%ZAPM.ext.database.CLS")=""
