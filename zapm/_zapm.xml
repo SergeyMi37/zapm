@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-27 06:38:26">
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2020.1 (Build 215U)" ts="2021-01-27 07:30:57">
 <Routine name="%ZAPM.ext.Common" type="INC" timestamp="65770,80471.580324"><![CDATA[
 #Include %occMessages
 #include %occReference
@@ -992,7 +992,7 @@ ZAPP(pArgs...) Do ##class(%ZAPM.ext.zapp).prompt(pArgs...)
 try { do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions() } catch ex {}</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext.Common</IncludeCode>
-<TimeChanged>65770,80526.771957</TimeChanged>
+<TimeChanged>65771,26859.725994</TimeChanged>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="GN">
@@ -1035,7 +1035,7 @@ do ##class(%ZAPM.ext.zapp).init()</Description>
 <Implementation><![CDATA[
 	set del=$$$escRed(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
-	set prompt=$$$escRed("<")
+	set prompt="zapm:"
 	for i=1:1:$l(tp,",") {
 		if $p(tp,",",i)=1 {	set prompt=prompt_$p($system,":")_del continue}
 		elseif $p(tp,",",i)=2 {	set prompt=prompt_$namespace_del continue}

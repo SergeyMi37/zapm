@@ -36,7 +36,7 @@ ClassMethod TerminalPrompt(comm = "") As %String
 {
 	set del=$$$escRed(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
-	set prompt=$$$escRed("<")
+	set prompt="zapm:"
 	for i=1:1:$l(tp,",") {
 		if $p(tp,",",i)=1 {	set prompt=prompt_$p($system,":")_del continue}
 		elseif $p(tp,",",i)=2 {	set prompt=prompt_$namespace_del continue}
