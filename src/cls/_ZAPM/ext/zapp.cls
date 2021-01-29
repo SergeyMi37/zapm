@@ -52,10 +52,12 @@ ClassMethod TerminalPrompt(comm = "") As %String
 /// do ##class(%ZAPM.ext.zapp).prompt("globuff")
 ClassMethod prompt(comm = "") As %Status
 {
+	set comm=$ZStrip(comm,"<>WC")
 	for {
 		if comm="" {
 			write !,..TerminalPrompt() 
-			read cmd 
+			read cmd
+			set cmd=$ZStrip(cmd,"<>WC")
 		}
 		else {
 			set cmd=comm

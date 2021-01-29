@@ -4,7 +4,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.2";
+Parameter VERSION = "1.0.7";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";

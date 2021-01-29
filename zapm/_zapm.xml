@@ -1053,10 +1053,12 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 <FormalSpec>comm=""</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	set comm=$ZStrip(comm,"<>WC")
 	for {
 		if comm="" {
 			write !,..TerminalPrompt() 
-			read cmd 
+			read cmd
+			set cmd=$ZStrip(cmd,"<>WC")
 		}
 		else {
 			set cmd=comm
@@ -1415,7 +1417,7 @@ research and development ZPM</Description>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
-<Default>1.0.2</Default>
+<Default>1.0.7</Default>
 </Parameter>
 
 <Parameter name="GN">
