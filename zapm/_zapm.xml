@@ -1551,36 +1551,77 @@ write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sm
 		set st=##class(%File).CreateDirectoryChain(TempDir)
 		if 'st  write !,$System.Status.GetErrorText(st) q st
 		;write !,"Create tempory directory "_TempDir
-		set filemodule=TempDir_dirrepo_sls_"module.xml"
+		//first try
+		set UrlArchive = ..GetUrlRepoArhive(path)
+		if UrlArchive'="" {
+			Do ##class(%Net.URLParser).Parse(UrlArchive,.tComponents)
+			Set tClient = ##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+			set tRequest = tClient.GetHttpRequest(UrlArchive)
+			Set tRequest.Timeout = 300
+    		Set tSC = tRequest.Get(tComponents("path"))
+    		If $$$ISOK(tSC), tRequest.HttpResponse.StatusCode=200 {
+      			Set tFileBinStream = ##class(%Stream.FileBinary).%New()
+      			Set tFileBinStream.Filename = TempDir_"tmp.zip"
+      			do tFileBinStream.CopyFromAndSave(tRequest.HttpResponse.Data)      
+			}
+		  	If $GET(tFileBinStream)'="" {
+				if $zversion(1)=3 {
+					set cmd="cd "_TempDir_" && unzip -q tmp.zip"
+				}
+				else {
+					set cmd="cd "_TempDir_" && powershell Expand-Archive -LiteralPath "_TempDir_"tmp.zip -DestinationPath "_TempDir
+				}
+				write !,cmd,!
+				if $zf(-1,cmd)
+				hang 2
+			}
+		}
+		if $$$FileSize(TempDir_dirrepo_"-master"_sls_"module.xml")>0 {
+			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo_"-master")
+			do ##class(%File).RemoveDirectoryTree(TempDir)
+			if 'st write !,$System.Status.GetErrorText(st)
+			Quit st
+		}
+		//second try
 		set cmd="cd "_TempDir_" && git clone "_path
-		;w !,cmd,!
+		write !,cmd,!
 		if $zf(-1,cmd)
-		h 2
-		if $zu(140,1,filemodule)>0 {
+		hang 2
+		if $$$FileSize(TempDir_dirrepo_sls_"module.xml")>0 {
 			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo)
+			do ##class(%File).RemoveDirectoryTree(TempDir)
+			if 'st write !,$System.Status.GetErrorText(st)
+			Quit st
 		}
-		else {
-			set urlarh=..GetUrlRepoArhive(path)
-		}
-		do ##class(%File).RemoveDirectoryTree(TempDir)
-		if 'st write !,$System.Status.GetErrorText(st)
-		Quit st
 	}
 	else {
 		Quit ##class(%ZPM.PackageManager).Shell("load "_path)
 	}
-	
 	q $$$OK
 ]]></Implementation>
 </Method>
 
 <Method name="GetUrlRepoArhive">
+<Description>
+https://github.com/SergeyMi37/zapm-addcmd.git
+https://codeload.github.com/SergeyMi37/zapm/zip/master
+write ##class(%ZAPM.ext.zpm).GetUrlRepoArhive("https://github.com/SergeyMi37/zapm-addcmd.git")
+https://gitlab.com/sergeymi/test.git
+https://gitlab.com/sergeymi/test/-/archive/master/test-master.zip
+write ##class(%ZAPM.ext.zpm).GetUrlRepoArhive("https://gitlab.com/sergeymi/test.git")</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>tLocation</FormalSpec>
-<ReturnType>%Status</ReturnType>
+<ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
 	Do ##class(%Net.URLParser).Parse(tLocation,.tComponents)
-	if
+	set reponame=$piece($piece(tComponents("path"),"/",3),".")
+	If tComponents("host")="gitlab.com" {
+		set ref="https://gitlab.com/"_$piece(tComponents("path"),"/",2)_"/"_reponame_"/-/archive/master/"_reponame_"-master.zip"
+	}
+	If tComponents("host")="github.com" {
+		set ref="https://codeload.github.com/"_$piece(tComponents("path"),"/",2)_"/"_reponame_"/zip/master"
+	}
+	quit $get(ref)
 ]]></Implementation>
 </Method>
 

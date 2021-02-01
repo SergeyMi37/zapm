@@ -3,7 +3,8 @@ ARG IMAGE=intersystemsdc/iris-community:2020.4.0.524.0-zpm
 FROM $IMAGE
 
 USER root   
-        
+
+RUN apt-get install -y unzip        
 WORKDIR /opt/irisapp
 RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} /opt/irisapp
 USER ${ISC_PACKAGE_MGRUSER}
