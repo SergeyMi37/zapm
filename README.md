@@ -65,11 +65,24 @@ USER>zapm "cmd"
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_3_load.png)
 
-These extensions are planned to be included in the main branch of the zpm project in the future.
-[101](https://github.com/intersystems-community/zpm/issues/101)
-[154](https://github.com/intersystems-community/zpm/issues/154)
+### show modules with context by repository URL
+
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_8_find.png)
+
 
 ## Additional commands.
+
+ Commands for working with databases and namespaces:
+
+### dbcreate - create a database with %DB resources ans namespace and interoperability mapping.
+```
+USER>zapm "dbcreate testdb3 -p d:/!/database/durable"
+```
+### dbdelete - delete a database with %DB resources ans namespace.
+```
+USER>zapm "dbdelete testdb3"
+```
+
 
 ### cmd - list of possible additional commands
 
@@ -120,17 +133,6 @@ USER>zapm "zshow"
 - or from the zapm shell
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_6_zshow.png)
-
-## Commands for working with databases and namespaces:
-
-### dbcreate - create a database with %DB resources ans namespace and interoperability mapping.
-```
-USER>zapm "dbcreate testdb3 -p d:/!/database/durable"
-```
-### dbdelete - delete a database with %DB resources ans namespace.
-```
-USER>zapm "dbdelete testdb3"
-```
 
 
 This solution can replace not only the zpm shell but also the main terminal shell. 
