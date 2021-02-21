@@ -22,7 +22,10 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
 	
-	if $p(cmd," ")="dbcreate" quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$p(cmd," ",3))
+	if $p(cmd," ")="dbcreate" {
+		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
+		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
+	}
 	if $p(cmd," ")="dbdelete" quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
@@ -77,6 +80,7 @@ ClassMethod exthelp(cmd = "") As %Status
  if cmd=""||(cmd="dbcreate") {
 	write !,"dbcreate namespace <path>"
  	write !," Create a new database and an Namespace,"
+ 	write !," dbcreate testdb2 -p d:/!/database/durable"
  }
  if cmd=""||(cmd="dbdelete") {
 	write !,"dbdelete namespace"
@@ -459,7 +463,7 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 		Set Module=tModuleName
 		Set where="where name = ?"
 	}
-	If UrlInc'="" Set RepoOwner=$Zconvert(UrlInc,"L"),RepoView=1 Write !,"Search by owner repository "_RepoOwner
+	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc)
 	If where="" Write !,"Search the entire repository"
 	Else  Write !,"Search the repository context "_Module
 	//Load the list info registry modules
@@ -474,7 +478,7 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 			Set name=rs.Get("Name")
 			set (Description,desc)=rs.Get("Description")
 			Set (repo,url)=rs.Get("Repo")
-			If $Zconvert(url,"L")'[$Get(RepoOwner) Continue
+			If $Zconvert(url,"L")'[$Zconvert($Get(UrlInc),"L") Continue
 			if desc="",ViewFromModule	{
 				Do ..GetDescFromRepo(url,.desc,.repo,.modxml)
 				if desc="" { set desc="not yet"}
@@ -483,7 +487,7 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 			Write !,$$$escGreen(name)
 				,?(maxlenname+1),rs.Get("Version")
 				,?(maxlenname+8),$$$escYellow("Desc: ")_desc
-			if $Get(RepoOwner)'="",repo'="" set repo=$replace(repo,RepoOwner,$$$escRed(RepoOwner))
+			if $Get(UrlInc)'="",repo'="" set repo=$replace(repo,UrlInc,$$$escRed(UrlInc))
 			if RepoView write:repo'="" !?3,repo
 		 }
 	}
