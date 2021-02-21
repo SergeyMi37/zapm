@@ -75,9 +75,19 @@ ClassMethod prompt(comm = "") As %Status
 		elseif $$iszapmcmd($p(cmd," "),.command) { 
 			;extention command
 			set %cmd=cmd
-			write !
-			xecute $lg(command,1)
-			do addhist(command,$lg(command,3),$lg(command,4))
+			set yes=$lg(command,2)
+			if $e(yes)="a" {
+				write !!,"  ",$lg(command,1)_" ; "_$lg(command,4)
+				write !,"     Are you sure ? [Y] " 
+				read sure 
+				continue:$e($zconvert(sure,"L"))'="y"
+				set yes="i"
+			}
+			if yes="i" {
+				write !
+				xecute $lg(command,1)
+				do addhist(command,$lg(command,3),$lg(command,4))
+			}
 			quit:cmd=comm
 			continue
 		}
@@ -173,7 +183,7 @@ ClassMethod history(mask = "") As %Status
 		set cmd=$Order(@gn@("cmd",cmd)) q:cmd=""
 		if mask'="",$zconvert(cmd,"L")'[mask continue
 		set num=num+1
-		write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_" //"_$lg(cmd,4)
+		write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
 		set %zapm(num)=cmd
 	}
 }
@@ -239,13 +249,16 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
 	;zapm
-	;set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zapp"",""i"",""zshow"",""Show a zpm modules with extention description"")","n","addzshow","")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
+	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
 	
 	q $$$OK
 }

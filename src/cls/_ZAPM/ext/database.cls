@@ -384,6 +384,7 @@ ClassMethod CheckDatabaseExists(directory As %String) As %Status [ CodeMode = ex
 /// w $system.Status.GetErrorText(##class(%ZAPM.ext.database).DeleteDBNS("SWAGGERUI", 0))
 ClassMethod DeleteDBNS(pNamespace) As %Status
 {
+	write !,"Delete "_pNamespace
 	if $namespace=$ZCONVERT(pNamespace,"U") set $namespace="%SYS"
 	Set sc = ##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace($ZCONVERT(pNamespace,"L"))
 	Quit:$$$ISERR(sc) sc

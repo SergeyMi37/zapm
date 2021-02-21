@@ -934,6 +934,7 @@ w $system.Status.GetErrorText(##class(%ZAPM.ext.database).DeleteDBNS("SWAGGERUI"
 <FormalSpec>pNamespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
+	write !,"Delete "_pNamespace
 	if $namespace=$ZCONVERT(pNamespace,"U") set $namespace="%SYS"
 	Set sc = ##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace($ZCONVERT(pNamespace,"L"))
 	Quit:$$$ISERR(sc) sc
@@ -1076,9 +1077,19 @@ do ##class(%ZAPM.ext.zapp).prompt("globuff")</Description>
 		elseif $$iszapmcmd($p(cmd," "),.command) { 
 			;extention command
 			set %cmd=cmd
-			write !
-			xecute $lg(command,1)
-			do addhist(command,$lg(command,3),$lg(command,4))
+			set yes=$lg(command,2)
+			if $e(yes)="a" {
+				write !!,"  ",$lg(command,1)_" ; "_$lg(command,4)
+				write !,"     Are you sure ? [Y] " 
+				read sure 
+				continue:$e($zconvert(sure,"L"))'="y"
+				set yes="i"
+			}
+			if yes="i" {
+				write !
+				xecute $lg(command,1)
+				do addhist(command,$lg(command,3),$lg(command,4))
+			}
 			quit:cmd=comm
 			continue
 		}
@@ -1179,7 +1190,7 @@ do ##class(%ZAPM.ext.zapp).history("dark")</Description>
 		set cmd=$Order(@gn@("cmd",cmd)) q:cmd=""
 		if mask'="",$zconvert(cmd,"L")'[mask continue
 		set num=num+1
-		write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_" //"_$lg(cmd,4)
+		write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
 		set %zapm(num)=cmd
 	}
 ]]></Implementation>
@@ -1259,13 +1270,16 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
 	;zapm
-	;set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zapp"",""i"",""zshow"",""Show a zpm modules with extention description"")","n","addzshow","")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
+	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
 	
 	q $$$OK
 ]]></Implementation>
@@ -1411,13 +1425,15 @@ $$$ENDTAG
 
 <Class name="%ZAPM.ext.zpm">
 <Description>
+installation string ZPM, ZAPM, Registry
+set $namespace="%SYS", name="DefaultSSL" do:'##class(Security.SSLConfigs).Exists(name) ##class(Security.SSLConfigs).Create(name) set url="https://pm.community.intersystems.com/packages/zpm/latest/installer" Do ##class(%Net.URLParser).Parse(url,.comp) set ht = ##class(%Net.HttpRequest).%New(), ht.Server = comp("host"), ht.Port = 443, ht.Https=1, ht.SSLConfiguration=name, st=ht.Get(comp("path")) quit:'st $System.Status.GetErrorText(st) set xml=##class(%File).TempFilename("xml"), tFile = ##class(%Stream.FileBinary).%New(), tFile.Filename = xml do tFile.CopyFromAndSave(ht.HttpResponse.Data) do ht.%Close(), $system.OBJ.Load(xml,"ck") do ##class(%File).Delete(xml) zpm "install zapm" zapm "newdb zpm-registry" zapm "zna"
 research and development ZPM</Description>
 <Abstract>1</Abstract>
 <IncludeCode>%ZAPM.ext.Common</IncludeCode>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
-<Default>1.0.7</Default>
+<Default>1.0.9</Default>
 </Parameter>
 
 <Parameter name="GN">
@@ -1435,10 +1451,30 @@ zapp "newdb spool-demo"</Description>
 <FormalSpec>cmd=""</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	if $p(cmd," ")="help" q ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
-	if $p(cmd," ")="newdb" q ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
-	if $p(cmd," ")="load" q ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
+	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
+	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
+	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
+	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
+	
+	if $p(cmd," ")="dbcreate" quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$p(cmd," ",3))
+	if $p(cmd," ")="dbdelete" quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
+	
+	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
+	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+]]></Implementation>
+</Method>
+
+<Method name="find">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>extcmd</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	if (extcmd)[" -r " set ViewRepo=1
+	if (extcmd)[" -d " set ViewFromModule=1
+	if (extcmd)[" -u " set ViewUrl=$p($p(extcmd," -u ",2)," ")
+	do ##class(%ZAPM.ext.zpm).Description($p(extcmd," "),$GET(ViewUrl),$GET(ViewRepo),$GET(ViewFromModule))
+	quit $$$OK
 ]]></Implementation>
 </Method>
 
@@ -1485,10 +1521,23 @@ zapp "newdb spool-demo"</Description>
 	write !,"newdb <module>"
  	write !," Create a new database and an Namespace with a name derived from the name of the module and Install the module into it,"
  }
+ if cmd=""||(cmd="dbcreate") {
+	write !,"dbcreate namespace <path>"
+ 	write !," Create a new database and an Namespace,"
+ }
+ if cmd=""||(cmd="dbdelete") {
+	write !,"dbdelete namespace"
+ 	write !," Delete database and an Namespace,"
+ }
  if cmd=""||(cmd="load") {
 	write !!,"load http://git-repo/developer-name/repo-name"
  	write !," Load the module directly from the repository into the current Namespace. The 'git clone' command is applied. The git program must be installed."
  }
+ if cmd=""||(cmd="find")||(cmd="search") {
+	write !!,"find app* -d  load description from modules, and the description is always displayed"
+ 	write !!,"find app* -u /rcemper  show modules only including context from repository"
+ }
+
  if cmd=""||(cmd="cmd") {
 	write !!,"cmd "
  	write !," Alias: ?"
@@ -1519,7 +1568,7 @@ zapp "newdb spool-demo"</Description>
 <Method name="cmdzpmext">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit $lb("newdb","cmd","hist")
+<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete")
 ]]></Implementation>
 </Method>
 
@@ -1898,6 +1947,158 @@ write ##class(%ZAPM.ext.zpm).ZPMColorScheme()</Description>
 		set scheme=0
 	}
 	quit scheme
+]]></Implementation>
+</Method>
+
+<Method name="Description">
+<Description>
+Show description 
+do ##class(%ZAPM.ext.zpm).Description("z*","/rcep",1)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>tModuleName,UrlInc="",RepoView="0",ViewFromModule=0</FormalSpec>
+<Implementation><![CDATA[
+	#define gn "^||tmpDesc"
+	Kill @$$$gn
+	Set tRegistry = ""
+	If (tModuleName["/") {
+		set $lb(tRegistry, tModuleName) = $lfs(tModuleName, "/")
+	}
+	set where=""
+		,maxlenname=0
+		,Module=""
+	If tModuleName["*" {
+		Set where="where name like ?"
+		Set Module=$Replace(tModuleName,"*","%")
+	} Elseif tModuleName'="" { 
+		Set Module=tModuleName
+		Set where="where name = ?"
+	}
+	If UrlInc'="" Set RepoOwner=$Zconvert(UrlInc,"L"),RepoView=1 Write !,"Search by owner repository "_RepoOwner
+	If where="" Write !,"Search the entire repository"
+	Else  Write !,"Search the repository context "_Module
+	//Load the list info registry modules
+	Set sql="select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_where
+		,rs=##class(%ResultSet).%New()
+		,sc=rs.Prepare(sql)
+	Set:sc sc=rs.Execute(Module)
+	set maxlenname=20
+	If sc {
+		For i=1:1 {
+			Quit:'rs.%Next()  
+			Set name=rs.Get("Name")
+			set (Description,desc)=rs.Get("Description")
+			Set (repo,url)=rs.Get("Repo")
+			If $Zconvert(url,"L")'[$Get(RepoOwner) Continue
+			if desc="",ViewFromModule	{
+				Do ..GetDescFromRepo(url,.desc,.repo,.modxml)
+				if desc="" { set desc="not yet"}
+				else { set desc="from module.xml: "_desc}
+			}
+			Write !,$$$escGreen(name)
+				,?(maxlenname+1),rs.Get("Version")
+				,?(maxlenname+8),$$$escYellow("Desc: ")_desc
+			if $Get(RepoOwner)'="",repo'="" set repo=$replace(repo,RepoOwner,$$$escRed(RepoOwner))
+			if RepoView write:repo'="" !?3,repo
+		 }
+	}
+	Else { 
+		Write !,"Not found "_tModuleName_" in current registry"
+	}
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="DrawColumn">
+<Description>
+draw description, code from zpmshow.mac</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>desc</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+ Set dx=$x
+	For d=1:1:$Length(desc," ") {
+ 		Set wd=$Piece(desc," ",d) 
+		If $x+$l(wd)>80 Write !,?dx
+		Write wd," " 
+	}
+ Quit ""
+]]></Implementation>
+</Method>
+
+<Method name="GetDescFromRepo">
+<Description>
+TODO GitLab repo</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[url:%String,&desc,&repo,&modxml]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set desc=""
+	Set url="https://raw.githubusercontent.com"_$Piece(url,"/github.com",2)
+	If url="" {
+		Set repo="not repository"
+	}
+	Else {
+		Set:$Extract(url,*)'="/" url=url_"/"
+		Set url=url_"master/module.xml"
+		If ..GetDataURL(url,.modxml) {
+			Set desc=$Piece($Piece($Get(modxml),"Description>",2),"</")
+			If 0,desc="",..GetDataURL($replace(url,"module.xml","README.md"),.readme) {
+				Set d=$Translate($Extract(readme,1,300),$Char(13,10),"  ")
+				If d["](" {
+					For  { Quit:d'["]("
+						Set d=$Translate($Piece(d,"](",1),"[()","   ")_$Piece($Piece(d,"](",2,*),")",$Select($Piece(d,"](",2,*)[")":2,1:1),*)
+						
+					}
+				}
+				Set desc="from readme: "_d_"..."
+			}
+		}
+	}
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetDataURL">
+<Description>
+write $System.Status.GetErrorText(##class(%ZPM.PackageManager).GetDataURL("https://raw.githubusercontent.com/intersystems-community/zpm/master/module.xml",.o)) w o</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[url:%String,&data]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	New $Namespace
+	Set data=""
+ 	#dim req As %Net.HttpRequest
+	Set req=##class(%Net.HttpRequest).%New()
+	Set server=$p(url,"/",3)
+
+	If server[":" {
+		Set port=$p(server,":",2)
+		Set server=$p(server,":")
+	}
+	If $zconvert(url,"L")["https:" {
+	 	Set SSLConfig = "ZPM"
+	 	Zn "%SYS"
+	 	Do:'##class(Security.SSLConfigs).Exists(SSLConfig) ##class(Security.SSLConfigs).Create(SSLConfig)
+	 	Set req.Https=1
+		Set req.SSLConfiguration=SSLConfig
+		Set:$g(port)="" port=443
+	}
+	Set:$Get(port)="" port=80
+	Set req.Server=server
+	Set req.Port=port
+	Set location=$Piece(url,"/",4,*)
+
+	Set req.Location =location
+
+	Set st = req.Get()
+	Return:$$$ISERR(st) st
+	Return:(req.HttpResponse.StatusCode = 404) $$$ERROR($$$GeneralError,"Repository doesn't exist OR you don't have access")
+	Return:((req.HttpResponse.StatusCode = 403) && (req.HttpResponse.GetHeader("X-RATELIMIT-REMAINING")=0)) $$$ERROR($$$GeneralError,"API rate limit exceeded. Try logging in.")
+ 	Return:(req.HttpResponse.StatusCode '= 200) $$$ERROR($$$GeneralError,"Received " _ req.HttpResponse.StatusCode _ " status, expected 200")
+
+	Set data=req.HttpResponse.Data.Read()
+
+ 	Return $$$OK
 ]]></Implementation>
 </Method>
 </Class>
