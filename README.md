@@ -14,8 +14,14 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 ## Installation with ZPM
 
+If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.
+```
+set $namespace="%SYS", name="DefaultSSL" do:'##class(Security.SSLConfigs).Exists(name) ##class(Security.SSLConfigs).Create(name) set url="https://pm.community.intersystems.com/packages/zpm/latest/installer" Do ##class(%Net.URLParser).Parse(url,.comp) set ht = ##class(%Net.HttpRequest).%New(), ht.Server = comp("host"), ht.Port = 443, ht.Https=1, ht.SSLConfiguration=name, st=ht.Get(comp("path")) quit:'st $System.Status.GetErrorText(st) set xml=##class(%File).TempFilename("xml"), tFile = ##class(%Stream.FileBinary).%New(), tFile.Filename = xml do tFile.CopyFromAndSave(ht.HttpResponse.Data) do ht.%Close(), $system.OBJ.Load(xml,"ck") do ##class(%File).Delete(xml)
+```
+If ZPM is installed, then ZAPM can be set with the command
+```
 zpm:USER>install zapm
-
+```
 ## Installation with Docker
 
 ## Prerequisites
@@ -50,6 +56,14 @@ USER>zapm "cmd"
 ```
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_cmd.png)
 
+## Commands for working with databases and namespaces.:
+
+additional zapm commands:
+
+dbcreate - create a database with %DB resources ans namespace and interoperability mapping.
+dbdelete - delete a database with %DB resources ans namespace.
+
+
 ## Command extensions zpm.
 ### help - coloring command description
 
@@ -59,9 +73,9 @@ USER>zapm "cmd"
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_3_load.png)
 
-These extensions are planned to be included in the main branch of the zpm project in the future.
-[101](https://github.com/intersystems-community/zpm/issues/101)
-[154](https://github.com/intersystems-community/zpm/issues/154)
+### find app* -d -u /Sergey  - show modules with context by git-repository URL
+
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_8_find.png)
 
 ## Additional commands.
 
@@ -115,13 +129,6 @@ USER>zapm "zshow"
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_6_zshow.png)
 
-## It is planned to do:
-
-additional zapm commands:
-
-cmd-add - add command
-
-cmd-del - delete command
 
 
 This solution can replace not only the zpm shell but also the main terminal shell. 
