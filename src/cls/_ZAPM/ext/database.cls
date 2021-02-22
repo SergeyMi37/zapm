@@ -269,7 +269,7 @@ ClassMethod CreateCSPApplication(pNamespace As %String) As %Status [ Private ]
         Set properties("CookiePath") = "/csp/"_lower
         Set properties("AutheEnabled") = $$$AutheUnauthenticated
         Set properties("NameSpace") = pNamespace
-        Set properties("Path") = $System.Util.InstallDirectory()_"csp"_del_lower
+        Set properties("Path") = ##class(%File).GetDirectory($zu(86))_"csp"_del_lower
         Set properties("GroupById") = $$$IscMgtPortalId
         Set properties("AutoCompile") = 1
 
