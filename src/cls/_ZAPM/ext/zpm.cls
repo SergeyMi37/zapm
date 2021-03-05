@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.9";
+Parameter VERSION = "1.0.11";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -21,7 +21,7 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
-	
+	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -157,14 +157,14 @@ ClassMethod LoadFromRepo(path = "") As %Status
       			do tFileBinStream.CopyFromAndSave(tRequest.HttpResponse.Data)      
 			}
 		  	If $GET(tFileBinStream)'="" {
-				if $zversion(1)=3 {
+				if $zversion(1)=3 { //for Linux
 					set cmd="cd "_TempDir_" && unzip -q tmp.zip"
 				}
-				else {
+				else { //for Windows
 					set cmd="cd "_TempDir_" && powershell Expand-Archive -LiteralPath "_TempDir_"tmp.zip -DestinationPath "_TempDir
 				}
 				write !,cmd,!
-				if $zf(-1,cmd)
+				$$$ThrowOnError(##class(%ZPM.PackageManager.Developer.Utils).RunCommandViaZF(cmd,.tLog,.tErr))
 				hang 2
 			}
 		}
@@ -177,7 +177,7 @@ ClassMethod LoadFromRepo(path = "") As %Status
 		//second try
 		set cmd="cd "_TempDir_" && git clone "_path
 		write !,cmd,!
-		if $zf(-1,cmd)
+		$$$ThrowOnError(##class(%ZPM.PackageManager.Developer.Utils).RunCommandViaZF(cmd,.tLog,.tErr))
 		hang 2
 		if $$$FileSize(TempDir_dirrepo_sls_"module.xml")>0 {
 			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo)
@@ -213,15 +213,16 @@ ClassMethod GetUrlRepoArhive(tLocation) As %String
 
 /// zpm-utility 
 /// repo -r -n registry -url http://127.0.0.1:52773/registry/ -user "superuser" -pass "pass"
-/// do ##class(%ZAPM.ext.zpm).LoadRegistrys("realworld")
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)
 ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 {
 	set currns=$namespace
 	set gn=..#GN
-	set sql="select Name, Version, Repo from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",1:"where Name=?")
+	set sql="select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",modulename["*":"where Name like '"_$tr(modulename,"*","%")_"'",1:"where Name=?")
 		,rs=##class(%ResultSet).%New()
 		,sc=rs.Prepare(sql)
 	set:sc sc=rs.Execute($zconvert(modulename,"L"))
+	write !,sql
 	if sc {
 		for i=1:1 {
 			quit:'rs.%Next()  
@@ -229,7 +230,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 			set Version=rs.Get("Version")
 			set Repo=rs.Get("Repo")
 			set ns=$zconvert($tr(name,"-."),"U")
-			if skipZPM, name["isc-apptools"||($e(name,1,3)="zpm")||($e(name,1,6)="appmsw") w !,"Skip" continue
+			if skipZPM, name["isc-apptools"||($e(name,1,3)="zpm")||($e(name,1,6)="appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
 			if $d(@gn@(name)) { ;already load
 				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
 					write !,ns_" Unload Removed DBNS ? Y\N " Read R   quit:"q"[R
@@ -238,7 +239,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 					}
 					continue
 				}
-				write !,"Already loaded - Skip"
+				write !,"Already loaded - Skip "_$$$escGreen(name)
 			} elseif 1 {
 				set sta=##class(%ZPM.PackageManager).Shell("find -r -d "_name) write !
 				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
@@ -249,6 +250,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 			}
 		}
 	}
+	write !,"Log in global ",!,gn
 }
 
 /// d ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS("sync-dstime")
