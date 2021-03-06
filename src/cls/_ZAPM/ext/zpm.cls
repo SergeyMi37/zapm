@@ -188,6 +188,7 @@ ClassMethod GetListModule(ns = {$namespace}, ByRef Mod) As %Status
 		For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" {
 			Set list=list_$lb(tRes.%Get(a))
 		}
+		Set Mod(name) = tRes.%Get("VersionString")
 		Set Mod(name,"L") = list
 		
 	}
