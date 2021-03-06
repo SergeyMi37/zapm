@@ -87,6 +87,10 @@ ClassMethod exthelp(cmd = "") As %Status
 	write !,"dbdelete namespace"
  	write !," Delete database and an Namespace,"
  }
+ if cmd=""||(cmd="upgrade") {
+	write !,"upgrade "
+ 	write !," Update the versions of modules installed in the current namespace."
+ }
  if cmd=""||(cmd="load") {
 	write !!,"load http://git-repo/developer-name/repo-name"
  	write !," Load the module directly from the repository into the current Namespace. The 'git clone' command is applied. The git program must be installed."

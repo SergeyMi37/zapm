@@ -1,289 +1,253 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="IRIS" version="26">
-<Routine name="%ZAPM.ext.Common" type="INC"><![CDATA[
-#Include %occMessages
-#include %occReference
+<Class name="%ZAPM.ext.Production">
+<Description>
+Utilities for group work with Ensemble or Interoperability products of different Namespaces
+do ##class(%ZAPM.ext.Production).SaveAndStop()
+do ##class(%ZAPM.ext.Production).StartAll()</Description>
+<Abstract>1</Abstract>
+<IncludeCode>%ZAPM.ext.Common</IncludeCode>
+<TimeCreated>65607,76510.942315</TimeCreated>
 
-#; Escape sequence for coloring the font in terminal do ##class(apptools.core.msg).EscColor()
-#define escClear $c(27)_"[0m"
-#define escBg $Case(##class(%ZAPM.ext.zpm).ZPMColorScheme(),"white":47,"dark":40,:0)
-#define escGreen(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;32;"_$$$escBg_"m"_%t_$$$escClear)
-#define escBlue(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;36;"_$$$escBg_"m"_%t_$$$escClear)
-#define escDefault(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;3"_$Select($$$escBg:0,1:7)_";"_$$$escBg_"m"_%t_$$$escClear)
-#define escYellow(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;33;"_$$$escBg_"m"_%t_$$$escClear)
-#define escViolet(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;35;"_$$$escBg_"m"_%t_$$$escClear)
-#define escSeq(%e,%t) $Select($$$escBg=0:%t,1:$c(27)_"["_%e_"m"_%t_$$$escClear)
-#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
+<Parameter name="TIMEOUTSTOP">
+<Description>
+How long to wait for the product to stop before being stopped again by force (seconds)</Description>
+<Default>60</Default>
+</Parameter>
 
+<Parameter name="SettingsGN">
+<Default>^%ZAPM.ext.Productions</Default>
+</Parameter>
 
-#;Include %msql $$$MaxStringLength
-#;		;2016.2<= set title={}.%FromJSON(json).title 
-#;		;2016.1 set title={}.$fromJSON(json).title
-#;		set title={}.$$$jsonFromJSON(json).title
-#define R(%property) %request.Content.##Expression(%property)
-#define RG(%property) %request.Get(%property)
-#define StackPlace 		$st($st(-1),"PLACE")
-#define CurrentClass 	##Expression($$$quote(%classname))
-#define CurrentMethod 	##Expression($$$quote(%methodname))
-#define slash $s($zversion(1)=3:"/",1:"\")
+<Method name="SaveStat">
+<Description>
+ Check and save settings and status of products in all Namespaces
+ d ##class(%ZAPM.ext.Production).SaveStat(1)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>resave=0</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	s listns=..ListNS(.inf,"NotPref,Ens")
+	s GN=..#SettingsGN
+	i 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y"
+	KILL @GN
+	MERGE @GN=inf
+	w !,"Updated "_GN,!!
+	s ns=""
+	f { s ns=$o(inf(ns)) q:ns=""
+	 zw inf(ns,"Ens")
+	}
+ quit $$$OK
+]]></Implementation>
+</Method>
 
-#define formatJSON 		"aelotwc"
-#define formatJSONSQL	"tw"
-#define formatDate		3
-#define formatTime		7
+<Method name="ListNS">
+<Description>
+Get a list of domain namespaces separated by commas
+w ##class(apptools.core.sys).ListNS(.info,"NotPre,Ens")
+Flag = "Ens" - only where the ensemble is installed
+Flag = "NotPre" - exclude prepared</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>info,Flag=""</FormalSpec>
+<Implementation><![CDATA[
+	s disp=""
+	$$$NspGoto(curNs,"%SYS")	
+	set tRS = ##class(%ResultSet).%New("Config.Namespaces:List")
+	if '$isobject(tRS) q ""
+	set tSC = tRS.Execute()
+	While tRS.Next() {	
+		s name=tRS.GetData(1) KILL ens
+		if Flag["NotPre" continue:..IsPreparedNS(name)
+		if Flag["Ens",..getEnsProd(name,.ens) k info("Ens") m info(name,"Ens")=ens
+		s disp=disp_","_name
+		m info(name)=tRS.Data
+	}
+	d tRS.Close()
+	$$$NspReturn(curNs)	
+	Q $g(disp)
+]]></Implementation>
+</Method>
 
-#define toJSONClassMethod "toJSON"
-#define updateClassMethod "updateIdFromObject"
-#define IsNewJSON ##Expression($$$comClassDefined("%Library.DynamicAbstractObject"))
+<Method name="getEnsProd">
+<Description>
+Get a list of products in namespace
+w ##class(apptools.core.sys).getEnsProd("ENSDEMO",.info)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>name,info</FormalSpec>
+<Implementation><![CDATA[
+	s sc=$$$OK
+	try {
+		$$$NspGoto(curNs,name) KILL info
+		DO ##CLASS(Ens.Director).GetProductionSummary(.info,name)
+	}
+	catch e { s sc=$$$ERROR($$$GeneralError,$ze)}
+	$$$NspReturn(curNs)
+	Q sc
+]]></Implementation>
+</Method>
 
-#if $$$IsNewJSON
-    #define NewDynObj {}
-    #define NewDynDTList []
-    #define NewDynObjList $$$NewDynDTList
-    #define Insert(%obj,%element) do %obj.%Push(%element)
-    #define DynObjToJSON(%obj) w %obj.%ToJSON()
-    #define ListToJSON(%obj) $$$DynObjToJSON(%obj)
-    #define ListSize(%obj) %obj.%Size()
-    #define ListGet(%obj,%i) %obj.%Get(%i-1)
-    #define jsonClassIsLatestVersion %ClassIsLatestVersion 	
-    						//usage: obj.$$$jsonClassIsLatestVersion()
-    #define jsonExtends %Extends							
-    						//usage: {}.$$$jsonExtends(classname) 
-    #define jsonFromJSON %FromJSON							
-    						//usage: {}.$$$jsonFromJSON(string) 
-    #define jsonGetIterator %GetIterator 					
-    						//usage: obj.$$$jsonGetIterator()
-	#define jsonGetNext %GetNext 					
-    						//usage: iterator.$$$jsonGetNext(.key, .value)
-	#define jsonIsA %IsA									
-    						//usage: obj.$$$jsonIsA(className)
-    #define jsonToJSON %ToJSON								
-    						//usage: obj.$$$jsonToJSON()
-    #define jsonGet %Get									
-    #define jsonNew %New									
-    						//usage: obj.$$$jsonGet(key)
-    #define jsonIsDefined %IsDefined						
-    						//usage: obj.$$$jsonIsDefined(key) 
-    #define jsonRemove %Delete								
-    						//usage: obj.$$$jsonRemove(key)
-    #define jsonSet %Set									
-    						//usage: obj.$$$jsonSet(key, val)
-    #define jsonSize %Size									
-    						//usage: obj.$$$jsonSize()
-    #define jsonPop %Pop									
-    						//usage: obj.$$$jsonPop()
-    #define jsonPush %Push									
-    						//usage: obj.$$$jsonPush(val) 
-	#define jsonAbstractClass %Library.AbstractDynamicObject
-	#define jsonObjectClass %Library.DynamicObject
-	#define jsonArrayClass %Library.DynamicArray
-	
-	#define jsonInitialArrayIndex 1
-	
-	#define jsonGetTypeOf %GetTypeOf
-    						//usage: obj.$$$jsonGgetTypeOf()
-#else
-    #define NewDynObj ##class(%ZEN.proxyObject).%New()
-    #define NewDynDTList ##class(%ListOfDataTypes).%New()
-    #define NewDynObjList ##class(%ListOfObjects).%New()
-    #define Insert(%obj,%element) do %obj.Insert(%element)
-    #define DynObjToJSON(%obj) do %obj.%ToJSON()
-    #define ListToJSON(%obj) do ##class(%ZEN.Auxiliary.jsonProvider).%ObjectToJSON(%obj)
-    #define ListSize(%obj) %obj.Count()
-    #define ListGet(%obj,%i) %obj.GetAt(%i)
+<Method name="IsPreparedNS">
+<Description>
+Check whether the namespace is prepared
+w ##class(apptools.core.sys).IsPreparedNS("%SYS")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>name</FormalSpec>
+<Implementation><![CDATA[	quit $lf($lb("%SYS","%ALL","DOCBOOK","ENSDEMO","ENSEMBLE","SAMPLES","USER"),$zconvert(name,"U"))
+]]></Implementation>
+</Method>
 
-   #define jsonClassIsLatestVersion $classIsLatestVersion 	
-    						//usage: obj.$$$jsonClassIsLatestVersion()
-    #define jsonExtends $extends							
-    						//usage: {}.$$$jsonExtends(classname) 
-    #define jsonFromJSON $fromJSON							
-    						//usage: {}.$$$jsonFromJSON(string) 
-    #define jsonGetIterator $getIterator 					
-    						//usage: obj.$$$jsonGetIterator()
-    #define jsonGetNext $getNext 					
-    						//usage: iterator.$$$jsonGetNext(.key, .value)
-    #define jsonIsA $isA									
-    						//usage: obj.$$$jsonIsA(classname)
-    #define jsonToJSON $toJSON								
-    						//usage: obj.$$$jsonToJSON()
-    #define jsonGet $get									
-    #define jsonNew $new									
-    						//usage: obj.$$$jsonGet(key)
-    #define jsonIsDefined $isDefined						
-    						//usage: obj.$$$jsonIsDefined(key) 
-    #define jsonRemove $remove								
-    						//usage: obj.$$$jsonRemove(key)
-    #define jsonSet $set									
-    						//usage: obj.$$$jsonSet(key, val)
-    #define jsonSize $size									
-    						// usage: obj.$$$jsonSize()
-    #define jsonPop $pop									
-    						//usage: obj.$$$jsonPop()
-    #define jsonPush $push									
-    						//usage: obj.$$$jsonPush(val) 
- 	#define jsonAbstractClass %Library.AbstractObject
-	#define jsonObjectClass %Library.Object
-	#define jsonArrayClass %Library.Array
-	#define jsonInitialArrayIndex 0
-	#define jsonGetTypeOf $getTypeOf
-    						//usage: obj.$$$jsonGgetTypeOf()
-#endif
+<Method name="SaveAndStop">
+<Description>
+ Save settings and status of products in all Namespaces; Stop all productions
+ d ##class(%ZAPM.ext.Production).SaveAndStop()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	d ..SaveStat(1)
+	d ..StopAll()
+]]></Implementation>
+</Method>
 
+<Method name="StopAll">
+<Description>
+Remove autostart from all products; stop all products in Namespaces before restarting the OS
+d ##class(%ZAPM.ext.Production).StopAll()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ d ..EnsAction("auto0")
+ d ..EnsAction("stop")
+ w !!,"ok"
+ q
+]]></Implementation>
+</Method>
 
-#def1arg jsonIsAbstract %IsA(##Quote($$$jsonAbstractClass))
-							//usage: obj.$$$jsonIsAbstract
-#def1arg jsonIsObject %IsA(##Quote($$$jsonObjectClass))
-							//usage: obj.$$$jsonIsObject
-#def1arg jsonIsArray %IsA(##Quote($$$jsonArrayClass))
-							//usage: obj.$$$jsonIsArray
+<Method name="StartAll">
+<Description>
+Check and restore autorun products in Namespaces, run all products that were launched
+d ##class(%ZAPM.ext.Production).StartAll()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ 	d ..EnsAction("auto1")
+ 	d ..EnsAction("start")
+ 	w !!,"ok"
+ 	q
+]]></Implementation>
+</Method>
 
-#define MethodArguments ##Expression(##class(apptools.core.Log).GetMethodArguments(%classname,%methodname))
+<Method name="EnsAction">
+<Description>
+Change products status in Namespaces
+d ##class(%ZAPM.ext.Production).EnsAction("restart")
+ex= "auto0" - clean all Namespaces of auto start products
+ex= "auto1" - enable auto start products, restore from #SettingsGN(ns)
+ex= "stop"  - stop all products
+ex= "restart"  - reload all products
+ex= "start"  - run the ones that were started, restore from #SettingsGN(ns)
+ex= "status" - output statuses
+ex= "info" - output of additional information about products and services with parameters d ##class(%ZAPM.ext.Production).EnsAction("info",,.out)
+out - result ;d ##class(%ZAPM.ext.Production).EnsAction("status",$Namespace,.out)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ex="",nsOnly="",out</FormalSpec>
+<PublicList>tProductionName,inf</PublicList>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	;get all namespace with ensemble
+	s listns=..ListNS(.inf,"NotPref,Ens")
+	#define NotSaveStat " settings not saved, to do ##class(%ZAPM.ext.Production).SaveStat(1) "
+	$$$forAll(ns,inf)
+	i nsOnly'="",nsOnly'=ns continue
+	$$$NspGoto(curN,ns)
+	i '$d(inf(ns,"Ens")) continue
+	s GN=..#SettingsGN
+	i ex'="info" w !!,"--- ",ns
+	if ex="stop" {
+		s sc=##class(Ens.Director).StopProduction(..#TIMEOUTSTOP)
+		i 'sc {
+			s sc2=##class(Ens.Director).StopProduction(..#TIMEOUTSTOP,1) 
+			i 'sc2 w $System.Status.DisplayError(sc2)
+		}
+	}
+	elseif ex="restart" {
+		s sc=##class(Ens.Director).RestartProduction()
+		i 'sc w $System.Status.DisplayError(sc)
+	}
+	elseif ex="start" {
+		i '$d(@GN@(ns,"Ens")) w !,$$$NotSaveStat
+		$$$forAll(tProductionName,@GN@(ns,"Ens"))
+			continue:$lg(@GN@(ns,"Ens",tProductionName),1)'[$$$EnsProductStatusRun
+			w !,ns," ",tProductionName
+			Set sc = ##class(Ens.Director).StartProduction(tProductionName) ; Quit:$$$ISERR(tSC)
+			i 'sc w $System.Status.DisplayError(sc)
+		$$$forEnd	
+	}
+	if ex="auto0" {
+		i '$d(@GN@(ns,"Ens")) w !,$$$NotSaveStat
+			$$$NspGoto(curNs,ns)
+			Set sc = ##class(Ens.Director).SetAutoStart("")
+			i 'sc w $System.Status.DisplayError(sc)
+			e  w " clean auto start"
+			$$$NspReturn(curNs)
+	} elseif ex="auto1" {
+		i '$d(@GN@(ns,"Ens")) w !,$$$NotSaveStat
+		$$$forAll(tProductionName,@GN@(ns,"Ens"))
+			continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
+			$$$NspGoto(curNs,ns)
+			Set sc = ##class(Ens.Director).SetAutoStart(tProductionName)
+			i 'sc w $System.Status.DisplayError(sc)
+			e  w " set auto start"
+			$$$NspReturn(curNs)
+		$$$forEnd		
+	} elseif ex="status"||(ex="info") {
+		i '$d(@GN@(ns,"Ens")) w !,$$$NotSaveStat
+		Set sc = ##class(Ens.Director).GetProductionSummary(.pInfo, ns)	if ex'="info" w ! zw pInfo
+		Set sc = ##class(Ens.Director).GetProductionSettings("",.tSettings)	if ex'="info" w ! zw tSettings
+		$$$forAll(tProductionName,@GN@(ns,"Ens"))
+			;continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
+			$$$NspGoto(curNs,ns)
+			if ex'="info" w !,"Name production :"_tProductionName
+			Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
+			s stat=$s(Stat=1:"Running",Stat=2:"Stopped",Stat=3:"Suspended",Stat=4:"Troubled",1:"?")
+			if ex'="info" w " Status :"_stat
+			i 'sc w $System.Status.DisplayError(sc)
+			s out(ns,tProductionName)=stat
+			;if ex="info" k ou d ..ExtInfo(tProductionName,.ou) m out(ns,tProductionName)=ou
+			$$$NspReturn(curNs)
+		$$$forEnd		
+	}
+	$$$forEnd
+	if $g(curN)'="" $$$NspReturn(curN)
+ 	quit $$$OK
+]]></Implementation>
+</Method>
 
-#define LogEvent(%type, %message) Do ##class(apptools.core.Log).AddRecord($$$CurrentClass,$$$CurrentMethod,$$$StackPlace,%type,$$$MethodArguments,%message)
-#define LogNone(%message) 		$$$LogEvent("NONE", %message)
-#define LogError(%message) 		$$$LogEvent("ERROR", %message)
-#define LogFatal(%message) 		$$$LogEvent("FATAL", %message)
-#define LogWarn(%message) 		$$$LogEvent("WARN", %message)
-#define LogInfo(%message) 		$$$LogEvent("INFO", %message)
-#define LogStat(%message) 		$$$LogEvent("STAT", %message)
-#define LogDebug(%message) 		$$$LogEvent("DEBUG", %message)
-#define LogRaw(%message) 		$$$LogEvent("RAW", %message)
+<Method name="init">
+<Description>
+do ##class(%ZAPM.ext.Production).init()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	new $namespace
+	set $namespace="%sys"
+	;init
+	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'StopProd' or 'StartProd' "
+	quit $$$OK
+]]></Implementation>
+</Method>
 
-#; To obtain the date and time in $h
-#define LoggedDT(%h) $s(%h[",":$tr($zd(%h,4),"/",".")_" "_$zt(+$p(%h,",",2),1),1:"")
-
-#; the macro saves the node in the global call stack and all local variables 
-#; Example of usage: /apptools/apptools.core.LogInfo.cls?WHAT=?
-#; If you need a trap for a particular process, to assign s ^logFIO(0)=Number of process
-#define LogEventAddGN(%debubGN, %message) s %AppLogId=##class(apptools.core.Log).AddRecord($$$CurrentClass,$$$CurrentMethod,$$$StackPlace,"DEBUG",%debubGN,%message)
-#define logdevGN 	"^log"
-#define MgtPortalSettings 	"^CacheTemp.MgtPortalSettings"
-#define AppLogTab(%type,%message,%desc) Do ##class(apptools.core.Log).AddRecord($$$CurrentClass,$$$CurrentMethod,$$$StackPlace,%type,%desc,%message)
-#define AppLog(%dev,%node,%list,%mode) s zsr=$zr,zsG=$$$logdevGN_%dev  if $g(@zsG@(0))=$j||($g(@zsG@(0))="") { s @zsG@(1,$i(@zsG),%node)=%list,zsGzr=$zr if %mode["t" { $$$LogEventAddGN(zsGzr,%list) } if %mode["s" {s zsG=$na(@($qs(zsGzr,0)_"stack")@($qs(zsGzr,2))),@zsG=$lb($ze,$h,$tl,$io,$j,$zu(110),##class(apptools.core.LogInfoPane).GetPathStack(),##class(apptools.core.Log).GetClientAddress()) S zs1="",zsG=$na(@zsG@("varList")),zsii=0 k @zsG s:%mode["e" @zsG@("%%%$$LOG^%ETN")=$$LOG^%ETN  if %mode["v" { f { s zs1=$O(@zs1) q:zs1=""  continue:$e(zs1,1,2)="zs"&&(zs1'="zs")  if $d(@zs1)'["0",$isobject(@zs1) { s @zsG@(zs1)=##class(apptools.core.Log).SerializeObject(@zs1,$na(@zsG@(zs1))),zsii=zsii+1 } elseif $d(@zs1)>9 {s:$d(@zs1)=11 @zsG@(zs1)=@zs1,zsii=zsii+1 MERGE @zsG@(zs1)=@zs1 if zs1="%zlog" {s zs2="" for {s zs2=$o(@zs1@(zs2)) q:zs2=""   s @zsG@(zs1,zs2)=##class(apptools.core.Log).SerializeObject($G(@zs1@(zs2)),$na(@zsG@(zs1,zs2)),%mode)   }}}	 elseif $d(@zs1)=1 {s @zsG@(zs1)=@zs1,zsii=zsii+1}} s @zsG=zsii KILL zsii,zsG,zs1,zs2}else{KILL zsii,zsG,zs1,zs2,zsGzr}} try{ if $d(@zsr) KILL zsr} catch e { KILL zsr}}
-#; To add an active link to the panel
-#define addAppLog(%text,%title,%input,%target) "<a title='"_%title_"' "_$g(%target)_" href=""apptools.core.LogInfo.cls?NSP="_$zu(5)_"&WHAT="_$zconvert(%input,"O","URL")_""">"_%text_"</a>"
-#define addAppL(%text) "<a target="""_$ZCRC(%text,7)_""" href=""apptools.core.LogInfo.cls?NSP="_$zu(5)_"&WHAT="_$zconvert(%text,"O","URL")_""">"_%text_"</a>"
-
-#; To obtain the date and time YYYY-MM-DD HH:MM:SS
-#define AppDT(%h) $zd(+%h,3)_" "_##class(apptools.core.type).GetValidZT(%h)
-#define AppObJs(%ob)  $s($isobject(%ob):##class(apptools.core.Log).WriteJSONFromObject(%ob),1:%ob)
-#define ApplogGN(%fio) ("^log"_$zconvert($e(%fio,1,3),"U"))
-#;define AppL(%fio,%node) @$$$ApplogGN(%fio)@($i(@$$$ApplogGN(%fio)),$$$AppDT($h)_" "_%node)
-#define AppL(%fio,%node) @$$$ApplogGN(%fio)@($i(@$$$ApplogGN(%fio)),$$$AppDT($h)_" ("_$classname()_")."_%node)
-
-#define forAll(%in,%gn) s gn%in=$na(%gn) s %in="" f { s %in=$o(@gn%in@(%in)) q:%in=""
-#define forAllk(%in,%kn,%gn) s gn%in=$na(%gn) s %in="" f %kn=1:1 { s %in=$o(@gn%in@(%in)) q:%in=""
-#define forEnd  }
-
-#; keep the name of the current region
-#define NspGoto(%cur,%ns)  s %cur=$zu(5) try {zn %ns} catch e {} 
-#; to return to the current region
-#define NspReturn(%cur)  zn %cur
-#;---------- layout
-#;
-#define appStyleInput " style='border: none;	background: none;	color: inherit;	padding: .222em 0;	margin: .2em 0;	vertical-align: middle;	margin-left: .4em;	margin-right: .4em;' "
-#define appInputHidden(%id,%attr,%val) "<input type=hidden "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'>"
-#define appText(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" type=text "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
-#define appAutocomplete(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input id='"_%id_"' name='"_%id_"' "_%attr_" "_$$$appStyleInput_" autocomplete='off' value='"_%val_"'>"
-#define appAutocomplete2(%id,%attr,%val) "<input id='"_%id_"' name='"_%id_"' "_%attr_" class='ui-autocomplete-input' autocomplete='off' value='"_%val_"'>"
-#define appInput(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
-#define appButton(%id,%attr,%val) $s($g(%ui):"<button class='uk-button uk-button-default uk-margin-small-right' type='button' "_%attr_" id='"_%id_"' name='"_%id_"' >"_%val_"</button>",1:"<input class='ui-button ui-corner-all ui-widget' type=button id='"_%id_"' name='"_%id_"' "_%attr_" value='"_%val_"'>")
-#define appTextarea(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><textarea autocomplete='off' "_$$$appStyleInput_" "_%attr_" id='"_%id_"' name='"_%id_"' >"_%val_"</textarea></span>"
-#define appDate(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" type=date "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
-#define appDateTime(%id,%attr,%val) "<span class='ui-spinner ui-corner-all ui-widget ui-widget-content'><input autocomplete='off' "_$$$appStyleInput_" type=datetime-local "_%attr_" id='"_%id_"' name='"_%id_"' value='"_%val_"'></span>"
-#;define appCheck(%id,%attr,%val) "<input class='ui-button ui-corner-all ui-widget' type=checkbox id='"_%id_"' name='"_%id_"' "_%attr_" value='"_%val_"'>"
-#define appCheck(%id,%attr,%val) "<input class='bigbox' type=checkbox id='"_%id_"' name='"_%id_"' "_%attr_" value='"_%val_"'>"
-#define appSelect(%id,%attr,%val) ""
-#define appError(%val) "<div class='ui-widget'><div class='ui-state-error ui-corner-all' style='margin-top: 20px; padding: 1em;'><p><span class='ui-icon ui-icon-alert' style='float: left; margin-right: 3em;'></span>"_%val_"</p></div></div>"
-#define appMsg(%val) "<div class='ui-widget'><div class='ui-state-highlight ui-corner-all' style='margin-top: 20px; padding: 1em;'><p><span class='ui-icon ui-icon-info' style='float: left; margin-right: 3em;'></span>"_%val_"</p></div></div>"
-
-#define appTableAttr "style=""border-radius: 10px; border: 1px solid #72a7cf"" cellpadding=2 cellspacing=0 class=""DetailTable"" bgcolor=""#c4d6d6"" width=""90%"""
-#define appTable1(%n1) "<table "_$$$appTableAttr_"><tbody><tr><th>"_%n1_"</th></tr>"
-#define appTableTrTd1(%n1) "<tr class=""trs"" ><td align=""center"" >"_%n1_"</td></tr>"
-#define appTableEnd1 "</tbody></table>"_$s('$d(%DrawArray):"<script language='javascript'>$('.trs').hover(function(){ $(this).toggleClass( 'ui-widget-content' ) });</script>",1:"")
-
-#define appTable2(%n1,%n2) "<table "_$$$appTableAttr_"><tbody><tr><th align=""left"" width=""5px"">"_%n1_"</th><th align=""left"" width=""50px"">"_%n2_"</th></tr>"
-#define appTableTrTd2(%n1,%n2) "<tr class=""trs"" ><td align=""left"" >"_%n1_"</td><td>"_%n2_"</td></tr>"
-#define appTableEnd2 "</tbody></table>"_$s('$d(%DrawArray):"<script language='javascript'>$('.trs').hover(function(){ $(this).toggleClass( 'ui-widget-content' ) });</script>",1:"")
-
-#define appTable3(%n1,%n2,%n3) "<table "_$$$appTableAttr_"><tbody><tr><th align=""left"" width=""5px"">"_%n1_"</th><th align=""left"" width=""50px"">"_%n2_"</th><th align=""left"" width=""50px"">"_%n3_"</th></tr>"
-#define appTableTrTd3(%n1,%n2,%n3) "<tr class=""trs"" ><td style=""text-align:left"" >"_%n1_"</td><td style=""text-align:left"" >"_%n2_"</td><td style=""text-align:left"" >"_%n3_"</td></tr>"
-#define appTableEnd3 "</tbody></table>"_$s('$d(%DrawArray):"<script language='javascript'>$('.trs').hover(function(){ $(this).toggleClass( 'ui-widget-content' ) });</script>",1:"")
-
-#define appTab3(%n1,%n2,%n3) "<table cellpadding=2 cellspacing=0 border=1 class=""DetailTable"" width=""90%""><tbody><tr><th align=""left"" width=""5px"">"_%n1_"</th><th align=""left"" width=""50px"">"_%n2_"</th><th align=""left"" width=""50px"">"_%n3_"</th></tr>"
-
-#define jsstart w "<script language='javascript'>"
-#define jsstop w "</script>"
-#define styleurl "text-decoration:underline; color:blue; cursor:hand;"
-#define blockui(%msg)  "$.blockUI( { message: '"_%msg_"' , css: { border: 'none', padding: '15px', backgroundColor: '#000', '-webkit-border-radius': '10px','-moz-border-radius': '10px', opacity: .5, color: '#fff' }} );"
-
-#;	Localization
-#define GNLangDOMAIN "AppTools"
-
-#define GNEnsConf "^%apptools.Setting"
-#define EnsProductStatusRun $g(@$$$GNEnsConf@("EnsProductStatusRun"),"Running")
-
-/// Global history of command
-#define HISTORYGN "^%apptools.History"
-/// Global tempory data
-#define TEMPORYGN "^mtempAppData"
-/// Global projects in the system
-#define PROJGN "^%apptools.Proj"
-#define GNExtentions "^%apptools.Exten"
-/// Global tempory data for Journals
-#define TEMPJRNL "^%apptools.JRNL"
-/// Limiting the number of nodes in a global or query result for output
-#define MAXSHOW 10000
-
-#;;; Parameters dependent on the installation server
-#define GNLang "^%AppCacheMsg"
-#; Path to CSP apps "/apptools/"
-#define  PATHCSP $GET(@$$$GNEnsConf@("PATHCSP")) 
-#; Mail Server Settings
-#define  EMAILSERVERIP $GET(@$$$GNEnsConf@("EMAILSERVERIP"))
-#define  EMAILSERVERPORT $GET(@$$$GNEnsConf@("EMAILSERVERPORT"))
-#; Authorization in the mail server
-#define  EMAILAUTH $GET(@$$$GNEnsConf@("EMAILAUTH")) 
-#define  EMAILAUTHPASS $GET(@$$$GNEnsConf@("EMAILAUTHPASS"))
-#; Technical support admin address
-#define  EMAILSUPPORT $G(@$$$GNEnsConf@("EMAILSUPPORT")) 
-#; Path for temporary xls file before sending to mail
-#define  EMAILXLSPATH $G(@$$$GNEnsConf@("EMAILXLSPATH"))
-#; Path to storing project sources
-#define  EXPORTPROJPATH $G(@$$$GNEnsConf@("EXPORTPROJPATH")) 
-#; List of databases to monitor free space in apptools..Chart.cls?panel=class(apptools.Chart.ChartPanel).ChartDbSize
-#define DBCACHESizeMon $G(@$$$GNEnsConf@("DBCACHESizeMon"))
-
-#; --------------- Application section
-#define GNmessages "^%apptools.cconsolelog"
-#define DubledQuote(%s)	$replace(%s,"'","''")
-
-
-#If $DATA(^%apptools.Proj("infoservice-focus"))
-#define  TESTSERVER "-test"
-#define DEVELOPER "mihaylenko_sv"
-#; The module display links to the administrative application panel
-#define  DRAWAllApp ##class(apptools.MVK.docbook).GetAllApp(0)
-#define SDNum if $g(SDNum)'="" write:##class(apptools.core.sys).ClassExist("apptools.MVK.docbook") "<br>"_##class(apptools.MVK.docbook).FindSDRef(SDNum)
-#define aText(%en,%ru) ##Expression(##class(apptools.core.msg).AddLangMsg(%en,%ru))
-#define  MultiLang 1
-#define  JSLibLocal 1
-
-#Else 
-#define  TESTSERVER " "
-#define DEVELOPER "admin"
-#; The module display links to the administrative application panel
-#define  DRAWAllApp " "
-#define SDNum  
-#define aText(%en,%ru) %en
-#define  MultiLang 0
-#define  JSLibLocal 0
-
-#EndIf
-
-
-
-]]></Routine>
+<Method name="exportXMLprod">
+<Description>
+do ##class(%ZAPM.ext.Production).exportXMLprod("d:\_proj\_zapp\zpm-addition+\zapm-addcmd\addcmd\zapm\_zapmprod.xml")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>dir=""</FormalSpec>
+<Implementation><![CDATA[
+ 	s list("%ZAPM.ext.Common.INC")=""
+	s list("%ZAPM.ext.Production.CLS")=""
+	d $SYSTEM.OBJ.Export(.list, dir)
+]]></Implementation>
+</Method>
+</Class>
 
 
 <Class name="%ZAPM.ext.commands">
@@ -1274,6 +1238,8 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","repo","Show repository")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upgrade","Upgrade modules in namespace")
 	;zapm
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
@@ -1433,7 +1399,7 @@ research and development ZPM</Description>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
-<Default>1.0.9</Default>
+<Default>1.0.12</Default>
 </Parameter>
 
 <Parameter name="GN">
@@ -1456,7 +1422,8 @@ zapp "newdb spool-demo"</Description>
 	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
-	
+	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
+	if $p(cmd," ")="upgrade" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -1533,6 +1500,10 @@ zapp "newdb spool-demo"</Description>
 	write !,"dbdelete namespace"
  	write !," Delete database and an Namespace,"
  }
+ if cmd=""||(cmd="upgrade") {
+	write !,"upgrade "
+ 	write !," Update the versions of modules installed in the current namespace."
+ }
  if cmd=""||(cmd="load") {
 	write !!,"load http://git-repo/developer-name/repo-name"
  	write !," Load the module directly from the repository into the current Namespace. The 'git clone' command is applied. The git program must be installed."
@@ -1572,7 +1543,7 @@ zapp "newdb spool-demo"</Description>
 <Method name="cmdzpmext">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete")
+<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upgrade")
 ]]></Implementation>
 </Method>
 
@@ -1585,6 +1556,98 @@ do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")</Description>
 <Implementation><![CDATA[
 	write !,1,scheme,1
 	Quit ##class(%ZPM.PackageManager).Shell("config set ColorScheme "_scheme)
+]]></Implementation>
+</Method>
+
+<Method name="Upgrade">
+<Description>
+Upgrade all installed modules
+write ##class(%ZAPM.ext.zpm).Upgrade()</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ns=$namespace</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List)
+	set name=""
+	for { set name=$Order(List(name)) quit:name=""
+		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
+			set Diff(name)="" 
+			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET(List(name,"R"),1)
+		}
+	}
+	if '$DATA(Diff) {
+		write !,"The versions of the modules are the same. Updating anyway? [Y/N]<N>"
+		read upd
+		if $zconvert(upd,"L")["y" do ..UpgradeList(.List)
+	}
+	else {
+		write !,"Updating different modules or all? [Y/A/N]<N>"
+		read upd 
+		set upd=$zconvert(upd,"L")
+		if upd["y" {do ..UpgradeList(.Diff)}
+		elseif upd["a" {do ..UpgradeList(.List)}
+	}
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="UpgradeList">
+<Description>
+write ##class(%ZAPM.ext.zpm).UpgradeList(.list)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>List</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set name=""
+	for { set name=$Order(List(name)) quit:name=""
+		zpm "install "_name
+	}
+]]></Implementation>
+</Method>
+
+<Method name="GetListModule">
+<Description>
+Get module list
+do ##class(%ZAPM.ext.zpm).GetListModule(,.List)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[ns=$namespace,&Mod]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	new $namespace
+	set $namespace=ns
+	Set tRes = ##class(%SQL.Statement).%ExecDirect(,
+		"select * from %ZPM_PackageManager_Developer.""MODULE""")
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	set in=""
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		Set name=tRes.%Get("Name")
+		set in=in_"'"_name_"',"
+		set list=$lb(tRes.%Get("VersionString"),tRes.%Get("Description"),tRes.%Get("Root"))
+		For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" {
+			Set list=list_$lb(tRes.%Get(a))
+		}
+		Set Mod(name) = tRes.%Get("VersionString")
+		Set Mod(name,"L") = list
+		
+	}
+	$$$ThrowOnError(tSC)
+	quit:in="" $$$OK
+	set in=$Extract(in,1,*-1)
+	;----------
+	Set tQuery = "select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') WHERE name in ("_in_")"
+	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
+	
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		Set Mod(tRes.%Get("Name"),"R")=$Listbuild(tRes.%Get("Version"),tRes.%Get("Description"),tRes.%Get("Repo"))
+	}
+	quit $$$OK
 ]]></Implementation>
 </Method>
 
@@ -1618,14 +1681,14 @@ write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sm
       			do tFileBinStream.CopyFromAndSave(tRequest.HttpResponse.Data)      
 			}
 		  	If $GET(tFileBinStream)'="" {
-				if $zversion(1)=3 {
+				if $zversion(1)=3 { //for Linux
 					set cmd="cd "_TempDir_" && unzip -q tmp.zip"
 				}
-				else {
+				else { //for Windows
 					set cmd="cd "_TempDir_" && powershell Expand-Archive -LiteralPath "_TempDir_"tmp.zip -DestinationPath "_TempDir
 				}
 				write !,cmd,!
-				if $zf(-1,cmd)
+				$$$ThrowOnError(##class(%ZPM.PackageManager.Developer.Utils).RunCommandViaZF(cmd,.tLog,.tErr))
 				hang 2
 			}
 		}
@@ -1638,7 +1701,7 @@ write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sm
 		//second try
 		set cmd="cd "_TempDir_" && git clone "_path
 		write !,cmd,!
-		if $zf(-1,cmd)
+		$$$ThrowOnError(##class(%ZPM.PackageManager.Developer.Utils).RunCommandViaZF(cmd,.tLog,.tErr))
 		hang 2
 		if $$$FileSize(TempDir_dirrepo_sls_"module.xml")>0 {
 			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo)
@@ -1682,17 +1745,18 @@ write ##class(%ZAPM.ext.zpm).GetUrlRepoArhive("https://gitlab.com/sergeymi/test.
 <Description>
 zpm-utility 
 repo -r -n registry -url http://127.0.0.1:52773/registry/ -user "superuser" -pass "pass"
-do ##class(%ZAPM.ext.zpm).LoadRegistrys("realworld")</Description>
+do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>modulename="",all=0,skipZPM=1</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	set currns=$namespace
 	set gn=..#GN
-	set sql="select Name, Version, Repo from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",1:"where Name=?")
+	set sql="select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",modulename["*":"where Name like '"_$tr(modulename,"*","%")_"'",1:"where Name=?")
 		,rs=##class(%ResultSet).%New()
 		,sc=rs.Prepare(sql)
 	set:sc sc=rs.Execute($zconvert(modulename,"L"))
+	write !,sql
 	if sc {
 		for i=1:1 {
 			quit:'rs.%Next()  
@@ -1700,26 +1764,29 @@ do ##class(%ZAPM.ext.zpm).LoadRegistrys("realworld")</Description>
 			set Version=rs.Get("Version")
 			set Repo=rs.Get("Repo")
 			set ns=$zconvert($tr(name,"-."),"U")
-			if skipZPM, name["isc-apptools"||($e(name,1,3)="zpm")||($e(name,1,6)="appmsw") w !,"Skip" continue
+			if skipZPM, name["apptools"||($e(name,1,3)="zpm")||(name["appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
 			if $d(@gn@(name)) { ;already load
 				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
 					write !,ns_" Unload Removed DBNS ? Y\N " Read R   quit:"q"[R
 					if $g(R)="y" {
 						do ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS(name,,,gn)
+						kill @gn@(name)
 					}
 					continue
 				}
-				write !,"Already loaded - Skip"
+				write !,"Already loaded - Skip "_$$$escGreen(name)
 			} elseif 1 {
 				set sta=##class(%ZPM.PackageManager).Shell("find -r -d "_name) write !
 				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
 				if 'all w !,ns_" Load into a new database ? Y\N " Read R   quit:"q"[R
 				if $g(R)="y"||(all=1) {
-					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,,,,gn)
+					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,,,,gn,.error)
+					if $g(error)["<INTERRUPT>" quit
 				}
 			}
 		}
 	}
+	write !,"Log in global ",!,gn
 ]]></Implementation>
 </Method>
 
@@ -1747,7 +1814,7 @@ d ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS("sync-dstime")</Description>
 <Description>
 d ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad("isc-tar")</Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec>name,ns="",Version="",Repo="",gn=""</FormalSpec>
+<FormalSpec>name,ns="",Version="",Repo="",gn="",err</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	new $namespace
@@ -1759,11 +1826,12 @@ d ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad("isc-tar")</Description>
 	if st {
 		zn ns
 		;s sta=$zpm("install "_name_" -v")
-		k err
-		w !,"zpm ""install "_name_""""
-		s sta=##class(%ZPM.PackageManager).Shell("install "_name)
-		i 'sta s err=$System.Status.GetErrorText(sta) w !,err
-		s:gn'="" @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		kill err
+		write !,"zpm ""install "_name_""""
+		set sta=##class(%ZPM.PackageManager).Shell("install "_name)
+		if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
+		set:gn'="" @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		if $g(err)["<INTERRUPT>" quit sta
 	}
 	q $$$OK
 ]]></Implementation>
