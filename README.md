@@ -12,6 +12,14 @@ The ZAPM checks if the command entered is a ZPM command, then sends the executio
 Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
+## What's new
+Added command: upgrade
+Update the versions of modules installed in the current namespace.
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_7_upgrade.png)
+
+Added command extension: list
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_list.png)
+
 ## Installation with ZPM
 
 If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.
