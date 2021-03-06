@@ -1,6 +1,6 @@
 ![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 
-## zapm
+# zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
 
 ZAPM is a shell - extends the ZPM shell and adds any other commands.
@@ -12,15 +12,16 @@ The ZAPM checks if the command entered is a ZPM command, then sends the executio
 Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
-## What's new
+# What's new
 Added command: upgrade
 Update the versions of modules installed in the current namespace.
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_7_upgrade.png)
+
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_7_upgrade.png)
 
 Added command extension: list
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_list.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_list.png)
 
-## Installation with ZPM
+# Installation with ZPM
 
 If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.
 ```
@@ -64,16 +65,16 @@ USER>zapm "cmd"
 ```
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_cmd.png)
 
-## Command extensions zpm.
-### help - coloring command description
+# Command extensions zpm.
+## help - coloring command description
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/2-help.gif)
 
-### load <https...git-repo> - loading the module directly from the git-repository
+## load <https...git-repo> - loading the module directly from the git-repository
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_3_load.png)
 
-### show modules with context by repository URL
+## show modules with context by repository URL
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_8_find.png)
 
