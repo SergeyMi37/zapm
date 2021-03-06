@@ -1,6 +1,6 @@
 ![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 
-# zapm
+## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
 
 ZAPM is a shell - extends the ZPM shell and adds any other commands.
@@ -12,7 +12,7 @@ The ZAPM checks if the command entered is a ZPM command, then sends the executio
 Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
-# What's new
+## What's new
 Added command: upgrade
 Update the versions of modules installed in the current namespace.
 
@@ -21,7 +21,7 @@ Update the versions of modules installed in the current namespace.
 Added command extension: list
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_list.png)
 
-# Installation with ZPM
+## Installation with ZPM
 
 If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.
 ```
@@ -33,7 +33,7 @@ zpm:USER>install zapm
 ```
 ## Installation with Docker
 
-## Prerequisites
+### Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
 
 ## Installation 
@@ -65,7 +65,7 @@ USER>zapm "cmd"
 ```
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/blob/master/doc/Screenshot_1_cmd.png)
 
-# Command extensions zpm.
+## Command extensions zpm.
 ## help - coloring command description
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/2-help.gif)
@@ -83,25 +83,25 @@ USER>zapm "cmd"
 
  Commands for working with databases and namespaces:
 
-### dbcreate - create a database with %DB resources ans namespace and interoperability mapping.
+## dbcreate - create a database with %DB resources ans namespace and interoperability mapping.
 ```
 USER>zapm "dbcreate testdb3 -p d:/!/database/durable"
 ```
-### dbdelete - delete a database with %DB resources ans namespace.
+## dbdelete - delete a database with %DB resources ans namespace.
 ```
 USER>zapm "dbdelete testdb3"
 ```
 
 
-### cmd - list of possible additional commands
+## cmd - list of possible additional commands
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_4_cmd.png)
 
-### hist - list of executed commands
+## hist - list of executed commands
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_5_hist.png)
 
-### newdb <module> -creating a database with a scope and installing the module there
+## newdb <module> -creating a database with a scope and installing the module there
 
 To add a new command to the zapm shell, use the ##class(%ZAPM.ext.zapp).addcmd
 For example, let's execute sequentially
