@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.11";
+Parameter VERSION = "1.0.12";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -22,6 +22,7 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
+	if $p(cmd," ")="upgrade" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -121,7 +122,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("newdb","cmd","hist","dbcreate","dbdelete")
+	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upgrade")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
@@ -129,6 +130,82 @@ ClassMethod SetColorScheme(scheme = {$s($zversion(1)=3:"dark",1:"white")}) As %S
 {
 	write !,1,scheme,1
 	Quit ##class(%ZPM.PackageManager).Shell("config set ColorScheme "_scheme)
+}
+
+/// Upgrade all installed modules
+/// write ##class(%ZAPM.ext.zpm).Upgrade()
+ClassMethod Upgrade(ns = {$namespace}) As %Status
+{
+	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List)
+	set name=""
+	for { set name=$Order(List(name)) quit:name=""
+		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
+			set Diff(name)="" 
+			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET(List(name,"R"),1)
+		}
+	}
+	if '$DATA(Diff) {
+		write !,"The versions of the modules are the same. Updating anyway? [Y/N]<N>"
+		read upd
+		if $zconvert(upd,"L")["y" do ..UpgradeList(.List)
+	}
+	else {
+		write !,"Updating different modules or all? [Y/A/N]<N>"
+		read upd 
+		set upd=$zconvert(upd,"L")
+		if upd["y" {do ..UpgradeList(.Diff)}
+		elseif upd["a" {do ..UpgradeList(.List)}
+	}
+	quit $$$OK
+}
+
+/// write ##class(%ZAPM.ext.zpm).UpgradeList(.list)
+ClassMethod UpgradeList(List) As %Status
+{
+	set name=""
+	for { set name=$Order(List(name)) quit:name=""
+		zpm "install "_name
+	}
+}
+
+/// Get module list
+/// do ##class(%ZAPM.ext.zpm).GetListModule(,.List)
+ClassMethod GetListModule(ns = {$namespace}, ByRef Mod) As %Status
+{
+	new $namespace
+	set $namespace=ns
+	Set tRes = ##class(%SQL.Statement).%ExecDirect(,
+		"select * from %ZPM_PackageManager_Developer.""MODULE""")
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	set in=""
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		Set name=tRes.%Get("Name")
+		set in=in_"'"_name_"',"
+		set list=$lb(tRes.%Get("VersionString"),tRes.%Get("Description"),tRes.%Get("Root"))
+		For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" {
+			Set list=list_$lb(tRes.%Get(a))
+		}
+		Set Mod(name,"L") = list
+		
+	}
+	$$$ThrowOnError(tSC)
+	quit:in="" $$$OK
+	set in=$Extract(in,1,*-1)
+	;----------
+	Set tQuery = "select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') WHERE name in ("_in_")"
+	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
+	
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		Set Mod(tRes.%Get("Name"),"R")=$Listbuild(tRes.%Get("Version"),tRes.%Get("Description"),tRes.%Get("Repo"))
+	}
+	quit $$$OK
 }
 
 /// write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sms")
@@ -230,12 +307,13 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 			set Version=rs.Get("Version")
 			set Repo=rs.Get("Repo")
 			set ns=$zconvert($tr(name,"-."),"U")
-			if skipZPM, name["isc-apptools"||($e(name,1,3)="zpm")||($e(name,1,6)="appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
+			if skipZPM, name["apptools"||($e(name,1,3)="zpm")||(name["appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
 			if $d(@gn@(name)) { ;already load
 				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
 					write !,ns_" Unload Removed DBNS ? Y\N " Read R   quit:"q"[R
 					if $g(R)="y" {
 						do ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS(name,,,gn)
+						kill @gn@(name)
 					}
 					continue
 				}
@@ -245,7 +323,8 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
 				if 'all w !,ns_" Load into a new database ? Y\N " Read R   quit:"q"[R
 				if $g(R)="y"||(all=1) {
-					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,,,,gn)
+					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,,,,gn,.error)
+					if $g(error)["<INTERRUPT>" quit
 				}
 			}
 		}
@@ -269,7 +348,7 @@ ClassMethod UnloadAndDeleteDBNS(name, Version = "", Repo = "", gn = {..#GN}) As 
 }
 
 /// d ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad("isc-tar")
-ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "") As %Status
+ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", err) As %Status
 {
 	new $namespace
 	k err w !
@@ -280,11 +359,12 @@ ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "") A
 	if st {
 		zn ns
 		;s sta=$zpm("install "_name_" -v")
-		k err
-		w !,"zpm ""install "_name_""""
-		s sta=##class(%ZPM.PackageManager).Shell("install "_name)
-		i 'sta s err=$System.Status.GetErrorText(sta) w !,err
-		s:gn'="" @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		kill err
+		write !,"zpm ""install "_name_""""
+		set sta=##class(%ZPM.PackageManager).Shell("install "_name)
+		if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
+		set:gn'="" @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		if $g(err)["<INTERRUPT>" quit sta
 	}
 	q $$$OK
 }
