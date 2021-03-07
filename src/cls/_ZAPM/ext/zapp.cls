@@ -10,12 +10,14 @@ Class %ZAPM.ext.zapp [ Abstract ]
 Parameter GN = "^%ZAPM.hist";
 
 /// do ##class(%ZAPM.ext.zapp).init()
-ClassMethod init() As %Status
+ClassMethod init(NoExt = 0) As %Status
 {
 	new $namespace
 	set $namespace="%sys"
-	do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
-	do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
+	if 'NoExt {
+		do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
+		do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
+	}
 	do ..favourite(.list)
 	;merge list=@..#GN@("cmd")
 	set i=""
@@ -30,6 +32,38 @@ ClassMethod init() As %Status
 	do ##class(%ZAPM.ext.zpm).SetColorScheme()
 	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
 	quit $$$OK
+}
+
+/// do ##class(%ZAPM.ext.zapp).favourite(.list)
+ClassMethod favourite(ByRef list) As %Status
+{
+	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
+	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "sys",     "system status")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","","job examing")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^SECURITY","i","","security utility")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
+	set list("sys",$i(list))=$lb("zn ""%SYS"" ","i","zn1","Go to namespace %SYS")
+	set list("sys",$i(list))=$lb("w !,""Host "",$zu(110),!,##class(apptools.core.net).GetURI()_""/csp/sys/%25CSP.Portal.Home.zen"",!,""w ##class(apptools.core.net).GetIP()"",!,##class(apptools.core.net).GetIP(),! do ##class(apptools.core.net).GetIPext(,.IPexternal) zw IPexternal ","i","myip","Show my IP")
+	;zmp
+	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","repo","Show repository")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upgrade","Upgrade modules in namespace")
+	;zapm
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
+	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
+	
+	q $$$OK
 }
 
 ClassMethod TerminalPrompt(comm = "") As %String
@@ -161,6 +195,7 @@ addhist(cmd,namecmd="",desc="") ;add to history
 	set gn=..#GN
 	if '$lv(cmd) s cmd=$lb(cmd,"a",namecmd,desc)
 	set @gn@("cmd",cmd)=$GET(@gn@("cmd",cmd))+1
+	set @gn@("cmd",cmd,"date")=$h
 	quit 1
 iszpmcmd(cmd) ;If is a zpm command
 	if $lf(##class(%ZAPM.ext.zpm).cmdzpm(),cmd) q $$$OK
@@ -171,27 +206,85 @@ iszapmcmd(cmd,command) ;
 	quit 0
 }
 
+/// hist 
 /// do ##class(%ZAPM.ext.zapp).history("dark")
 ClassMethod history(mask = "") As %Status
 {
-	set mask=$ZStrip(mask,"<>WC")
-	kill %zapm
 	set gn=..#GN
+	set mask=$ZStrip(mask,"<>WC")
+	if $e(mask,1,4)="-add" { //flag added Number_hist <name_cmd> description
+		set num=$p($p(mask,"-add ",2,*)," ")
+		if '$D(%zapm(num),cmd) write !,"number invalid" q $$$OK
+		set name=$p($p(mask,"-add ",2,*)," ",2)
+		set type=$p($p(mask,"-add ",2,*)," ",3)
+		set desc=$p($p(mask,"-add ",2,*)," ",4,*)
+		if name="" set @..#GN@("cmd",cmd,"nonrem")=$h write !,"added in list non-removable" q $$$OK
+		do ##class(%ZAPM.ext.commands).GetCmd("",name,.comman)
+		if comman'="" write !,"command name '"_name_"' already exist" q $$$OK
+		if '$lf($lb("i","a","n"),type) write !,"command type '"_type_"' invalid" q $$$OK
+		do ##class(%ZAPM.ext.zapp).addcmd($lg(cmd,1),"hist",type,name,desc) 
+		write !,"added in list of commands" q $$$OK
+	}
+	if $e(mask,1,4)="-del" { //flag added Number_hist <name_cmd> description
+		set days=$p($p(mask,"-del ",2,*)," ",1)
+		if days'="" {
+			set hor=$h-days
+				,count=0
+			do ..CreateHistArray(.list)
+			set h="" for { set h=$o(list(h),1) q:h=""
+				if h<hor {
+					set cmd="" for { set cmd=$o(list(h,cmd)) q:cmd=""
+						if '$D(@gn@("cmd",cmd,"nonrem")) KILL @gn@("cmd",cmd) set count=count+1
+					}
+				}
+			}
+			w !,"killed "_count
+		}
+		quit $$$OK
+	}
+	kill %zapm
+
 	set cmd=""
 		,num=0
-	for {
-		set cmd=$Order(@gn@("cmd",cmd)) q:cmd=""
-		if mask'="",$zconvert(cmd,"L")'[mask continue
-		set num=num+1
-		write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
-		set %zapm(num)=cmd
+	
+	set order=$select($e(mask,1)="+":-1,1:1)
+	if $e(mask,1)="-"||($e(mask,1)="+") set mask=$e(mask,2,*)
+	do ..CreateHistArray(.list)
+	set h="" for { set h=$o(list(h),order) q:h=""
+		set cmd=""	for { set cmd=$Order(list(h,cmd)) q:cmd=""  do write($$$escBlue($zd(h,3))_" ") }
 	}
+	;for { set cmd=$Order(@gn@("cmd",cmd)) q:cmd=""  
+	;do write() }
+ quit $$$OK
+write(date="")
+	if mask'="",$zconvert(cmd,"L")'[mask quit
+	set num=num+1
+	set cmdline=$lg(cmd,1)
+	if $D(@gn@("cmd",cmd,"nonrem")) set cmdline=$$$escRed(cmdline)
+	write !,date_$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_cmdline_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
+	set %zapm(num)=cmd
+ quit
 }
 
+ClassMethod CreateHistArray(ByRef list) As %Status
+{
+	set gn=..#GN
+	set cmd="" for {set cmd=$o(@gn@("cmd",cmd)) q:cmd=""  
+	  if $D(@gn@("cmd",cmd,"date"),Hor) 
+	  else  set Hor="100,1"
+	  set list(Hor,cmd)=""
+	}
+	quit $$$OK
+}
+
+/// cmd 
 /// do ##class(%ZAPM.ext.zapp).help("dark")
 ClassMethod help(mask = "") As %Status
 {
 	set mask=$ZStrip(mask,"<>WC")
+	if $e(mask,1,5)="-init" { //flags init
+		do ##class(%ZAPM.ext.zapp).init(1) q $$$OK
+	}
 	#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
 	kill %zapm
 	write !,$$$escViolet("Extending ZPM commands, the standard ZPM commands also work as from zpm shell.")
@@ -235,41 +328,12 @@ ClassMethod write(part, num, cmd, noprompt = 0) As %Status
  quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.zapp).favourite(.list)
-ClassMethod favourite(ByRef list) As %Status
-{
-	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
-	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "sys",     "system status")
-	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","","job examing")
-	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
-	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
-	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^SECURITY","i","","security utility")
-	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
-	;zmp
-	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","repo","Show repository")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upgrade","Upgrade modules in namespace")
-	;zapm
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
-	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
-	
-	q $$$OK
-}
-
 /// do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow","zpm","i","zshow","Show a zpm modules with extention description")
 ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", description = "") As %Status
 {
 	if partion="" set partion="other"
-	;set @..#GN@("cmd",partion,$i(@..#GN@("cmd")))=$lb(cmd,moderun,namecmd,description)
+	do ##class(%ZAPM.ext.commands).GetCmd("",namecmd,.comman)
+	if comman'="" write !,"command name '"_namecmd_"' already exist" q $$$OK
 	set st=##class(%ZAPM.ext.commands).AddUpdate(cmd,namecmd,partion,moderun,description)
 	if 'st write $System.Status.GetErrorText(st) quit st
 	else  write !,"added"

@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.12";
+Parameter VERSION = "1.0.14";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -104,15 +104,27 @@ ClassMethod exthelp(cmd = "") As %Status
 	write !!,"cmd "
  	write !," Alias: ?"
  	write !," Show all commands."
- 	write !!,"cmd context"
+ 	write !!,"cmd <context>"
  	write !," Show all commands including context."
+ 	write !!,"cmd -init"
+ 	write !," Reload all commands. Run do ##class(%ZAPM.ext.zapp).init()"
  }
  if cmd=""||(cmd="hist") {
 	write !!,"hist "
 	write !," Alias: ??"
  	write !," Show all history."
- 	write !!,"hist context"
+ 	write !!,"hist <context>"
  	write !," Show all history including context."
+ 	write !!,"hist - <context>"
+ 	write !," Show all history including context. Sorting by date"
+ 	write !!,"hist + <context>"
+ 	write !," Show all history including context. Reverse sorting by date"
+ 	write !!,"hist -del Number_day"
+ 	write !," Delete all history older than the number of days."
+ 	write !!,"hist -add Number_hist"
+ 	write !," Added history in list for non-removable."
+ 	write !!,"hist -add Number_hist [name_cmd] [a/i/n] description"
+ 	write !," Added history in list commans."
  }
 
  write !

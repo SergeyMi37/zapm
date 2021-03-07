@@ -21,6 +21,32 @@ Update the versions of modules installed in the current namespace.
 Added command extension: list
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_list.png)
 
+```
+ cmd -init
+  Reload all commands. Run do ##class(%ZAPM.ext.zapp).init()
+ 
+ hist
+  Alias: ??
+  Show all history.
+ 
+ hist <context>
+  Show all history including context.
+ 
+ hist - <context>
+  Show all history including context. Sorting by date
+ 
+ hist + <context>
+  Show all history including context. Reverse sorting by date
+ 
+ hist -del Number_day
+  Delete all history older than the number of days.
+ 
+ hist -add Number_hist
+  Added history in list for non-removable.
+ 
+ hist -add Number_hist [name_cmd] [a/i/n] description
+  Added history in list commans.
+```
 ## Installation with ZPM
 
 If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.
