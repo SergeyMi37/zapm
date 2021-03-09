@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.14";
+Parameter VERSION = "1.0.15";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -21,8 +21,9 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
+	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
-	if $p(cmd," ")="upgrade" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
+	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -31,6 +32,92 @@ ClassMethod extcmd(cmd = "") As %Status
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+}
+
+ClassMethod info(extcmd) As %Status
+{
+	set tDesc=1 ;+$g(pCommandInfo("data","Desc"))
+	quit:'..GetListModule(,.tModMap,'tDesc)
+		Set tMod = ""
+		For { Set tMod = $Order(tModMap(tMod),1,tVersion)
+			Quit:(tMod="")
+			Write !,$$$escGreen(tMod)," ",tVersion_" "
+			If tDesc,$Data(tModMap(tMod,"L"),Lock) {
+				Set maxlenname=$L(tMod_" "_tVersion_" ")
+				Do ..DrawColumn($$$escYellow("Description: ")_$ListGet(Lock,2))
+				Set au=3 
+				For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" { 
+					Set au=au+1
+					set audata=$ListGet(Lock,au)
+					Write:audata'="" !
+					,?(maxlenname)
+					,..DrawColumn($$$escViolet(a_": ")_audata)
+				}
+				set dirroot=$ListGet(Lock,3)
+				Write !
+					,?(maxlenname)
+					,..DrawColumn($$$escViolet("Root: ")_dirroot)
+				if $Data(tModMap(tMod,"R"),Rem) {
+					write !,$ListGet(Rem,3)
+				}
+				if (extcmd)["-r " kill out do ..GetFileLines(dirroot_"README.md",.out),..DrawArray(.out)
+				if (extcmd)["-m " kill out do ..GetFileLines(dirroot_"module.xml",.out),..DrawArray(.out)
+				if (extcmd)["-f " kill out do ..GetAllDir(dirroot,,.out),..DrawArray(.out,dirroot)
+			}
+		}
+	quit $$$OK
+}
+
+ClassMethod DrawArray(ByRef Array As %String, ListDir = "") As %Status
+{
+	set i="" for  {set i=$o(Array(i),1,str) q:i=""  
+		if ListDir="" write !,$$$escRed(str) continue
+		if $lg(str,2)="F" write !,$$$escRed($p($lg(str,1),ListDir,2))
+	}
+}
+
+/// Get all files in a directory and subdirectories
+ClassMethod GetAllDir(dir, ext = "", ByRef out)
+{
+	set dir = ##class(%File).NormalizeDirectory(dir)
+	set rs = ##class(%ResultSet).%New("%File:FileSet")
+	s sc=rs.Execute(dir, ext)
+	while (rs.Next()) {
+		set out($i(out)) = $lb(rs.Get("Name"),rs.Get("Type"),rs.Get("Size"),rs.Get("ItemName"),rs.Get("DateCreated"),rs.Get("DateModified"))
+		i rs.Get("Type")="D" d ..GetAllDir($lg(out(out),1),ext,.out)
+	}
+	q $$$OK
+}
+
+/// from %ZPM.PackageManager.Developer.Utils
+ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
+{
+	Set tSC = $$$OK
+	set curio=$i
+	Try {
+		Kill pOutput
+		Close pFileName Open pFileName:("RS"):5
+		If '$T Set tSC = $$$ERROR($$$CacheError, "Failed to open file '"_pFileName_"'") Quit
+		Set TooMuch = 0
+		Use pFileName
+		For {
+			// Keep reading through end of file; save only first 32,000 characters
+			Set tLine = "" Read tLine:1
+			If '$T && (tLine=$C(-1)) Quit  // Exit by timeout
+			If $Length(tLine)<32000 {
+				Set pOutput($i(pOutput)) = tLine
+			} Else {
+				Set pOutput($i(pOutput)) = $E(tLine,1,32000)_" (more...)"
+			}
+			If ($ZEOF=-1) Quit  // Exit by EOF
+		}
+		Close pFileName
+	} Catch e {
+		Set tSC = e.AsStatus()
+		Close pFileName
+	}
+	use curio
+	Quit tSC
 }
 
 ClassMethod find(extcmd) As %Status
@@ -75,21 +162,31 @@ ClassMethod exthelp(cmd = "") As %Status
 	write !,"-----------------------------"
  }
  if cmd=""||(cmd="newdb") {
-	write !,"newdb <module>"
+	write !!,"newdb <module>"
  	write !," Create a new database and an Namespace with a name derived from the name of the module and Install the module into it,"
  }
  if cmd=""||(cmd="dbcreate") {
-	write !,"dbcreate namespace <path>"
+	write !!,"dbcreate namespace <path>"
  	write !," Create a new database and an Namespace,"
  	write !," dbcreate testdb2 -p d:/!/database/durable"
  }
  if cmd=""||(cmd="dbdelete") {
-	write !,"dbdelete namespace"
+	write !!,"dbdelete namespace"
  	write !," Delete database and an Namespace,"
  }
- if cmd=""||(cmd="upgrade") {
-	write !,"upgrade "
- 	write !," Update the versions of modules installed in the current namespace."
+ if cmd=""||(cmd="info") {
+	write !!,"info "
+ 	write !," Show more complete information about modules in the current namespace."
+	write !,"info -m module"
+ 	write !," Show file module.xml."
+	write !,"info -f module"
+ 	write !," List file in repository."
+	write !,"info -r module"
+ 	write !," Show file readme.md."
+ }
+ if cmd=""||(cmd="upg") {
+	write !!,"upg "
+ 	write !," Upgrade the versions of modules installed in the current namespace."
  }
  if cmd=""||(cmd="load") {
 	write !!,"load http://git-repo/developer-name/repo-name"
@@ -138,7 +235,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upgrade")
+	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
@@ -152,7 +249,7 @@ ClassMethod SetColorScheme(scheme = {$s($zversion(1)=3:"dark",1:"white")}) As %S
 /// write ##class(%ZAPM.ext.zpm).Upgrade()
 ClassMethod Upgrade(ns = {$namespace}) As %Status
 {
-	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List)
+	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List,0)
 	set name=""
 	for { set name=$Order(List(name)) quit:name=""
 		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
@@ -184,9 +281,9 @@ ClassMethod UpgradeList(List) As %Status
 	}
 }
 
-/// Get module list
 /// do ##class(%ZAPM.ext.zpm).GetListModule(,.List)
-ClassMethod GetListModule(ns = {$namespace}, ByRef Mod) As %Status
+/// Get module list in currently namespace
+ClassMethod GetListModule(ns = {$namespace}, ByRef Mod, OnlyName = 1) As %Status
 {
 	new $namespace
 	set $namespace=ns
@@ -205,13 +302,13 @@ ClassMethod GetListModule(ns = {$namespace}, ByRef Mod) As %Status
 			Set list=list_$lb(tRes.%Get(a))
 		}
 		Set Mod(name) = tRes.%Get("VersionString")
-		Set Mod(name,"L") = list
+		Set:'OnlyName Mod(name,"L") = list
 		
 	}
 	$$$ThrowOnError(tSC)
-	quit:in="" $$$OK
+	quit:in=""||(OnlyName) $$$OK
 	set in=$Extract(in,1,*-1)
-	;----------
+
 	Set tQuery = "select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') WHERE name in ("_in_")"
 	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
 	
@@ -562,7 +659,7 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 		Set Module=tModuleName
 		Set where="where name = ?"
 	}
-	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc)
+	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc) Set where=where_" order by Repo "
 	If where="" Write !,"Search the entire repository"
 	Else  Write !,"Search the repository context "_Module
 	//Load the list info registry modules

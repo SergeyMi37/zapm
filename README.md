@@ -13,15 +13,56 @@ Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
 ## What's new
-Added command: upgrade
-Update the versions of modules installed in the current namespace.
+Added new command: upg
+Upgrade the versions of modules installed in the current namespace.
 
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_7_upgrade.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_upg.png)
 
-Added command extension: list
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_list.png)
+Added new command: info
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_info-m.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_info-r.png)
+![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_info-f.png)
 
 ```
+ Available commands extention:
+ -----------------------------
+ 
+ newdb <module>
+  Create a new database and an Namespace with a name derived from the name of the module and Install the module into it,
+ 
+ dbcreate namespace <path>
+  Create a new database and an Namespace,
+  dbcreate testdb2 -p d:/!/database/durable
+ 
+ dbdelete namespace
+  Delete database and an Namespace,
+ 
+ info
+  Show more complete information about modules in the current namespace.
+ info -m module
+  Show file module.xml.
+ info -f module
+  List file in repository.
+ info -r module
+  Show file readme.md.
+ 
+ upg
+  Upgrade the versions of modules installed in the current namespace.
+ 
+ load http://git-repo/developer-name/repo-name
+  Load the module directly from the repository into the current Namespace. The 'git clone' command is applied. The git program must be installed.
+ 
+ find app* -d  load description from modules, and the description is always displayed
+ 
+ find app* -u /rcemper  show modules only including context from repository
+ 
+ cmd
+  Alias: ?
+  Show all commands.
+ 
+ cmd <context>
+  Show all commands including context.
+ 
  cmd -init
   Reload all commands. Run do ##class(%ZAPM.ext.zapp).init()
  
@@ -47,6 +88,7 @@ Added command extension: list
  hist -add Number_hist [name_cmd] [a/i/n] description
   Added history in list commans.
 ```
+
 ## Installation with ZPM
 
 If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.

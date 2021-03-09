@@ -1018,7 +1018,8 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","repo","Show repository")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upgrade","Upgrade modules in namespace")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upg","Upgrade modules in namespace")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","info","Show more complete information about modules")
 	;zapm
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
@@ -1468,7 +1469,7 @@ research and development ZPM</Description>
 <TimeCreated>65692,84099.653344</TimeCreated>
 
 <Parameter name="VERSION">
-<Default>1.0.14</Default>
+<Default>1.0.15</Default>
 </Parameter>
 
 <Parameter name="GN">
@@ -1491,8 +1492,9 @@ zapp "newdb spool-demo"</Description>
 	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
+	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
-	if $p(cmd," ")="upgrade" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
+	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -1501,6 +1503,109 @@ zapp "newdb spool-demo"</Description>
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+]]></Implementation>
+</Method>
+
+<Method name="info">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>extcmd</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set tDesc=1 ;+$g(pCommandInfo("data","Desc"))
+	quit:'..GetListModule(,.tModMap,'tDesc)
+		Set tMod = ""
+		For { Set tMod = $Order(tModMap(tMod),1,tVersion)
+			Quit:(tMod="")
+			Write !,$$$escGreen(tMod)," ",tVersion_" "
+			If tDesc,$Data(tModMap(tMod,"L"),Lock) {
+				Set maxlenname=$L(tMod_" "_tVersion_" ")
+				Do ..DrawColumn($$$escYellow("Description: ")_$ListGet(Lock,2))
+				Set au=3 
+				For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" { 
+					Set au=au+1
+					set audata=$ListGet(Lock,au)
+					Write:audata'="" !
+					,?(maxlenname)
+					,..DrawColumn($$$escViolet(a_": ")_audata)
+				}
+				set dirroot=$ListGet(Lock,3)
+				Write !
+					,?(maxlenname)
+					,..DrawColumn($$$escViolet("Root: ")_dirroot)
+				if $Data(tModMap(tMod,"R"),Rem) {
+					write !,$ListGet(Rem,3)
+				}
+				if (extcmd)["-r " kill out do ..GetFileLines(dirroot_"README.md",.out),..DrawArray(.out)
+				if (extcmd)["-m " kill out do ..GetFileLines(dirroot_"module.xml",.out),..DrawArray(.out)
+				if (extcmd)["-f " kill out do ..GetAllDir(dirroot,,.out),..DrawArray(.out,dirroot)
+			}
+		}
+	quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="DrawArray">
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&Array:%String,ListDir=""]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set i="" for  {set i=$o(Array(i),1,str) q:i=""  
+		if ListDir="" write !,$$$escRed(str) continue
+		if $lg(str,2)="F" write !,$$$escRed($p($lg(str,1),ListDir,2))
+	}
+]]></Implementation>
+</Method>
+
+<Method name="GetAllDir">
+<Description>
+Get all files in a directory and subdirectories</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[dir,ext="",&out]]></FormalSpec>
+<Implementation><![CDATA[
+	set dir = ##class(%File).NormalizeDirectory(dir)
+	set rs = ##class(%ResultSet).%New("%File:FileSet")
+	s sc=rs.Execute(dir, ext)
+	while (rs.Next()) {
+		set out($i(out)) = $lb(rs.Get("Name"),rs.Get("Type"),rs.Get("Size"),rs.Get("ItemName"),rs.Get("DateCreated"),rs.Get("DateModified"))
+		i rs.Get("Type")="D" d ..GetAllDir($lg(out(out),1),ext,.out)
+	}
+	q $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetFileLines">
+<Description>
+from %ZPM.PackageManager.Developer.Utils</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pFileName:%String,*pOutput</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tSC = $$$OK
+	set curio=$i
+	Try {
+		Kill pOutput
+		Close pFileName Open pFileName:("RS"):5
+		If '$T Set tSC = $$$ERROR($$$CacheError, "Failed to open file '"_pFileName_"'") Quit
+		Set TooMuch = 0
+		Use pFileName
+		For {
+			// Keep reading through end of file; save only first 32,000 characters
+			Set tLine = "" Read tLine:1
+			If '$T && (tLine=$C(-1)) Quit  // Exit by timeout
+			If $Length(tLine)<32000 {
+				Set pOutput($i(pOutput)) = tLine
+			} Else {
+				Set pOutput($i(pOutput)) = $E(tLine,1,32000)_" (more...)"
+			}
+			If ($ZEOF=-1) Quit  // Exit by EOF
+		}
+		Close pFileName
+	} Catch e {
+		Set tSC = e.AsStatus()
+		Close pFileName
+	}
+	use curio
+	Quit tSC
 ]]></Implementation>
 </Method>
 
@@ -1557,21 +1662,31 @@ zapp "newdb spool-demo"</Description>
 	write !,"-----------------------------"
  }
  if cmd=""||(cmd="newdb") {
-	write !,"newdb <module>"
+	write !!,"newdb <module>"
  	write !," Create a new database and an Namespace with a name derived from the name of the module and Install the module into it,"
  }
  if cmd=""||(cmd="dbcreate") {
-	write !,"dbcreate namespace <path>"
+	write !!,"dbcreate namespace <path>"
  	write !," Create a new database and an Namespace,"
  	write !," dbcreate testdb2 -p d:/!/database/durable"
  }
  if cmd=""||(cmd="dbdelete") {
-	write !,"dbdelete namespace"
+	write !!,"dbdelete namespace"
  	write !," Delete database and an Namespace,"
  }
- if cmd=""||(cmd="upgrade") {
-	write !,"upgrade "
- 	write !," Update the versions of modules installed in the current namespace."
+ if cmd=""||(cmd="info") {
+	write !!,"info "
+ 	write !," Show more complete information about modules in the current namespace."
+	write !,"info -m module"
+ 	write !," Show file module.xml."
+	write !,"info -f module"
+ 	write !," List file in repository."
+	write !,"info -r module"
+ 	write !," Show file readme.md."
+ }
+ if cmd=""||(cmd="upg") {
+	write !!,"upg "
+ 	write !," Upgrade the versions of modules installed in the current namespace."
  }
  if cmd=""||(cmd="load") {
 	write !!,"load http://git-repo/developer-name/repo-name"
@@ -1624,7 +1739,7 @@ zapp "newdb spool-demo"</Description>
 <Method name="cmdzpmext">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upgrade")
+<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info")
 ]]></Implementation>
 </Method>
 
@@ -1648,7 +1763,7 @@ write ##class(%ZAPM.ext.zpm).Upgrade()</Description>
 <FormalSpec>ns=$namespace</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List)
+	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List,0)
 	set name=""
 	for { set name=$Order(List(name)) quit:name=""
 		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
@@ -1688,10 +1803,10 @@ write ##class(%ZAPM.ext.zpm).UpgradeList(.list)</Description>
 
 <Method name="GetListModule">
 <Description>
-Get module list
-do ##class(%ZAPM.ext.zpm).GetListModule(,.List)</Description>
+do ##class(%ZAPM.ext.zpm).GetListModule(,.List)
+Get module list in currently namespace</Description>
 <ClassMethod>1</ClassMethod>
-<FormalSpec><![CDATA[ns=$namespace,&Mod]]></FormalSpec>
+<FormalSpec><![CDATA[ns=$namespace,&Mod,OnlyName=1]]></FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	new $namespace
@@ -1711,13 +1826,13 @@ do ##class(%ZAPM.ext.zpm).GetListModule(,.List)</Description>
 			Set list=list_$lb(tRes.%Get(a))
 		}
 		Set Mod(name) = tRes.%Get("VersionString")
-		Set Mod(name,"L") = list
+		Set:'OnlyName Mod(name,"L") = list
 		
 	}
 	$$$ThrowOnError(tSC)
-	quit:in="" $$$OK
+	quit:in=""||(OnlyName) $$$OK
 	set in=$Extract(in,1,*-1)
-	;----------
+
 	Set tQuery = "select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') WHERE name in ("_in_")"
 	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
 	
@@ -2126,7 +2241,7 @@ do ##class(%ZAPM.ext.zpm).Description("z*","/rcep",1)</Description>
 		Set Module=tModuleName
 		Set where="where name = ?"
 	}
-	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc)
+	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc) Set where=where_" order by Repo "
 	If where="" Write !,"Search the entire repository"
 	Else  Write !,"Search the repository context "_Module
 	//Load the list info registry modules
