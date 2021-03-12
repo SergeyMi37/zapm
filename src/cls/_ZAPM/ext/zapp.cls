@@ -14,10 +14,6 @@ ClassMethod init(NoExt = 0) As %Status
 {
 	new $namespace
 	set $namespace="%sys"
-	if 'NoExt {
-		do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
-		do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
-	}
 	do ..favourite(.list)
 	;merge list=@..#GN@("cmd")
 	set i=""
@@ -28,6 +24,10 @@ ClassMethod init(NoExt = 0) As %Status
 			set ii=$Order(list(i,ii),1,val) q:ii=""
 			do ##class(%ZAPM.ext.commands).AddUpdate($lg(val,1),$lg(val,3),i,$lg(val,2),$lg(val,4))
 		}
+	}
+	if 'NoExt {
+		do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
+		do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
 	}
 	do ##class(%ZAPM.ext.zpm).SetColorScheme()
 	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
@@ -63,7 +63,10 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
 	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
-	
+	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bs","navigator namespace")
+	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsg","globals edotor")
+	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsr","routine editor")
+	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsd","filesystem navigator")
 	q $$$OK
 }
 

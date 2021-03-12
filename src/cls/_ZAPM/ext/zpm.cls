@@ -24,6 +24,7 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
 	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
+	if $e(cmd,1,2)="bs" quit ##class(%ZAPM.ext.zpm).bs(cmd) 
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -32,6 +33,16 @@ ClassMethod extcmd(cmd = "") As %Status
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+}
+
+ClassMethod bs(cmd) As %Status
+{
+	if '$$EXIST^%R("%ZAPM.bs.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if $p(cmd," ")="bs" do ^%ZAPM.bs.BSC quit $$$OK
+	if $p(cmd," ")="bsg" do ^%ZAPM.bs.BSMSMG($p(cmd," ",2)) quit $$$OK
+	if $p(cmd," ")="bsr" do ^%ZAPM.bs.BSXprog($p(cmd," ",2)) quit $$$OK
+	if $p(cmd," ")="bsd" ;do ^%ZAPM.bs.BSX($p(cmd," ",2)) quit $$$OK ;file system
+	quit $$$OK
 }
 
 ClassMethod info(extcmd) As %Status
@@ -223,7 +234,14 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !!,"hist -add Number_hist [name_cmd] [a/i/n] description"
  	write !," Added history in list commans."
  }
-
+ if $$EXIST^%R("%ZAPM.bs.BSC") {
+	if cmd=""||($e(cmd,1,2)="bs") {
+	write !!,"bs - navigator namespace"
+	write !,"bsg - globals edotor"
+	write !,"bsr - routine editor"
+	write !,"bsd - filesystem navigator"
+	}
+}
  write !
 	quit $$$OK
 }
@@ -235,7 +253,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info")
+	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","bs","bsg","bst","bsr","bsd")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")

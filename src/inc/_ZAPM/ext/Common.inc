@@ -24,6 +24,7 @@ ROUTINE %ZAPM.ext.Common [Type=INC]
 #define CurrentClass 	##Expression($$$quote(%classname))
 #define CurrentMethod 	##Expression($$$quote(%methodname))
 #define slash $s($zversion(1)=3:"/",1:"\")
+#define FileTempDir	$zu(140,17)
 
 #define formatJSON 		"aelotwc"
 #define formatJSONSQL	"tw"

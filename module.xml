@@ -12,15 +12,12 @@
    <License>MIT</License>
   </Author>
   <Packaging>module</Packaging>
-  <SourcesRoot>./</SourcesRoot>
-	<Invokes>
-	<Invoke Class="%SYSTEM.OBJ" Method="CompilePackage">
-      <Arg>%ZAPM</Arg>
-	  <Arg>cuk</Arg>
-    </Invoke>
+   <SourcesRoot>src</SourcesRoot>
+  <Resource Name="%ZAPM.ext.PKG" Directory="cls"/>
+  <Resource Name="%ZAPM.ext.Common.INC" Directory="inc"/>
+  <Invokes>
 	<Invoke Class="%ZAPM.ext.zapp" Method="init"></Invoke>
 	</Invokes>
-  <Resource Name="zapm.PKG"/> 
 </Module>
 </Document>
 </Export>
