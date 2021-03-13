@@ -63,10 +63,10 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
 	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bs","navigator namespace")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsg","globals edotor")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsr","routine editor")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsd","filesystem navigator")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edt","navigator namespace")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edg","globals edotor")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edr","routine editor")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edf","filesystem navigator")
 	q $$$OK
 }
 

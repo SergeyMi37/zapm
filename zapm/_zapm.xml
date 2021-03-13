@@ -1026,10 +1026,10 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
 	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bs","navigator namespace")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsg","globals edotor")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsr","routine editor")
-	set list("bs",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","bsd","filesystem navigator")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edt","navigator namespace")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edg","globals edotor")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edr","routine editor")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edf","filesystem navigator")
 	q $$$OK
 ]]></Implementation>
 </Method>
@@ -1498,7 +1498,7 @@ zapp "newdb spool-demo"</Description>
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
 	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
-	if $e(cmd,1,2)="bs" quit ##class(%ZAPM.ext.zpm).bs(cmd) 
+	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
@@ -1510,16 +1510,16 @@ zapp "newdb spool-demo"</Description>
 ]]></Implementation>
 </Method>
 
-<Method name="bs">
+<Method name="editor">
 <ClassMethod>1</ClassMethod>
 <FormalSpec>cmd</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	if '$$EXIST^%R("%ZAPM.bs.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
-	if $p(cmd," ")="bs" do ^%ZAPM.bs.BSC quit $$$OK
-	if $p(cmd," ")="bsg" do ^%ZAPM.bs.BSMSMG($p(cmd," ",2)) quit $$$OK
-	if $p(cmd," ")="bsr" do ^%ZAPM.bs.BSXprog($p(cmd," ",2)) quit $$$OK
-	if $p(cmd," ")="bsd" ;do ^%ZAPM.bs.BSX($p(cmd," ",2)) quit $$$OK ;file system
+	if '$$EXIST^%R("%ZAPM.ed.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if $p(cmd," ")="edt" do ^%ZAPM.ed.BSC quit $$$OK
+	if $p(cmd," ")="edg" do ^%ZAPM.ed.BSMSMG($p(cmd," ",2)) quit $$$OK
+	if $p(cmd," ")="edr" do ^%ZAPM.ed.BSXprog($p(cmd," ",2)) quit $$$OK
+	if $p(cmd," ")="edf" ;do ^%ZAPM.bs.BSX($p(cmd," ",2)) quit $$$OK ;file system
 	quit $$$OK
 ]]></Implementation>
 </Method>
@@ -1741,12 +1741,12 @@ from %ZPM.PackageManager.Developer.Utils</Description>
  	write !!,"hist -add Number_hist [name_cmd] [a/i/n] description"
  	write !," Added history in list commans."
  }
- if $$EXIST^%R("%ZAPM.bs.BSC") {
-	if cmd=""||($e(cmd,1,2)="bs") {
-	write !!,"bs - navigator namespace"
-	write !,"bsg - globals edotor"
-	write !,"bsr - routine editor"
-	write !,"bsd - filesystem navigator"
+ if $$EXIST^%R("%ZAPM.ed.BSC") {
+	if cmd=""||($e(cmd,1,2)="ed") {
+	write !!,"edt - navigator namespace"
+	write !,"edg - globals edotor"
+	write !,"edr - routine editor"
+	write !,"edf - filesystem navigator"
 	}
 }
  write !
@@ -1764,7 +1764,7 @@ from %ZPM.PackageManager.Developer.Utils</Description>
 <Method name="cmdzpmext">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","bs","bsg","bst","bsr","bsd")
+<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edt","edg","edf","edr")
 ]]></Implementation>
 </Method>
 
