@@ -2,6 +2,7 @@
 
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm-1)
+[![license](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ZAPM is a shell - extends the ZPM shell and adds any other commands.
 
