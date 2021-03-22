@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="IRIS" version="26">
+<Class name="%ZAPM.ed.test.Unitest">
+<Super>%UnitTest.TestCase</Super>
+<TimeCreated>65817,81349.762724</TimeCreated>
+
+<Method name="TestCreateRecord">
+<Implementation><![CDATA[   do $$$AssertStatusOK(1,"Create Record")
+]]></Implementation>
+</Method>
+
+<Method name="TestFortyTwo">
+<Implementation><![CDATA[
+	Set tResults=42
+	Set tExpected=42
+	Do $$$AssertEquals(tResults,tExpected,tExpected_" = "_tResults)
+]]></Implementation>
+</Method>
+</Class>
+
+
 <Class name="%ZAPM.ext.Production">
 <Description>
 Utilities for group work with Ensemble or Interoperability products of different Namespaces
@@ -1009,6 +1028,10 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
 	set list("sys",$i(list))=$lb("zn ""%SYS"" ","i","zn1","Go to namespace %SYS")
 	set list("sys",$i(list))=$lb("w !,""Host "",$zu(110),!,##class(apptools.core.net).GetURI()_""/csp/sys/%25CSP.Portal.Home.zen"",!,""w ##class(apptools.core.net).GetIP()"",!,##class(apptools.core.net).GetIP(),! do ##class(apptools.core.net).GetIPext(,.IPexternal) zw IPexternal ","i","myip","Show my IP")
+	
+	;sql
+	set list("sql",$i(list))=$lb("do $system.SQL.Shell()","i","sql","Shell SQL")
+	
 	;zmp
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
