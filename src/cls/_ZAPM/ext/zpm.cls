@@ -37,12 +37,16 @@ ClassMethod extcmd(cmd = "") As %Status
 
 ClassMethod editor(cmd) As %Status
 {
-	if '$$EXIST^%R("%ZAPM.ed.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
-	if $p(cmd," ")="edt" do ^%ZAPM.ed.BSC quit $$$OK
-	if $p(cmd," ")="edg" do ^%ZAPM.ed.BSMSMG($p(cmd," ",2)) quit $$$OK
-	if $p(cmd," ")="edr" do ^%ZAPM.ed.BSXprog($p(cmd," ",2)) quit $$$OK
-	if $p(cmd," ")="edf" ;do ^%ZAPM.bs.BSX($p(cmd," ",2)) quit $$$OK ;file system
+	;if '$$EXIST^%R("%ZAPM.ed.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if $p(cmd," ")="edt" do ^%ZAPM.ed.BSC,rest quit $$$OK
+	if $p(cmd," ")="edn" do nszpm^%ZAPM.ed.a,rest quit $$$OK
+	if $p(cmd," ")="edg" do glo^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
+	if $p(cmd," ")="edr" do rou^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
+	if $p(cmd," ")="edf" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;file system
+	if $p(cmd," ")="eds" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;sql queries
 	quit $$$OK
+rest open 0:(:)
+ quit
 }
 
 ClassMethod info(extcmd) As %Status
@@ -236,10 +240,10 @@ ClassMethod exthelp(cmd = "") As %Status
  }
  if $$EXIST^%R("%ZAPM.ed.BSC") {
 	if cmd=""||($e(cmd,1,2)="ed") {
-	write !!,"edt - navigator namespace"
+	write !!,"edn - navigator for zpm"
 	write !,"edg - globals edotor"
 	write !,"edr - routine editor"
-	write !,"edf - filesystem navigator"
+	;write !,"edf - filesystem navigator"
 	}
 }
  write !
@@ -253,7 +257,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edt","edg","edf","edr")
+	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edt","edg","edf","edr","edn","edf","eds")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
