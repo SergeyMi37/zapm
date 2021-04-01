@@ -45,7 +45,7 @@ ClassMethod editor(cmd) As %Status
 	if $p(cmd," ")="edf" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;file system
 	if $p(cmd," ")="eds" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;sql queries
 	quit $$$OK
-rest open 0:(:)
+rest open 0:(:) write $$$escClear
  quit
 }
 
@@ -238,12 +238,14 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !!,"hist -add Number_hist [name_cmd] [a/i/n] description"
  	write !," Added history in list commans."
  }
- if $$EXIST^%R("%ZAPM.ed.BSC") {
+ if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {
-	write !!,"edn - navigator for zpm"
-	write !,"edg - globals edotor"
-	write !,"edr - routine editor"
-	;write !,"edf - filesystem navigator"
+	write !!,"edn - Navigator for namespace and zpm modules"
+	write !,"edg - Globals editor"
+	write !,"zapm ""edg ^test"" - Globals editor"
+	write !,"zapm ""edg lockarray"" - Local array editor"
+	write !,"edr - Routine editor"
+	;write !,"edf - Filesystem navigator"
 	}
 }
  write !
@@ -274,9 +276,9 @@ ClassMethod Upgrade(ns = {$namespace}) As %Status
 	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List,0)
 	set name=""
 	for { set name=$Order(List(name)) quit:name=""
-		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
+		if $LISTGET(List(name,"L"),1)'=$LISTGET($GET(List(name,"R")),1) {
 			set Diff(name)="" 
-			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET(List(name,"R"),1)
+			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET($GET(List(name,"R")),1)
 		}
 	}
 	if '$DATA(Diff) {
