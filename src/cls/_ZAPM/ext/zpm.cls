@@ -37,9 +37,10 @@ ClassMethod extcmd(cmd = "") As %Status
 
 ClassMethod editor(cmd) As %Status
 {
-	;if '$$EXIST^%R("%ZAPM.ed.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if '$$EXIST^%R("%ZAPM.ed.a") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if $e(cmd,1,5)="edit-" set cmd="ed"_$e(cmd,6)_" "_$p(cmd," ",2,*)
 	if $p(cmd," ")="edt" do ^%ZAPM.ed.BSC,rest quit $$$OK
-	if $p(cmd," ")="edn" do nszpm^%ZAPM.ed.a,rest quit $$$OK
+	if $p(cmd," ")="edz" do nszpm^%ZAPM.ed.a,rest quit $$$OK
 	if $p(cmd," ")="edg" do glo^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
 	if $p(cmd," ")="edr" do rou^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
 	if $p(cmd," ")="edf" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;file system
@@ -214,7 +215,7 @@ ClassMethod exthelp(cmd = "") As %Status
 
  if cmd=""||(cmd="cmd") {
 	write !!,"cmd "
- 	write !," Alias: ?"
+ 	write !,"  Alias: ?"
  	write !," Show all commands."
  	write !!,"cmd <context>"
  	write !," Show all commands including context."
@@ -223,7 +224,7 @@ ClassMethod exthelp(cmd = "") As %Status
  }
  if cmd=""||(cmd="hist") {
 	write !!,"hist "
-	write !," Alias: ??"
+	write !,"  Alias: ??"
  	write !," Show all history."
  	write !!,"hist <context>"
  	write !," Show all history including context."
@@ -240,12 +241,27 @@ ClassMethod exthelp(cmd = "") As %Status
  }
  if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {
-	write !!,"edn - Navigator for namespace and zpm modules"
-	write !,"edg - Globals editor"
-	write !,"zapm ""edg ^test"" - Globals editor"
-	write !,"zapm ""edg lockarray"" - Local array editor"
-	write !,"edr - Routine editor"
-	;write !,"edf - Filesystem navigator"
+	write !!,"edit-glo - Globals and lockals editor"
+	write !,"  Alias: edg "
+	write !,"    edg ^globaltest"
+	write !,"    edg localarray"
+	write !,"edit-rou - Routine editor"
+	write !,"  Alias: edr "
+	write !,"    edr ^rouname"
+	write !,"edit-zpm - Navigator for zpm"
+	write !,"  Alias: edz "
+	write !,"edit-file - Filesystem navigator"
+	write !,"  Alias: edf "
+	write !,"    edf /home/file.txt"
+	write !,"    edf mess - view file messages.log"
+	write !,"    edf cpf - view file iris.cpf"
+	write !,"edit-lock - Locktab navigator"
+	write !,"  Alias: edl "
+	write !,"edit-job - Job navigator"
+	write !,"  Alias: edj "
+	write !,"edit-sql - SQL query executor"
+	write !,"  Alias: eds "
+	write !,"    eds select * from sample.person"
 	}
 }
  write !
@@ -259,7 +275,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edt","edg","edf","edr","edn","edf","eds")
+	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
@@ -276,9 +292,9 @@ ClassMethod Upgrade(ns = {$namespace}) As %Status
 	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List,0)
 	set name=""
 	for { set name=$Order(List(name)) quit:name=""
-		if $LISTGET(List(name,"L"),1)'=$LISTGET($GET(List(name,"R")),1) {
+		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
 			set Diff(name)="" 
-			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET($GET(List(name,"R")),1)
+			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET(List(name,"R"),1)
 		}
 	}
 	if '$DATA(Diff) {

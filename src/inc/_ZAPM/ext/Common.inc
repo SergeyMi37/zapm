@@ -24,7 +24,6 @@ ROUTINE %ZAPM.ext.Common [Type=INC]
 #define CurrentClass 	##Expression($$$quote(%classname))
 #define CurrentMethod 	##Expression($$$quote(%methodname))
 #define slash $s($zversion(1)=3:"/",1:"\")
-#define FileTempDir	$zu(140,17)
 
 #define formatJSON 		"aelotwc"
 #define formatJSONSQL	"tw"
@@ -173,7 +172,6 @@ ROUTINE %ZAPM.ext.Common [Type=INC]
 #define forAll(%in,%gn) s gn%in=$na(%gn) s %in="" f { s %in=$o(@gn%in@(%in)) q:%in=""
 #define forAllk(%in,%kn,%gn) s gn%in=$na(%gn) s %in="" f %kn=1:1 { s %in=$o(@gn%in@(%in)) q:%in=""
 #define forEnd  }
-#define foreach(%key,%arr,%do) set %key="" for  set %key=$o(%arr(%key)) q:%key=""  do %do
 
 #; keep the name of the current region
 #define NspGoto(%cur,%ns)  s %cur=$zu(5) try {zn %ns} catch e {} 

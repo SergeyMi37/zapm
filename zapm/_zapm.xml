@@ -1012,30 +1012,35 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 	
 	;sql
 	set list("sql",$i(list))=$lb("do $system.SQL.Shell()","i","sql","Shell SQL")
-	
+	set ecmd="do ##class(%ZAPM.ext.zpm).extcmd(%cmd)"
 	;zmp
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","repo","Show repository")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upg","Upgrade modules in namespace")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","info","Show more complete information about modules")
+	set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
+	set list("zpm",$i(list))=$lb(ecmd,"i","help","Extension help command")
+	set list("zpm",$i(list))=$lb(ecmd,"i","ver","Extension show version")
+	set list("zpm",$i(list))=$lb(ecmd,"i","find","Show modules")
+	set list("zpm",$i(list))=$lb(ecmd,"i","repo","Show repository")
+	set list("zpm",$i(list))=$lb(ecmd,"i","upg","Upgrade modules in namespace")
+	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
+	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
+	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")
+	set list("zapm",$i(list))=$lb(ecmd,"a","dbdelete","delete database, namespace and role")
 	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edn","Navigator for namespace and zpm modules")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edg","Globals edotor")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edr","Routine editor")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edf","Navigator for file system")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edt","Navigator for tables")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","eds","Navigator for sql-queries")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edz","navigator for zpm")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-zpm","navigator for zpm")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edg","globals edotor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-glo","globals and lockals edotor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edr","routine editor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-rou","routine editor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edf","navigator for file system")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-file","navigator for file system")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edt","navigator for tables")
+	set list("zapm",$i(list))=$lb(ecmd,"i","eds","navigator for sql-queries")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-sql","navigator for sql-queries")
 	q $$$OK
 ]]></Implementation>
 </Method>
@@ -1045,7 +1050,7 @@ do ##class(%ZAPM.ext.zapp).favourite(.list)</Description>
 <FormalSpec>comm=""</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
-	set del=$$$escRed(">")
+	set del=$$$escBlue(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
 	set prompt="zapm:"
 	for i=1:1:$l(tp,",") {
@@ -1521,9 +1526,10 @@ zapp "newdb spool-demo"</Description>
 <FormalSpec>cmd</FormalSpec>
 <ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
-	;if '$$EXIST^%R("%ZAPM.ed.BSC") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if '$$EXIST^%R("%ZAPM.ed.a") write !,"Extension zapm-editor not installed. To install, run: zapm ""install zapm-editor"" " quit $$$OK
+	if $e(cmd,1,5)="edit-" set cmd="ed"_$e(cmd,6)_" "_$p(cmd," ",2,*)
 	if $p(cmd," ")="edt" do ^%ZAPM.ed.BSC,rest quit $$$OK
-	if $p(cmd," ")="edn" do nszpm^%ZAPM.ed.a,rest quit $$$OK
+	if $p(cmd," ")="edz" do nszpm^%ZAPM.ed.a,rest quit $$$OK
 	if $p(cmd," ")="edg" do glo^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
 	if $p(cmd," ")="edr" do rou^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
 	if $p(cmd," ")="edf" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;file system
@@ -1727,7 +1733,7 @@ from %ZPM.PackageManager.Developer.Utils</Description>
 
  if cmd=""||(cmd="cmd") {
 	write !!,"cmd "
- 	write !," Alias: ?"
+ 	write !,"  Alias: ?"
  	write !," Show all commands."
  	write !!,"cmd <context>"
  	write !," Show all commands including context."
@@ -1736,7 +1742,7 @@ from %ZPM.PackageManager.Developer.Utils</Description>
  }
  if cmd=""||(cmd="hist") {
 	write !!,"hist "
-	write !," Alias: ??"
+	write !,"  Alias: ??"
  	write !," Show all history."
  	write !!,"hist <context>"
  	write !," Show all history including context."
@@ -1753,12 +1759,27 @@ from %ZPM.PackageManager.Developer.Utils</Description>
  }
  if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {
-	write !!,"edn - Navigator for namespace and zpm modules"
-	write !,"edg - Globals editor"
-	write !,"zapm ""edg ^test"" - Globals editor"
-	write !,"zapm ""edg lockarray"" - Local array editor"
-	write !,"edr - Routine editor"
-	;write !,"edf - Filesystem navigator"
+	write !!,"edit-glo - Globals and lockals editor"
+	write !,"  Alias: edg "
+	write !,"    edg ^globaltest"
+	write !,"    edg localarray"
+	write !,"edit-rou - Routine editor"
+	write !,"  Alias: edr "
+	write !,"    edr ^rouname"
+	write !,"edit-zpm - Navigator for zpm"
+	write !,"  Alias: edz "
+	write !,"edit-file - Filesystem navigator"
+	write !,"  Alias: edf "
+	write !,"    edf /home/file.txt"
+	write !,"    edf mess - view file messages.log"
+	write !,"    edf cpf - view file iris.cpf"
+	write !,"edit-lock - Locktab navigator"
+	write !,"  Alias: edl "
+	write !,"edit-job - Job navigator"
+	write !,"  Alias: edj "
+	write !,"edit-sql - SQL query executor"
+	write !,"  Alias: eds "
+	write !,"    eds select * from sample.person"
 	}
 }
  write !
@@ -1776,7 +1797,7 @@ from %ZPM.PackageManager.Developer.Utils</Description>
 <Method name="cmdzpmext">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edt","edg","edf","edr","edn","edf","eds")
+<Implementation><![CDATA[	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 ]]></Implementation>
 </Method>
 
@@ -1803,9 +1824,9 @@ write ##class(%ZAPM.ext.zpm).Upgrade()</Description>
 	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List,0)
 	set name=""
 	for { set name=$Order(List(name)) quit:name=""
-		if $LISTGET(List(name,"L"),1)'=$LISTGET($GET(List(name,"R")),1) {
+		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
 			set Diff(name)="" 
-			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET($GET(List(name,"R")),1)
+			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET(List(name,"R"),1)
 		}
 	}
 	if '$DATA(Diff) {

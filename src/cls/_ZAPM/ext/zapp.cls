@@ -49,36 +49,41 @@ ClassMethod favourite(ByRef list) As %Status
 	
 	;sql
 	set list("sql",$i(list))=$lb("do $system.SQL.Shell()","i","sql","Shell SQL")
-	
+	set ecmd="do ##class(%ZAPM.ext.zpm).extcmd(%cmd)"
 	;zmp
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","load","Extension Load module from repo")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","help","Extension help command")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","ver","Extension show version")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","find","Show modules")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","repo","Show repository")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","upg","Upgrade modules in namespace")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","info","Show more complete information about modules")
+	set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
+	set list("zpm",$i(list))=$lb(ecmd,"i","help","Extension help command")
+	set list("zpm",$i(list))=$lb(ecmd,"i","ver","Extension show version")
+	set list("zpm",$i(list))=$lb(ecmd,"i","find","Show modules")
+	set list("zpm",$i(list))=$lb(ecmd,"i","repo","Show repository")
+	set list("zpm",$i(list))=$lb(ecmd,"i","upg","Upgrade modules in namespace")
+	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","newdb","create new db,namespace and install module")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","dbcreate","create new database and namespace and role")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","a","dbdelete","delete database, namespace and role")
+	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
+	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")
+	set list("zapm",$i(list))=$lb(ecmd,"a","dbdelete","delete database, namespace and role")
 	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edn","Navigator for namespace and zpm modules")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edg","Globals edotor")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edr","Routine editor")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edf","Navigator for file system")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","edt","Navigator for tables")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).extcmd(%cmd)","i","eds","Navigator for sql-queries")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edz","navigator for zpm")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-zpm","navigator for zpm")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edg","globals edotor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-glo","globals and lockals edotor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edr","routine editor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-rou","routine editor")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edf","navigator for file system")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-file","navigator for file system")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edt","navigator for tables")
+	set list("zapm",$i(list))=$lb(ecmd,"i","eds","navigator for sql-queries")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-sql","navigator for sql-queries")
 	q $$$OK
 }
 
 ClassMethod TerminalPrompt(comm = "") As %String
 {
-	set del=$$$escRed(">")
+	set del=$$$escBlue(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
 	set prompt="zapm:"
 	for i=1:1:$l(tp,",") {
