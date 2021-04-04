@@ -78,6 +78,11 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zapm",$i(list))=$lb(ecmd,"i","edt","navigator for tables")
 	set list("zapm",$i(list))=$lb(ecmd,"i","eds","navigator for sql-queries")
 	set list("zapm",$i(list))=$lb(ecmd,"i","edit-sql","navigator for sql-queries")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edj","navigator for jobs")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-job","navigator for jobs")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edl","Locktab navigator")
+	set list("zapm",$i(list))=$lb(ecmd,"i","edit-lock","Locktab navigator")
+	set list("zapm",$i(list))=$lb("do ##class(apptools.MSW.dev).ExportMy()","i","expo","Export projects")
 	q $$$OK
 }
 

@@ -43,11 +43,16 @@ ClassMethod editor(cmd) As %Status
 	if $p(cmd," ")="edz" do nszpm^%ZAPM.ed.a,rest quit $$$OK
 	if $p(cmd," ")="edg" do glo^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
 	if $p(cmd," ")="edr" do rou^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK
-	if $p(cmd," ")="edf" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;file system
-	if $p(cmd," ")="eds" ;TODO do ^%ZAPM.bs.BSX($p(cmd," ",2)),rest quit $$$OK ;sql queries
+	if $p(cmd," ")="edf" do FileSys^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK ;file system navigator
+	if $p(cmd," ")="eds" if $$appinstall() do SQLTab^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK ;sql queries
+	if $p(cmd," ")="edl" if $$appinstall() do SQLLockTab^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK ;sql queries
+	if $p(cmd," ")="edj" if $$appinstall() do SQLJobs^%ZAPM.ed.a($p(cmd," ",2)),rest quit $$$OK ;sql queries
 	quit $$$OK
 rest open 0:(:) write $$$escClear
  quit
+appinstall() 
+ if '$$EXIST^%R("apptools.core.LogInfoPane.1") write !,"Modele ZPN ""apptools-admin"" not installed. To install, run: zapm ""install apptools-admin"" " quit 0
+ quit 1
 }
 
 ClassMethod info(extcmd) As %Status
@@ -100,7 +105,7 @@ ClassMethod GetAllDir(dir, ext = "", ByRef out)
 	s sc=rs.Execute(dir, ext)
 	while (rs.Next()) {
 		set out($i(out)) = $lb(rs.Get("Name"),rs.Get("Type"),rs.Get("Size"),rs.Get("ItemName"),rs.Get("DateCreated"),rs.Get("DateModified"))
-		i rs.Get("Type")="D" d ..GetAllDir($lg(out(out),1),ext,.out)
+		if rs.Get("Type")="D" d ..GetAllDir($lg(out(out),1),ext,.out)
 	}
 	q $$$OK
 }
