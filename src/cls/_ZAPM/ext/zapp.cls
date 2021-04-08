@@ -31,6 +31,7 @@ ClassMethod init(NoExt = 0) As %Status
 	}
 	do ##class(%ZAPM.ext.zpm).SetColorScheme()
 	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
+	do ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET,##class(%ZAPM.ext.zpm).#VERSION)
 	quit $$$OK
 }
 

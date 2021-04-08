@@ -11,6 +11,9 @@ Parameter VERSION = "1.0.15";
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
 
+/// Storage of settings
+Parameter GNSET = "^%ZAPM.settings";
+
 /// extention zpm commans
 /// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
 /// zapp "newdb spool-demo"
@@ -20,7 +23,11 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
 	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
-	if $p(cmd," ")="ver" zpm "ver" write !,$$$escGreen("zapm")_" "_..#VERSION,!
+	if $p(cmd," ")="ver" {
+		zpm "ver" 
+		write !,$$$escGreen("zapm")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
+		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
 	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
@@ -33,6 +40,44 @@ ClassMethod extcmd(cmd = "") As %Status
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+}
+
+/// write ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm","^%ZAPM.settings","1.0.15")
+ClassMethod SetModuleVersion(modulename = "zapm", gn = {..#GNSET}, ver = "") As %Status
+{
+	do ##class(%ZAPM.ext.zpm).GetListModule(,.List,0)
+	set st=$$$OK
+	if '$D(List(modulename,"L"),data) quit $$$ERROR($$$GeneralError,"there is no module '"_modulename_"' in the namespace '"_$namespace_"'")
+	set root=$lg($g(data),3) 
+	set desc=$lg($g(data),2) 
+	if root="" quit $$$ERROR($$$GeneralError,"there is no root defined in the namespace '"_$namespace_"' for the module '"_modulename_"'")
+	do ..GetFileLines(root_"module.xml",.out)
+	set i="" for  {set i=$o(out(i),1,str) q:i=""  
+		if str["<Version>" set ver=$p($p(str,"<Version>",2),"<")
+	}
+	if $G(ver)="" quit $$$ERROR($$$GeneralError,"no version number found in the module file")
+	try {
+		set @gn@("Modules",modulename,"Version")=ver
+		if $G(List(modulename,"R"))'="" {
+			set @gn@("Modules",modulename,"Remote")=$G(List(modulename,"R"))
+			set repo=$lg(List(modulename,"R"),3)
+			set:repo'="" @gn@("Modules",modulename,"Repo")=repo
+		}
+		set:$G(List(modulename,"L"))'="" @gn@("Modules",modulename,"Local")=$G(List(modulename,"L"))
+		set:desc'="" @gn@("Modules",modulename,"Desc")=desc
+		if 
+	}
+	catch e {
+		set st=$$$ERROR($$$GeneralError,$ze)
+		quit
+	}
+	quit st
+}
+
+/// write ##class(%ZAPM.ext.zpm).GetModuleVersion()
+ClassMethod GetModuleVersion(modulename = "zapm", gn = {..#GNSET}) As %Status
+{
+	quit $GET(@gn@("Modules",modulename,"Version"),"0.0.?")
 }
 
 ClassMethod editor(cmd) As %Status
