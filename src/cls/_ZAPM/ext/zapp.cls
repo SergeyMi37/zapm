@@ -14,7 +14,8 @@ ClassMethod initeditor(NoExt = 0) As %Status
 {
 	new $namespace
 	set $namespace="%sys"
-	do init^%ZAPM.ed.a
+	try {do init^%ZAPM.ed.a	} 
+	catch e {}
 	quit $$$OK
 }
 
