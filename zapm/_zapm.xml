@@ -963,6 +963,20 @@ Storage of work history</Description>
 <Default>^%ZAPM.hist</Default>
 </Parameter>
 
+<Method name="initeditor">
+<Description>
+do ##class(%ZAPM.ext.zapp).initeditor()</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>NoExt=0</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	new $namespace
+	set $namespace="%sys"
+	do init^%ZAPM.ed.a
+	quit $$$OK
+]]></Implementation>
+</Method>
+
 <Method name="init">
 <Description>
 do ##class(%ZAPM.ext.zapp).init()</Description>
@@ -1552,7 +1566,7 @@ write ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm","^%ZAPM.settings","1.0.15")
 	if root="" quit $$$ERROR($$$GeneralError,"there is no root defined in the namespace '"_$namespace_"' for the module '"_modulename_"'")
 	do ..GetFileLines(root_"module.xml",.out)
 	set i="" for  {set i=$o(out(i),1,str) q:i=""  
-		if str["<Version>" set ver=$p($p(str,"<Version>",2),"<")
+		if str["<Version>" set ver=$p($p(str,"<Version>",2),"<") quit
 	}
 	if $G(ver)="" quit $$$ERROR($$$GeneralError,"no version number found in the module file")
 	try {

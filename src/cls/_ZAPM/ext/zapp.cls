@@ -9,6 +9,15 @@ Class %ZAPM.ext.zapp [ Abstract ]
 /// Storage of work history
 Parameter GN = "^%ZAPM.hist";
 
+/// do ##class(%ZAPM.ext.zapp).initeditor()
+ClassMethod initeditor(NoExt = 0) As %Status
+{
+	new $namespace
+	set $namespace="%sys"
+	do init^%ZAPM.ed.a
+	quit $$$OK
+}
+
 /// do ##class(%ZAPM.ext.zapp).init()
 ClassMethod init(NoExt = 0) As %Status
 {

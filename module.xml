@@ -16,8 +16,8 @@
   <Resource Name="%ZAPM.ext.PKG" Directory="cls"/>
   <Resource Name="%ZAPM.ext.Common.INC" Directory="inc"/>
   <Invokes>
-	<Invoke Class="%ZAPM.ext.zapp" Method="init"></Invoke>
-	</Invokes>
+   <Invoke Class="%ZAPM.ext.zapp" Method="init"></Invoke>
+  </Invokes>
 </Module>
 </Document>
 </Export>

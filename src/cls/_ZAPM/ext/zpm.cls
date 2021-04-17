@@ -53,7 +53,7 @@ ClassMethod SetModuleVersion(modulename = "zapm", gn = {..#GNSET}, ver = "") As 
 	if root="" quit $$$ERROR($$$GeneralError,"there is no root defined in the namespace '"_$namespace_"' for the module '"_modulename_"'")
 	do ..GetFileLines(root_"module.xml",.out)
 	set i="" for  {set i=$o(out(i),1,str) q:i=""  
-		if str["<Version>" set ver=$p($p(str,"<Version>",2),"<")
+		if str["<Version>" set ver=$p($p(str,"<Version>",2),"<") quit
 	}
 	if $G(ver)="" quit $$$ERROR($$$GeneralError,"no version number found in the module file")
 	try {
