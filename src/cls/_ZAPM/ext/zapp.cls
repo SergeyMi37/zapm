@@ -25,23 +25,25 @@ ClassMethod init(NoExt = 0) As %Status
 	new $namespace
 	set $namespace="%sys"
 	do ..favourite(.list)
-	;merge list=@..#GN@("cmd")
-	set i=""
-	for {
-		set i=$Order(list(i)) q:i=""
-		set ii="" 
-		for { 
-			set ii=$Order(list(i,ii),1,val) q:ii=""
-			do ##class(%ZAPM.ext.commands).AddUpdate($lg(val,1),$lg(val,3),i,$lg(val,2),$lg(val,4))
+	try {
+		set i=""
+		for {
+			set i=$Order(list(i)) q:i=""
+			set ii="" 
+			for { 
+				set ii=$Order(list(i,ii),1,val) q:ii=""
+				do ##class(%ZAPM.ext.commands).AddUpdate($lg(val,1),$lg(val,3),i,$lg(val,2),$lg(val,4))
+			}
 		}
-	}
-	if 'NoExt {
-		do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
-		do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
-	}
-	do ##class(%ZAPM.ext.zpm).SetColorScheme()
-	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
-	do ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET,##class(%ZAPM.ext.zpm).#VERSION)
+		if 'NoExt {
+			do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
+			do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
+		}
+		do ##class(%ZAPM.ext.zpm).SetColorScheme()
+		write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
+		do ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET,##class(%ZAPM.ext.zpm).#VERSION)
+	} 
+	catch e {}
 	quit $$$OK
 }
 
