@@ -21,8 +21,7 @@ Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
 ## What's new
-Added new command: upg
-Upgrade the versions of modules installed in the current namespace.
+Added support new version zpm + hspm
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_upg.png)
 

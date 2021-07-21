@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.15";
+Parameter VERSION = "1.0.22";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -14,7 +14,7 @@ Parameter GN = "^%ZAPM.ZpmLoad";
 /// Storage of settings
 Parameter GNSET = "^%ZAPM.settings";
 
-/// extention zpm commans
+/// extention zpm commands
 /// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
@@ -61,7 +61,7 @@ ClassMethod SetModuleVersion(modulename = "zapm", gn = {..#GNSET}, ver = "") As 
 		if $G(List(modulename,"R"))'="" {
 			set @gn@("Modules",modulename,"Remote")=$G(List(modulename,"R"))
 			set repo=$lg(List(modulename,"R"),3)
-			set:repo'="" @gn@("Modules",modulename,"Repo")=repo
+			set:repo'="" @gn@("Modules",modulename,"Repository")=repo
 		}
 		set:$G(List(modulename,"L"))'="" @gn@("Modules",modulename,"Local")=$G(List(modulename,"L"))
 		set:desc'="" @gn@("Modules",modulename,"Desc")=desc
@@ -398,8 +398,8 @@ ClassMethod GetListModule(ns = {$namespace}, ByRef Mod, OnlyName = 1) As %Status
 	$$$ThrowOnError(tSC)
 	quit:in=""||(OnlyName) $$$OK
 	set in=$Extract(in,1,*-1)
-
-	Set tQuery = "select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') WHERE name in ("_in_")"
+	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)
+	Set tQuery = "select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') WHERE name in ("_in_")"
 	Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
 	
 	If (tRes.%SQLCODE < 0) {
@@ -407,7 +407,7 @@ ClassMethod GetListModule(ns = {$namespace}, ByRef Mod, OnlyName = 1) As %Status
 	}
 	While tRes.%Next(.tSC) {
 		$$$ThrowOnError(tSC)
-		Set Mod(tRes.%Get("Name"),"R")=$Listbuild(tRes.%Get("Version"),tRes.%Get("Description"),tRes.%Get("Repo"))
+		Set Mod(tRes.%Get("Name"),"R")=$Listbuild(tRes.%Get("Version"),tRes.%Get("Description"),tRes.%Get(RepoFieldName))
 	}
 	quit $$$OK
 }
@@ -499,7 +499,8 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 {
 	set currns=$namespace
 	set gn=..#GN
-	set sql="select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",modulename["*":"where Name like '"_$tr(modulename,"*","%")_"'",1:"where Name=?")
+	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)	
+	set sql="select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",modulename["*":"where Name like '"_$tr(modulename,"*","%")_"'",1:"where Name=?")
 		,rs=##class(%ResultSet).%New()
 		,sc=rs.Prepare(sql)
 	set:sc sc=rs.Execute($zconvert(modulename,"L"))
@@ -509,7 +510,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
 			quit:'rs.%Next()  
 			set name=rs.Get("Name")
 			set Version=rs.Get("Version")
-			set Repo=rs.Get("Repo")
+			set Repo=rs.Get(RepoFieldName)
 			set ns=$zconvert($tr(name,"-."),"U")
 			if skipZPM, name["apptools"||($e(name,1,3)="zpm")||(name["appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
 			if $d(@gn@(name)) { ;already load
@@ -729,6 +730,24 @@ ClassMethod ZPMColorScheme() As %String
 	quit scheme
 }
 
+/// Version ZPM 
+/// write ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm)
+ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName)
+{
+	new $namespace
+	set $namespace="%SYS"
+	Do ##class(%ZPM.PackageManager).GetListModules("zpm",.list)
+	If $Data(list("zpm")) {
+			set ver=$ListGet(list("zpm"),1)
+	}
+	set IsHspm=0
+	if $p(ver,".",2)=2,$p(ver,".",3)>14 set IsHspm=1
+	if $p(ver,".",2)>2 set IsHspm=1
+	set RepoFieldName="Repo" 
+	if IsHspm set RepoFieldName="Repository" 
+	Quit $Get(ver)
+}
+
 /// Show description 
 /// do ##class(%ZAPM.ext.zpm).Description("z*","/rcep",1)
 ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule = 0)
@@ -752,8 +771,10 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc) Set where=where_" order by Repo "
 	If where="" Write !,"Search the entire repository"
 	Else  Write !,"Search the repository context "_Module
+	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)
+	
 	//Load the list info registry modules
-	Set sql="select Name, Version, Repo, Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_where
+	Set sql="select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_where
 		,rs=##class(%ResultSet).%New()
 		,sc=rs.Prepare(sql)
 	Set:sc sc=rs.Execute(Module)
@@ -763,7 +784,7 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 			Quit:'rs.%Next()  
 			Set name=rs.Get("Name")
 			set (Description,desc)=rs.Get("Description")
-			Set (repo,url)=rs.Get("Repo")
+			Set (repo,url)=rs.Get(RepoFieldName)
 			If $Zconvert(url,"L")'[$Zconvert($Get(UrlInc),"L") Continue
 			if desc="",ViewFromModule	{
 				Do ..GetDescFromRepo(url,.desc,.repo,.modxml)
