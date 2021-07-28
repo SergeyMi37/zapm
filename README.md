@@ -22,6 +22,7 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 ## What's new
 Added support new version zpm + hspm
+Updated escape sequence color scheme
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_upg.png)
 

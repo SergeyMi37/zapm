@@ -1,3 +1,4 @@
+ROUTINE %ZAPM.ext.Common [Type=INC]
 #Include %occMessages
 #include %occReference
 
