@@ -25,7 +25,7 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
-		write !,$$$escGreen("zapm")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
+		write !,$$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
@@ -117,12 +117,12 @@ ClassMethod info(extcmd) As %Status
 					set audata=$ListGet(Lock,au)
 					Write:audata'="" !
 					,?(maxlenname)
-					,..DrawColumn($$$escViolet(a_": ")_audata)
+					,..DrawColumn($$$escMagenta(a_": ")_audata)
 				}
 				set dirroot=$ListGet(Lock,3)
 				Write !
 					,?(maxlenname)
-					,..DrawColumn($$$escViolet("Root: ")_dirroot)
+					,..DrawColumn($$$escMagenta("Root: ")_dirroot)
 				if $Data(tModMap(tMod,"R"),Rem) {
 					write !,$ListGet(Rem,3)
 				}
@@ -212,7 +212,7 @@ ClassMethod help(cmd = "") As %Status
  	for { set i=$o(^SPOOL($j,i),1,s) q:i=""
  		set s=" "_s
  		if $o(^SPOOL($j,i)) {
-	 		for cm=1:1:$ll(cmds) if s[(" "_$lg(cmds,cm)_" ") set s=$replace(s," "_$lg(cmds,cm)_" "," "_$$$escViolet($lg(cmds,cm))_" ")
+	 		for cm=1:1:$ll(cmds) if s[(" "_$lg(cmds,cm)_" ") set s=$replace(s," "_$lg(cmds,cm)_" "," "_$$$escMagenta($lg(cmds,cm))_" ")
  			set help=help_s
  		}
  	}

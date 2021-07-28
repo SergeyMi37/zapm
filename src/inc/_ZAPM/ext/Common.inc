@@ -1,17 +1,54 @@
-ROUTINE %ZAPM.ext.Common [Type=INC]
 #Include %occMessages
 #include %occReference
+
+/// Returns a line with given formatting, clearing the formatting at the end of the line
+#define FormattedLine(%formatCode, %line) $$$ControlSequence(%formatCode)_%line_$$$ControlSequence($$$ResetAll)
+
+/// Creates the control sequence for the formatting based on the code
+#define ControlSequence(%code) $Char(27)_"["_%code_"m"
+
+#; Codes to add to convert format types
+#define Reset 20
+#define Background 10
+
+#; All font formats (bold, underline etc.)
+#define Bold 1
+#define Bright 1
+#define Dim 2
+#define Underlined 4
+#define Blink 5
+#define Reverse 7
+#define Hidden 8
+
+#; All font format resets
+#define ResetAll 0
+#define ResetFontFormat(%format) ($$$Reset + %format)
+
+#; Text colour conversions
+#define BackgroundColor(%fgColor) ($$$Background + %fgColor)
+
+#; All text colors in foreground
+#define Default 39
+#define Black 30
+#define Red 31
+#define Green 32
+#define Yellow 33
+#define Blue 34
+#define Magenta 35
+#define Cyan 36
+#define White 97
 
 #; Escape sequence for coloring the font in terminal do ##class(apptools.core.msg).EscColor()
 #define escClear $c(27)_"[0m"
 #define escBg $Case(##class(%ZAPM.ext.zpm).ZPMColorScheme(),"white":47,"dark":40,:0)
-#define escGreen(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;32;"_$$$escBg_"m"_%t_$$$escClear)
-#define escBlue(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;36;"_$$$escBg_"m"_%t_$$$escClear)
-#define escDefault(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;3"_$Select($$$escBg:0,1:7)_";"_$$$escBg_"m"_%t_$$$escClear)
-#define escYellow(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;33;"_$$$escBg_"m"_%t_$$$escClear)
-#define escViolet(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;35;"_$$$escBg_"m"_%t_$$$escClear)
 #define escSeq(%e,%t) $Select($$$escBg=0:%t,1:$c(27)_"["_%e_"m"_%t_$$$escClear)
-#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
+
+#define escGreen(%t) $$$FormattedLine($$$Green,%t)
+#define escBlue(%t) $$$FormattedLine($$$Blue,%t)
+#define escYellow(%t) $$$FormattedLine($$$Yellow,%t)
+#define escMagenta(%t) $$$FormattedLine($$$Magenta,%t)
+#define escRed(%t) $$$FormattedLine($$$Red,%t)
+#define escCyan(%t) $$$FormattedLine($$$Cyan,%t)
 
 
 #;Include %msql $$$MaxStringLength
@@ -278,6 +315,5 @@ ROUTINE %ZAPM.ext.Common [Type=INC]
 #define  JSLibLocal 0
 
 #EndIf
-
 
 

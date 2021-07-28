@@ -101,7 +101,7 @@ ClassMethod favourite(ByRef list) As %Status
 
 ClassMethod TerminalPrompt(comm = "") As %String
 {
-	set del=$$$escBlue(">")
+	set del=$$$escGreen(">")
 	set tp=##class(%SYSTEM.Process).TerminalPrompt()
 	set prompt="zapm:"
 	for i=1:1:$l(tp,",") {
@@ -294,7 +294,7 @@ write(date="")
 	set num=num+1
 	set cmdline=$lg(cmd,1)
 	if $D(@gn@("cmd",cmd,"nonrem")) set cmdline=$$$escRed(cmdline)
-	write !,date_$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_cmdline_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
+	write !,date_$$$escRed(num)_"."_$$$escMagenta($lg(cmd,3))_" "_cmdline_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
 	set %zapm(num)=cmd
  quit
 }
@@ -318,10 +318,10 @@ ClassMethod help(mask = "") As %Status
 	if $e(mask,1,5)="-init" { //flags init
 		do ##class(%ZAPM.ext.zapp).init(1) q $$$OK
 	}
-	#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
+	//#define escRed(%t) $Select($$$escBg=0:%t,1:$c(27)_"[1;31;"_$$$escBg_"m"_%t_$$$escClear)
 	kill %zapm
-	write !,$$$escViolet("Extending ZPM commands, the standard ZPM commands also work as from zpm shell.")
-		,!,"Enter the command "_$$$escRed("number")_" or "_$$$escViolet("name")_" to execute."
+	write !,$$$escMagenta("Extending ZPM commands, the standard ZPM commands also work as from zpm shell.")
+		,!,"Enter the command "_$$$escRed("number")_" or "_$$$escMagenta("name")_" to execute."
 	do ##class(%ZAPM.ext.commands).GetList(.list)
 	set i=""
 	for {
@@ -357,7 +357,7 @@ ClassMethod write(part, num, cmd, noprompt = 0) As %Status
 	set prompt=$lg(cmd,2)
 	;if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"Ask before launch",prompt="n":"Launch immediately",1:"Do not run"))
 	if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="a":"A",prompt="i":"I",prompt="n":"N",1:"N"))
-	write !,$$$escRed(num)_"."_$$$escViolet($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
+	write !,$$$escRed(num)_"."_$$$escMagenta($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
  quit $$$OK
 }
 
