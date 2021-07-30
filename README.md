@@ -10,6 +10,7 @@
 [![](https://img.shields.io/badge/InterSystems-Ensemble-blue.svg)](https://www.intersystems.com/products/ensemble/)
 
 <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/SergeyMi37/zapm">
+
 [![license](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ZAPM is a shell - extends the ZPM shell and adds any other commands.
