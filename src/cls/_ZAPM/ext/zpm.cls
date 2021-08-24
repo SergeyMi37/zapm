@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.22";
+Parameter VERSION = "1.0.23";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -568,7 +568,10 @@ ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", e
 		write !,"zpm ""install "_name_""""
 		set sta=##class(%ZPM.PackageManager).Shell("install "_name)
 		if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
-		set:gn'="" @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		if gn'="" {
+			set @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+			set @gn@(name,"url")="<a target='_new' href='"_Repo_"'>"_Repo_"</a>"
+		}
 		if $g(err)["<INTERRUPT>" quit sta
 	}
 	q $$$OK
@@ -768,10 +771,10 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 		Set Module=tModuleName
 		Set where="where name = ?"
 	}
-	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc) Set where=where_" order by Repo "
+	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)
+	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc) Set where=where_" order by "_RepoFieldName_" "
 	If where="" Write !,"Search the entire repository"
 	Else  Write !,"Search the repository context "_Module
-	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)
 	
 	//Load the list info registry modules
 	Set sql="select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_where
