@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.23";
+Parameter VERSION = "1.0.25";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -27,6 +27,7 @@ ClassMethod extcmd(cmd = "") As %Status
 		zpm "ver" 
 		write !,$$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
@@ -557,7 +558,7 @@ ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", e
 {
 	new $namespace
 	k err w !
-	if ns="" s ns=$zconvert($tr(name,"-."),"U")
+	if ns="" s ns=$zconvert($tr(name,"$-.","S"),"U")
 	s st=##class(%ZAPM.ext.database).CreateDBNS(ns)
 	i 'st s err=$System.Status.GetErrorText(st) w !,err
 	s:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
@@ -887,4 +888,3 @@ ClassMethod GetDataURL(url As %String, ByRef data) As %Status
 }
 
 }
-
