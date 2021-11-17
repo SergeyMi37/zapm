@@ -3,7 +3,8 @@ FROM $IMAGE
 
 USER root   
 
-RUN apt-get install -y unzip        
+# RUN apt-get install -y unzip
+RUN apt-get update && apt-get install -y unzip    
 WORKDIR /opt/irisapp
 RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} /opt/irisapp
 USER ${ISC_PACKAGE_MGRUSER}
