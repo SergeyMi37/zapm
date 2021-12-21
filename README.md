@@ -10,9 +10,7 @@
 [![Habr](https://img.shields.io/badge/Available%20article%20on-Intersystems%20Community-orange)](https://community.intersystems.com/post/zapm-shell-extends-zpm-shell-and-adds-any-other-commands)
 
 [![](https://img.shields.io/badge/InterSystems-IRIS-blue.svg)](https://www.intersystems.com/products/intersystems-iris/)
-
 <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/SergeyMi37/zapm">
-
 [![license](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ZAPM is a shell - extends the ZPM shell and adds any other commands.
