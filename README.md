@@ -2,6 +2,7 @@
 ![OEX-zapm](https://img.shields.io/badge/dynamic/json?url=https:%2F%2Fpm.community.intersystems.com%2Fpackages%2Fzapm%2F&label=ZPM-pm.community.intersystems.com&query=$.version&color=green&prefix=zapm)
 
 ![Docker-ports](https://img.shields.io/badge/dynamic/yaml?color=blue&label=docker-compose&prefix=ports%20-%20&query=%24.services.iris.ports&url=https%3A%2F%2Fraw.githubusercontent.com%2Fsergeymi37%2Fzapm%2Fmaster%2Fdocker-compose.yml)
+
 ![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm)
@@ -9,8 +10,6 @@
 [![Habr](https://img.shields.io/badge/Available%20article%20on-Intersystems%20Community-orange)](https://community.intersystems.com/post/zapm-shell-extends-zpm-shell-and-adds-any-other-commands)
 
 [![](https://img.shields.io/badge/InterSystems-IRIS-blue.svg)](https://www.intersystems.com/products/intersystems-iris/)
-[![](https://img.shields.io/badge/InterSystems-Caché-blue.svg)](https://www.intersystems.com/products/cache/)
-[![](https://img.shields.io/badge/InterSystems-Ensemble-blue.svg)](https://www.intersystems.com/products/ensemble/)
 
 <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/SergeyMi37/zapm">
 
