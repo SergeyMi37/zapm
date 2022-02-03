@@ -19,6 +19,23 @@ ClassMethod initeditor(NoExt = 0) As %Status
 	quit $$$OK
 }
 
+/// do ##class(%ZAPM.ext.zapp).AddLine2Rou("ZPIPE(%a) new $namespace zn """_$namespace_""" do cmd^Zpipe(%a) quit","%ZLANGC00",.err)
+ClassMethod AddLine2Rou(line, rou As %String = "%ZLANGC00", err, r) As %Status
+{
+	new $namespace
+	set $namespace="%sys"
+	merge r=^rMAC(rou,0)
+	for i=1:1 { quit:'$DATA(r(i),str)
+		if $p(str,"(")=$p(line,"(") set r(i)=line,yes=1
+	}
+	if '$GET(yes) {
+		set r(i)=line
+		set r(0)=i
+	}
+	D ROUTINE^%R(rou_".MAC",.r,.err,"CS",0)
+	quit $$$OK
+}
+
 /// do ##class(%ZAPM.ext.zapp).init()
 ClassMethod init(NoExt = 0) As %Status
 {
@@ -38,6 +55,9 @@ ClassMethod init(NoExt = 0) As %Status
 		if 'NoExt {
 			do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
 			do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
+			if ##class(%ZPM.PackageManager).Shell("install zpipe") {
+				do ##class(%ZAPM.ext.zapp).AddLine2Rou("ZPIPE(%a) new $namespace zn """_$namespace_""" do cmd^Zpipe(%a) quit","%ZLANGC00",.err)
+			}
 		}
 		do ##class(%ZAPM.ext.zpm).SetColorScheme()
 		write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "

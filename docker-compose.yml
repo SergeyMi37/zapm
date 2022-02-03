@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.8'
 services:
   iris:
     build: 
@@ -6,10 +6,10 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports: 
-      - 51773
+      - 1972
       - 52773
       - 53773
     # network_mode: "host"
     volumes:
-      - ~/iris.key:/usr/irissys/mgr/iris.key
+    #  - ~/iris.key:/usr/irissys/mgr/iris.key
       - ./:/irisdev/app
