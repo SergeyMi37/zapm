@@ -37,7 +37,7 @@ ClassMethod extcmd(cmd = "") As %Status
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
 	}
-	if $p(cmd," ")="dbdelete" quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
+	if $p(cmd," ")="dbdelete" write !,"Delete database,namespace "_$p(cmd," ",2,*)_": " quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
@@ -848,7 +848,7 @@ ClassMethod GetDescFromRepo(url As %String, ByRef desc, ByRef repo, ByRef modxml
 	Quit $$$OK
 }
 
-/// write $System.Status.GetErrorText(##class(%ZPM.PackageManager).GetDataURL("https://raw.githubusercontent.com/intersystems-community/zpm/master/module.xml",.o)) w o
+/// write $System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL("https://raw.githubusercontent.com/intersystems-community/zpm/master/module.xml",.o)) w o
 ClassMethod GetDataURL(url As %String, ByRef data) As %Status
 {
 	New $Namespace
@@ -888,3 +888,4 @@ ClassMethod GetDataURL(url As %String, ByRef data) As %Status
 }
 
 }
+

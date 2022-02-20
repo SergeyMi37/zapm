@@ -167,7 +167,7 @@ ClassMethod prompt(comm = "") As %Status
 				write !!,"  ",$lg(command,1)_" ; "_$lg(command,4)
 				write !,"     Are you sure ? [Y] " 
 				read sure 
-				continue:$e($zconvert(sure,"L"))'="y"
+				if $e($zconvert(sure,"L"))'="y"  quit:cmd=comm   continue
 				set yes="i"
 			}
 			if yes="i" {
@@ -217,7 +217,7 @@ ClassMethod prompt(comm = "") As %Status
 				write !!,"  ",$lg(command,1)_" ; "_$lg(command,4)
 				write !,"     Are you sure ? [Y] " 
 				 read sure 
-				 continue:$e($zconvert(sure,"L"))'="y"
+				 if $e($zconvert(sure,"L"))'="y" quit:cmd=comm  continue
 				 set yes="i"
 			}
 			if yes="i" {

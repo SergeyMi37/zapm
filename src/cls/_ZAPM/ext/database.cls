@@ -386,13 +386,14 @@ ClassMethod DeleteDBNS(pNamespace) As %Status
 {
 	write !,"Delete "_pNamespace
 	if $namespace=$ZCONVERT(pNamespace,"U") set $namespace="%SYS"
-	Set sc = ##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace($ZCONVERT(pNamespace,"L"))
-	Quit:$$$ISERR(sc) sc
-	Set sc = ..DeleteResource($ZCONVERT(pNamespace,"U"))
+	do ##class(%ZAPM.ext.Production).delete(pNamespace)
+	set sc = ##class(%ZPM.PackageManager.Developer.UnitTest.Utils).DeleteNamespace($ZCONVERT(pNamespace,"L"))
+	quit:$$$ISERR(sc) sc
+	set sc = ..DeleteResource($ZCONVERT(pNamespace,"U"))
 	;Quit:$$$ISERR(sc) sc
-	Set sc = ..DeleteRole($ZCONVERT(pNamespace,"U"))
+	set sc = ..DeleteRole($ZCONVERT(pNamespace,"U"))
 	;Quit:$$$ISERR(sc) sc
-	q sc
+	quit sc
 }
 
 /// zn "app" w $System.Status.GetErrorText(##class(%ZAPM.ext.database).DismountListDB("DOJO"))

@@ -180,13 +180,44 @@ ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tPro
  	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.Production).init()
-ClassMethod init() As %Status
+/// do ##class(%ZAPM.ext.Production).repair() 
+ClassMethod repair() As %Status
 {
 	new $namespace
-	set $namespace="%sys"
-	;init
-	write !,"To work in the shell, enter 'zapm' in the terminal, and then 'StopProd' or 'StartProd' "
+	set gn=$na(^%SYS("Ensemble","InstalledNamespace"))
+	set ns=""
+	for { set ns=$o(@gn@(ns)) quit:ns=""
+		try {
+			zn ns
+		}
+		catch ex {
+			KILL @gn@($zconvert(ns,"U"))
+			KILL @gn@($zconvert(ns,"L"))
+			write !,"remove node "_$zr
+		}
+	}
+}
+
+/// do ##class(%ZAPM.ext.Production).delete() 
+ClassMethod delete(ns = {$namespace}) As %Status
+{
+	new $namespace
+	if $zconvert(ns,"U")'=$namespace set $namespace=ns
+	;Set sc = ##class(Ens.Director).GetProductionSettings("",.tSettings)	w !,"Settings " zw tSettings
+	do ##class(Ens.Director).StopProduction(1,1)
+	;Set sc = ##class(Ens.Director).GetProductionSummary(.pInfo, ns)	;w !,"Summary " zw pInfo
+	;set pn=""
+	;for { set pn=$o(pInfo(pn)) quit:pn=""
+	;		w !,pn_" deleted"
+	;	do ##class(Ens.Director).DeleteProduction(pn)
+	;}
+	try {
+		Set pn = ##class(Ens.Director).GetActiveProductionName()
+		if pn'="",##class(Ens.Director).DeleteProduction(pn) write !,pn_" deleted"
+	}
+	catch ex {}
+	KILL ^%SYS("Ensemble","InstalledNamespace",$zconvert(ns,"U"))
+	KILL ^%SYS("Ensemble","InstalledNamespace",$zconvert(ns,"L"))
 	quit $$$OK
 }
 
