@@ -59,6 +59,20 @@ ClassMethod init(NoExt = 0) As %Status
 				do ##class(%ZAPM.ext.zapp).AddLine2Rou("ZPIPE(%a) new $namespace zn """_$namespace_""" do cmd^Zpipe(%a) quit","%ZLANGC00",.err)
 			}
 		}
+		if $zversion(1)=3 {  //Linux
+			set dir="/opt/irisapp/src/"
+			set dir2="/irisdev/" 
+			;set outputpath="/usr/irissys/mgr/Temp/"
+			if ##class(%File).DirectoryExists(dir) {
+			 if '##class(%File).DirectoryExists(dir2) {	;for demo  GCR
+				for name="webterminal" {
+					if '##class(appmsw.python.util).IsInstallzpm(name) {
+						do ##class(%ZPM.PackageManager).Shell("install "_name)
+				    }
+				}
+			 }
+			}
+		}
 		do ##class(%ZAPM.ext.zpm).SetColorScheme()
 		write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
 		do ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET,##class(%ZAPM.ext.zpm).#VERSION)
