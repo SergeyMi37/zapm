@@ -66,7 +66,7 @@ ClassMethod init(NoExt = 0) As %Status
 			if ##class(%File).DirectoryExists(dir) {
 			 if '##class(%File).DirectoryExists(dir2) {	;for demo  GCR
 				for name="webterminal" {
-					if '##class(appmsw.python.util).IsInstallzpm(name) {
+					if '##class(%ZAPM.ext.zapp).IsInstallzpm(name) {
 						do ##class(%ZPM.PackageManager).Shell("install "_name)
 				    }
 				}
@@ -79,6 +79,14 @@ ClassMethod init(NoExt = 0) As %Status
 	} 
 	catch e {}
 	quit $$$OK
+}
+
+/// write ##class(%ZAPM.ext.zapp).IsInstallzpm("exchange-rate-cbrf")
+ClassMethod IsInstallzpm(modulename, ns = {$namespace}) As %String
+{
+	do ##class(%ZPM.PackageManager).GetListModule(ns,.list)
+	;zw list
+	quit $DATA(list(modulename))
 }
 
 /// do ##class(%ZAPM.ext.zapp).favourite(.list)
