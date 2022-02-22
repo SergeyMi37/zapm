@@ -19,8 +19,8 @@ ClassMethod Test2(zpmname As %String, workdir = "", ByRef data) As %Status
 	set st=$zapm("newdb "_zpmname) if 'st quit st
 	set st=$zapm("newdb "_zpmname2) if 'st quit st
 	
-	set ns=$zconvert($tr(zpmname,"$-.","S"),"U")
-	set ns2=$zconvert($tr(zpmname2,"$-.","S"),"U")
+	set ns=$zconvert($tr(zpmname,"$.","S"),"U")
+	set ns2=$zconvert($tr(zpmname2,"$.","S"),"U")
 	
 	try { zn ns set st=1 }
 	catch ex { set st=$$$ERROR($$$GeneralError,$ze)	}

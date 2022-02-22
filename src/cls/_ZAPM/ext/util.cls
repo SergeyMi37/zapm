@@ -56,7 +56,7 @@ ClassMethod CopyCSP(path, TempDir, slash = {$s($zversion(1)=3:"/",1:"\")}) As %S
 	quit st
 }
 
-/// do ##class(%ZAPM.ext.util).MakeZpmProject("zapm","d:\_proj\!\test\")
+/// do ##class(%ZAPM.ext.util).MakeZpmProject("zapm","d:\_proj\_mygirhub\zapm\")
 ClassMethod MakeZpmProject(namemodule, dir) As %Status
 {
 	set dirpath=##class(%File).GetDirectory(dir_"src/")
