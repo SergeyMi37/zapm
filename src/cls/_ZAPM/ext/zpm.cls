@@ -869,6 +869,20 @@ ClassMethod GetDataURL(url As %String, ByRef data) As %Status
 		Set req.SSLConfiguration=SSLConfig
 		Set:$g(port)="" port=443
 	}
+	set proxy=$System.Util.GetEnviron("https_proxy")
+	if proxy'="" {
+		Do ##class(%Net.URLParser).Parse(proxy,.pr)
+		if (pr("scheme")="https") {
+			set req.ProxyHTTPS=1
+			set req.ProxyTunnel=1
+		}
+		set req.ProxyPort=pr("port")
+		set req.ProxyServer=pr("host")
+		if pr("username")'="",pr("password")'="" {
+			set req.ProxyAuthorization="Basic "_$system.Encryption.Base64Encode(pr("username")_":"_pr("password"))
+		}
+	}
+
 	Set:$Get(port)="" port=80
 	Set req.Server=server
 	Set req.Port=port
