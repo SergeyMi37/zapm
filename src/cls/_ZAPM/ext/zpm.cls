@@ -872,7 +872,7 @@ ClassMethod GetDataURL(url As %String, ByRef data) As %Status
 	set proxy=$System.Util.GetEnviron("https_proxy")
 	if proxy'="" {
 		Do ##class(%Net.URLParser).Parse(proxy,.pr)
-		if (pr("scheme")="https") {
+		if (req.Https) {
 			set req.ProxyHTTPS=1
 			set req.ProxyTunnel=1
 		}
