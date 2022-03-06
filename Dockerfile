@@ -1,10 +1,9 @@
-ARG IMAGE=intersystemsdc/iris-community:latest
+ARG IMAGE=intersystemsdc/iris-ml-community:2021.2.0.649.0-zpm
 FROM $IMAGE
 
 USER root   
 
-# RUN apt-get install -y unzip
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl && apt-get install -y unzip
 WORKDIR /opt/irisapp
 RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} /opt/irisapp
 USER ${ISC_PACKAGE_MGRUSER}
