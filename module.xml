@@ -3,7 +3,7 @@
 <Document name="zapm.ZPM">
 <Module>
  <Name>zapm</Name>
-  <Version>1.0.27</Version>
+  <Version>1.0.28</Version>
   <Description>Zapm is a shell - extends the zpm shell and adds any other commands.</Description>
   <Keywords>Extension Package Manager</Keywords>
   <Author>
@@ -15,6 +15,7 @@
    <SourcesRoot>src</SourcesRoot>
   <Resource Name="%ZAPM.ext.PKG" Directory="cls"/>
   <Resource Name="%ZAPM.ext.Common.INC" Directory="inc"/>
+  <UnitTest Name="/unitest/zapm/" Package="ZAPM.unutest.zapm" Phase="verify"/>
   <Invokes>
    <Invoke Class="%ZAPM.ext.zapp" Method="init"></Invoke>
   </Invokes>
