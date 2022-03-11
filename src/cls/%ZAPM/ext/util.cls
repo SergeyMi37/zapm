@@ -56,12 +56,13 @@ ClassMethod CopyCSP(path, TempDir, slash = {$s($zversion(1)=3:"/",1:"\")}) As %S
 	quit st
 }
 
-/// do ##class(%ZAPM.ext.util).MakeZpmProject("zapm","d:\_proj\_mygirhub\zapm\")
+/// do ##class(%ZAPM.ext.util).MakeZpmProject("zapm","/backup/repo-iris-test/zapm/")
 ClassMethod MakeZpmProject(namemodule, dir) As %Status
 {
 	set dirpath=##class(%File).GetDirectory(dir_"src/")
 	write !,dirpath
-	d ##class(%ZPM.PackageManager.Developer.ModuleTemplate).ExportOneResource(dirpath,"00100","%ZAPM")
+	do ##class(%ZAPM.ext.code).ExportOneResource(dirpath,"001001","%ZAPM")
+
 	quit $$$OK
 	;do ##class(apptools.core.code).exp(dir_"src","appmsw")
 	;do $classmethod("apptools.core.code","exp",dir_"src","appmsw")

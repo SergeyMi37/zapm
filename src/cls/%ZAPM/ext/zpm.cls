@@ -848,12 +848,30 @@ ClassMethod GetDescFromRepo(url As %String, ByRef desc, ByRef repo, ByRef modxml
 	Quit $$$OK
 }
 
+ClassMethod SetProxy(ByRef req) As %Status
+{
+	set proxy=$System.Util.GetEnviron("https_proxy")
+	if proxy'="" {
+		Do ##class(%Net.URLParser).Parse(proxy,.pr)
+		if (req.Https) {
+			set req.ProxyHTTPS=1
+			set req.ProxyTunnel=1
+		}
+		set req.ProxyPort=pr("port")
+		set req.ProxyServer=pr("host")
+		if pr("username")'="",pr("password")'="" {
+			set req.ProxyAuthorization="Basic "_$system.Encryption.Base64Encode(pr("username")_":"_pr("password"))
+		}
+	}
+ quit $$$OK
+}
+
 /// write $System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL("https://raw.githubusercontent.com/intersystems-community/zpm/master/module.xml",.o)) w o
-ClassMethod GetDataURL(url As %String, ByRef data) As %Status
+ClassMethod GetDataURL(url As %String, ByRef data, ByRef req) As %Status
 {
 	New $Namespace
 	Set data=""
- 	#dim req As %Net.HttpRequest
+ 	;#dim req As %Net.HttpRequest
 	Set req=##class(%Net.HttpRequest).%New()
 	Set server=$p(url,"/",3)
 
@@ -869,19 +887,7 @@ ClassMethod GetDataURL(url As %String, ByRef data) As %Status
 		Set req.SSLConfiguration=SSLConfig
 		Set:$g(port)="" port=443
 	}
-	set proxy=$System.Util.GetEnviron("https_proxy")
-	if proxy'="" {
-		Do ##class(%Net.URLParser).Parse(proxy,.pr)
-		if (req.Https) {
-			set req.ProxyHTTPS=1
-			set req.ProxyTunnel=1
-		}
-		set req.ProxyPort=pr("port")
-		set req.ProxyServer=pr("host")
-		if pr("username")'="",pr("password")'="" {
-			set req.ProxyAuthorization="Basic "_$system.Encryption.Base64Encode(pr("username")_":"_pr("password"))
-		}
-	}
+	do ..SetProxy(.req)
 
 	Set:$Get(port)="" port=80
 	Set req.Server=server
