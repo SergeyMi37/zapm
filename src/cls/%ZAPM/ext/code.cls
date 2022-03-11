@@ -519,7 +519,6 @@ ClassMethod Expfilename(code, wd)
 	#; lowercase file extension
 	Set $Piece(filename,".",*)=ext
 	//B:code="DPRep.Rest.JSON.cls" "L"
-	#; for *.cls Package.Subpackage.ClassName.cls -> Folder/Subfolder/ClassName.cls
 	If ext ="cls"||(ext ="inc") {
 		Set dirs = $Piece( code, ".",1, *-2 ), dirs = $Translate( dirs, ".", "/" )
 		Set relpath = dirs _ "/" _ $Piece( code, ".", *-1, * ) ;

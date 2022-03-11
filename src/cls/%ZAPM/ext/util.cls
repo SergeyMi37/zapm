@@ -56,13 +56,23 @@ ClassMethod CopyCSP(path, TempDir, slash = {$s($zversion(1)=3:"/",1:"\")}) As %S
 	quit st
 }
 
-/// do ##class(%ZAPM.ext.util).MakeZpmProject("zapm","/backup/repo-iris-test/zapm/")
-ClassMethod MakeZpmProject(namemodule, dir) As %Status
+/// do ##class(%ZAPM.ext.util).MakeZapmSrc("/backup/repo-iris-test/zapm/","%ZAPM")
+ClassMethod MakeZapmSrc(dir, pack) As %Status
 {
 	set dirpath=##class(%File).GetDirectory(dir_"src/")
 	write !,dirpath
-	do ##class(%ZAPM.ext.code).ExportOneResource(dirpath,"001001","%ZAPM")
+	do ##class(%ZAPM.ext.code).ExportOneResource(dirpath,"001001",pack)
+	quit $$$OK
+    return $$$OK
+}
 
+/// do ##class(%ZAPM.ext.util).MakeZpmProject("zapm","/backup/repo-iris-test/zapm/",.res,"zapm is a shell - extends the zpm shell and adds any other commands.")
+ClassMethod MakeZpmProject(namemodule, dir, ByRef resources, desc) As %Status
+{
+	set dirpath=##class(%File).GetDirectory(dir_"src/")
+	write !,dirpath
+	
+	do ##class(%ZAPM.ext.code).ExportOneResource(dirpath,"001001",pack)
 	quit $$$OK
 	;do ##class(apptools.core.code).exp(dir_"src","appmsw")
 	;do $classmethod("apptools.core.code","exp",dir_"src","appmsw")
@@ -76,7 +86,7 @@ ClassMethod MakeZpmProject(namemodule, dir) As %Status
 	for { set name=$order(list(name)) quit:name=""
 		set tWebAppList=tWebAppList_name_","
 	}
-	do ..CreateModuleXML($namespace,dir,namemodule,,"desc","",$e(tWebAppList,1,*-1))
+	do ..CreateModuleXML($namespace,dir,namemodule,,desc,"",$e(tWebAppList,1,*-1))
     return $$$OK
 }
 
