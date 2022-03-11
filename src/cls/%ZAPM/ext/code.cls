@@ -459,7 +459,8 @@ ClassMethod ExportOneResource(workdir = "", flags, mask = "", ignoremask = "")
 			Set item(code)=""
 	    } Set rs=""
 	}
-	If $Extract(flags,6) { //INC files
+	#; INC
+	If $Extract(flags,6) { 
 		set code=""
 		for { set code=$o(^rINC(code)) quit:code=""
 			If mask'="",(("@"_code)'[("@"_mask )) Continue
@@ -493,6 +494,7 @@ ClassMethod ExportOneResource(workdir = "", flags, mask = "", ignoremask = "")
 /// test.dfi -> /dfi/test.dfi
 /// test.cls -> /cls/test.cls
 /// testpkg.test.cls -> /cls/testpkg/test.cls
+/// %ZAPM.ext.Common.inc -> inc/%ZAPM/ext/Common.inc 
 ClassMethod Expfilename(code, wd)
 {
 	#define log(%dir,%sc) Write !, "mkdir ", %dir, " ", sc
@@ -518,7 +520,7 @@ ClassMethod Expfilename(code, wd)
 	Set $Piece(filename,".",*)=ext
 	//B:code="DPRep.Rest.JSON.cls" "L"
 	#; for *.cls Package.Subpackage.ClassName.cls -> Folder/Subfolder/ClassName.cls
-	If ext ="cls" {
+	If ext ="cls"||(ext ="inc") {
 		Set dirs = $Piece( code, ".",1, *-2 ), dirs = $Translate( dirs, ".", "/" )
 		Set relpath = dirs _ "/" _ $Piece( code, ".", *-1, * ) ;
 		Set filename = ##class(%File).NormalizeFilename( relpath, wd )
