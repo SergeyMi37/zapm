@@ -558,7 +558,7 @@ ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", e
 {
 	new $namespace
 	k err w !
-	if ns="" s ns=$zconvert($tr(name,"$.","S"),"U")
+	if ns="" s ns=$zconvert($tr(name,"_$.","-S"),"U")
 	s st=##class(%ZAPM.ext.database).CreateDBNS(ns)
 	i 'st s err=$System.Status.GetErrorText(st) w !,err
 	s:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
