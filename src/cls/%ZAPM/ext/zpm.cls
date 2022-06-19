@@ -21,7 +21,12 @@ ClassMethod extcmd(cmd = "") As %Status
 {
 	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
-	if $p(cmd," ")="newdb" quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad($p(cmd," ",2,*))
+	if $p(cmd," ")="newdb" {
+		set cmdext=$p(cmd," ",2,*)
+		if cmd["zpm ""install " set cmdext=$p($p(cmd,"zpm ""install ",2,*),$c(34))
+		quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext)
+	}
+
 	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
