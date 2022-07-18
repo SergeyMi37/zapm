@@ -348,7 +348,7 @@ ClassMethod Upgrade(ns = {$namespace}) As %Status
 	do ##class(%ZAPM.ext.zpm).GetListModule(ns,.List,0)
 	set name=""
 	for { set name=$Order(List(name)) quit:name=""
-		if $LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
+		if $g(List(name,"R"))'="",$LISTGET(List(name,"L"),1)'=$LISTGET(List(name,"R"),1) {
 			set Diff(name)="" 
 			write !," "_$$$escGreen(name)_" Local: "_$LISTGET(List(name,"L"),1)_" Registr: "_$LISTGET(List(name,"R"),1)
 		}
