@@ -4,8 +4,8 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.test [ Abstract ]
 {
 
-/// do ##class(%ZAPM.ext.util).Test2("spool-demo,spool-mapping","/home/irisusr/test/")
-/// do ##class(%ZAPM.ext.util).Test2("sudoku-en,sudoku-es","d:\_proj\!\test\")
+/// do ##class(%ZAPM.ext.test).Test2("spool-demo,spool-mapping","/home/irisusr/test/")
+/// do ##class(%ZAPM.ext.test).Test2("sudoku-en,sudoku-es","d:\_proj\!\test\")
 ClassMethod Test2(zpmname As %String, workdir = "", ByRef data) As %Status
 {
 	New $Namespace
