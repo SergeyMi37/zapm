@@ -23,9 +23,9 @@ Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
 ## What's new
-### fixed test and upd command
-### added extensions newdb command
-### added proxy mode
+- fixed test and upd command
+- added extensions newdb command
+- added proxy mode
 
 ```
  Available commands extention:
