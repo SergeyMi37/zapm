@@ -23,15 +23,9 @@ Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
 ## What's new
-Added support new version zpm + hspm
-Updated escape sequence color scheme
-
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_upg.png)
-
-Added new command: info
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_info-m.png)
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_info-r.png)
-![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_1_info-f.png)
+###fixed test and upd command
+###added extensions newdb command
+###added proxy mode
 
 ```
  Available commands extention:
@@ -103,7 +97,7 @@ Added new command: info
 
 If ZPM the current instance is not installed, then in one line you can install the latest version of ZPM.
 ```
-zn "%SYS" d ##class(Security.SSLConfigs).Create("z") s r=##class(%Net.HttpRequest).%New(),r.Server="pm.community.intersystems.com",r.SSLConfiguration="z" d r.Get("/packages/zpm/latest/installer"),$system.OBJ.LoadStream(r.HttpResponse.Data,"c")
+s r=##class(%Net.HttpRequest).%New(),proxy=$System.Util.GetEnviron("https_proxy") Do ##class(%Net.URLParser).Parse(proxy,.pr) s:$d(pr) r.ProxyHTTPS=1,r.ProxyTunnel=1,r.ProxyPort=pr("port"),r.ProxyServer=pr("host") s:pr("username")'=""&&(pr("password")'="") r.ProxyAuthorization="Basic "_$system.Encryption.Base64Encode(pr("username")_":"_pr("password")) set r.Server="pm.community.intersystems.com",r.SSLConfiguration="ISC.FeatureTracker.SSL.Config" d r.Get("/packages/zpm/latest/installer"),$system.OBJ.LoadStream(r.HttpResponse.Data,"c")
 ```
 If ZPM is installed, then ZAPM can be set with the command
 ```
