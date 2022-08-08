@@ -9,7 +9,7 @@ services:
       - 51663:1972
       - 52663:52773
       - 53773
-    network_mode: "host"
+    #network_mode: "host"
     volumes:
     #  - ~/iris.key:/usr/irissys/mgr/iris.key
       - ./:/irisdev/app
