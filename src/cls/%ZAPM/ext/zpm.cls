@@ -14,6 +14,75 @@ Parameter GN = "^%ZAPM.ZpmLoad";
 /// Storage of settings
 Parameter GNSET = "^%ZAPM.settings";
 
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys()
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"iris-csv-anonymizer")
+ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = "") As %Status
+{
+	set currns=$namespace
+	set gn=..#GN
+	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)	
+	set sql="select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",modulename["*":"where Name like '"_$tr(modulename,"*","%")_"'",1:"where Name=?")
+		,rs=##class(%ResultSet).%New()
+		,sc=rs.Prepare(sql)
+	set:sc sc=rs.Execute($zconvert(modulename,"L"))
+	write !,sql
+	if sc {
+		for i=1:1 {
+			quit:'rs.%Next()  
+			set name=rs.Get("Name")
+
+			if $g(Starting)="",StartingFrom'="" {
+				i (("@"_name)'[("@"_StartingFrom)) write !,name," Skip" continue
+				set Starting=1
+			}
+			
+			set Version=rs.Get("Version")
+			set Repo=rs.Get(RepoFieldName)
+			set ns=$zconvert($tr(name,"_$.","-S"),"U")
+			if skipZPM, name["apptools"||(name="zpm")||($e(name,1,4)="zpm-")||(name["appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
+			if $d(@gn@(name)) { ;already load
+				if $d(@gn@(name,"install")) { ;restore
+					;set @gn@(name,"generate")=##class(apptools.core.code).SetList(@gn@(name,"generate"), 1, ns)
+					;set @gn@(name,"install")=##class(apptools.core.code).SetList(@gn@(name,"install"), 3, Version)
+					;set @gn@(name,"install")=##class(apptools.core.code).SetList(@gn@(name,"install"), 4, Repo)
+					;set @gn@(name,"url")="<a target='_blank' href='"_Repo_"'>"_Repo_"</a>"
+					if $lg(@gn@(name,"install"),3)'=Version {
+						write !,$$$escGreen(name)_" new version: "_$$$escRed(Version)
+						do ..InstallModule(name, ns, Version, Repo, gn, .err)
+					}
+					if $lg(@gn@(name,"install"),2)'=$$$OK {
+						write !,$$$escGreen(name)_" Last error: "_$$$escRed($lg(@gn@(name,"install"),1))
+						w !," ReInstall ? Y\N\Q" Read R   quit:R="Q"||(R="q")
+						do:R["y" ..InstallModule(name, ns, Version, Repo, gn, .err)
+					}
+				}
+				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
+					;					
+					if 0 {
+						write !,ns_" Unload Removed DBNS ? Y\N " Read R   quit:"q"[R
+						if $g(R)="y" {
+							do ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS(name,Version,Repo,gn)
+							kill @gn@(name)
+						}
+						continue
+					}
+				}
+				write !,"Already loaded - Skip "_$$$escGreen(name)
+			} elseif 1 {
+				set sta=##class(%ZPM.PackageManager).Shell("find -r -d "_name) write !
+				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
+				if 'all w !,ns_" Load into a new database ? Y\N " Read R   quit:"q"[R
+				if $g(R)="y"||(all=1) {
+					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,ns,Version,Repo,gn,.error)
+					if $g(error)["<INTERRUPT>" quit
+				}
+			}
+		}
+	}
+	write !,"Log in global ",!,gn
+}
+
 /// extention zpm commands
 /// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
 /// zapp "newdb spool-demo"
@@ -498,51 +567,6 @@ ClassMethod GetUrlRepoArhive(tLocation) As %String
 	quit $get(ref)
 }
 
-/// zpm-utility 
-/// repo -r -n registry -url http://127.0.0.1:52773/registry/ -user "superuser" -pass "pass"
-/// do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)
-ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1) As %Status
-{
-	set currns=$namespace
-	set gn=..#GN
-	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)	
-	set sql="select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_$s(modulename="":"",modulename["*":"where Name like '"_$tr(modulename,"*","%")_"'",1:"where Name=?")
-		,rs=##class(%ResultSet).%New()
-		,sc=rs.Prepare(sql)
-	set:sc sc=rs.Execute($zconvert(modulename,"L"))
-	write !,sql
-	if sc {
-		for i=1:1 {
-			quit:'rs.%Next()  
-			set name=rs.Get("Name")
-			set Version=rs.Get("Version")
-			set Repo=rs.Get(RepoFieldName)
-			set ns=$zconvert($tr(name,"-."),"U")
-			if skipZPM, name["apptools"||($e(name,1,3)="zpm")||(name["appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
-			if $d(@gn@(name)) { ;already load
-				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
-					write !,ns_" Unload Removed DBNS ? Y\N " Read R   quit:"q"[R
-					if $g(R)="y" {
-						do ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS(name,,,gn)
-						kill @gn@(name)
-					}
-					continue
-				}
-				write !,"Already loaded - Skip "_$$$escGreen(name)
-			} elseif 1 {
-				set sta=##class(%ZPM.PackageManager).Shell("find -r -d "_name) write !
-				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
-				if 'all w !,ns_" Load into a new database ? Y\N " Read R   quit:"q"[R
-				if $g(R)="y"||(all=1) {
-					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,,,,gn,.error)
-					if $g(error)["<INTERRUPT>" quit
-				}
-			}
-		}
-	}
-	write !,"Log in global ",!,gn
-}
-
 /// d ##class(%ZAPM.ext.zpm).UnloadAndDeleteDBNS("sync-dstime")
 ClassMethod UnloadAndDeleteDBNS(name, Version = "", Repo = "", gn = {..#GN}) As %Status
 {
@@ -568,19 +592,28 @@ ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", e
 	i 'st s err=$System.Status.GetErrorText(st) w !,err
 	s:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
 	if st {
-		zn ns
 		;s sta=$zpm("install "_name_" -v")
 		kill err
-		write !,"zpm ""install "_name_""""
-		set sta=##class(%ZPM.PackageManager).Shell("install "_name)
-		if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
-		if gn'="" {
-			set @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
-			set @gn@(name,"url")="<a target='_new' href='"_Repo_"'>"_Repo_"</a>"
-		}
+		do ..InstallModule(name, ns, Version, Repo, gn, .err)
 		if $g(err)["<INTERRUPT>" quit sta
 	}
 	q $$$OK
+}
+
+ClassMethod InstallModule(name, ns = "", Version = "", Repo = "", gn = "", err) As %Status
+{
+	new $namespace
+	zn ns
+	;s sta=$zpm("install "_name_" -v")
+	kill err
+	write !,"zpm ""install "_name_""""
+	set sta=##class(%ZPM.PackageManager).Shell("install "_name)
+	if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
+	if gn'="" {
+		set @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		set @gn@(name,"url")="<a target='_new' href='"_Repo_"'>"_Repo_"</a>"
+	}
+	quit sta
 }
 
 /// Recompilation to IRIS namespace
@@ -913,4 +946,3 @@ ClassMethod GetDataURL(url As %String, ByRef data, ByRef req) As %Status
 }
 
 }
-
