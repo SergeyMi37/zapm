@@ -6,13 +6,36 @@
       },
     "objectscript.conn" :{
       "ns": "%SYS",
+      "active": true,
+      "host": "172.16.253.242",
+      "port": 52443,
       "username": "_SYSTEM",
       "password": "SYS",
       "docker-compose": {
         "service": "iris",
         "internalPort": 52773
       },
-      "active": false
-    }
+      "links": {
+        "apptools": "http://172.16.253.242:${port}/apptools/apptools.core.LogInfo.cls",
+        "Product Info": "http://172.16.253.242:${port}/apptoolsrest/a/info",
+        "Matrix permissions": "http://172.16.253.242:${port}/apptools/apptools.Tabs.TabsPanelUikitPermissMatrx.cls?autoload=Matrix",
+        "ZAPM": "http://172.16.253.242:${port}/apptoolsrest/a/zapm"
+      }
+    },
+    "sqltools.connections": [
+      {
+        "namespace": "USER",
+        "connectionMethod": "Server and Port",
+        "showSystem": false,
+        "previewLimit": 50,
+        "server": "172.16.253.242",
+        "port": 32770,
+        "askForPassword": false,
+        "driver": "InterSystems IRIS",
+        "name": "objectscript-docker",
+        "username": "_SYSTEM",
+        "password": "SYS"
+      }
+    ]
 
 }
