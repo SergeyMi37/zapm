@@ -26,7 +26,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 		,rs=##class(%ResultSet).%New()
 		,sc=rs.Prepare(sql)
 	set:sc sc=rs.Execute($zconvert(modulename,"L"))
-	write !,sql
+	write !,"Query :",sql
 	if sc {
 		for i=1:1 {
 			quit:'rs.%Next()  
