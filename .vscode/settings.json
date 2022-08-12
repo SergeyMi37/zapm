@@ -7,7 +7,7 @@
     "objectscript.conn" :{
       "ns": "%SYS",
       "active": true,
-      "host": "172.16.253.242",
+      "host": "localhost",
       "port": 52443,
       "username": "_SYSTEM",
       "password": "SYS",
@@ -16,10 +16,10 @@
         "internalPort": 52773
       },
       "links": {
-        "apptools": "http://172.16.253.242:${port}/apptools/apptools.core.LogInfo.cls",
-        "Product Info": "http://172.16.253.242:${port}/apptoolsrest/a/info",
-        "Matrix permissions": "http://172.16.253.242:${port}/apptools/apptools.Tabs.TabsPanelUikitPermissMatrx.cls?autoload=Matrix",
-        "ZAPM": "http://172.16.253.242:${port}/apptoolsrest/a/zapm"
+        "apptools": "http://localhost:${port}/apptools/apptools.core.LogInfo.cls",
+        "Product Info": "http://localhost:${port}/apptoolsrest/a/info",
+        "Matrix permissions": "http://localhost:${port}/apptools/apptools.Tabs.TabsPanelUikitPermissMatrx.cls?autoload=Matrix",
+        "ZAPM": "http://localhost:${port}/apptoolsrest/a/zapm"
       }
     },
     "sqltools.connections": [
@@ -28,7 +28,7 @@
         "connectionMethod": "Server and Port",
         "showSystem": false,
         "previewLimit": 50,
-        "server": "172.16.253.242",
+        "server": "localhost",
         "port": 32770,
         "askForPassword": false,
         "driver": "InterSystems IRIS",
