@@ -8,7 +8,7 @@
       "ns": "%SYS",
       "active": true,
       "host": "localhost",
-      "port": 52443,
+      "port": 52663,
       "username": "_SYSTEM",
       "password": "SYS",
       "docker-compose": {

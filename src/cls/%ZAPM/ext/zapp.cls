@@ -111,6 +111,8 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("sql",$i(list))=$lb("do $system.SQL.Shell()","i","sql","Shell SQL")
 	set ecmd="do ##class(%ZAPM.ext.zpm).extcmd(%cmd)"
 	;zmp
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).LoadRegistrys()","i","zloginst","Install all repos do ##class(%ZAPM.ext.zpm).LoadRegistrys()")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).ShowLog()","i","zloglist","Show log list do ##class(%ZAPM.ext.zpm).ShowLog()")
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
@@ -532,4 +534,3 @@ $$$ENDTAG
 }
 
 }
-

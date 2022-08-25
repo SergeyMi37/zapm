@@ -26,7 +26,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 		,rs=##class(%ResultSet).%New()
 		,sc=rs.Prepare(sql)
 	set:sc sc=rs.Execute($zconvert(modulename,"L"))
-	write !,"Query --- ",sql
+	write !,sql
 	if sc {
 		for i=1:1 {
 			quit:'rs.%Next()  
@@ -48,12 +48,12 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 					;set @gn@(name,"install")=##class(apptools.core.code).SetList(@gn@(name,"install"), 4, Repo)
 					;set @gn@(name,"url")="<a target='_blank' href='"_Repo_"'>"_Repo_"</a>"
 					if $lg(@gn@(name,"install"),3)'=Version {
-						write !,$$$escGreen(name)_" new version: "_$$$escRed(Version)
+						write !,"Upgrade "_$$$escGreen(name)_" to new version: "_$$$escRed(Version)
 						do ..InstallModule(name, ns, Version, Repo, gn, .err)
 					}
 					if $lg(@gn@(name,"install"),2)'=$$$OK {
 						write !,$$$escGreen(name)_" Last error: "_$$$escRed($lg(@gn@(name,"install"),1))
-						w !," ReInstall ? Y\N\Q" Read R   quit:R="Q"||(R="q")
+						w !!," ReInstall ? Y\N\Q" Read R   quit:R="Q"||(R="q")
 						do:R["y" ..InstallModule(name, ns, Version, Repo, gn, .err)
 					}
 				}
@@ -72,7 +72,7 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 			} elseif 1 {
 				set sta=##class(%ZPM.PackageManager).Shell("find -r -d "_name) write !
 				if 'sta s err=$System.Status.GetErrorText(sta) w !,err w !,"Skip" continue
-				if 'all w !,ns_" Load into a new database ? Y\N " Read R   quit:"q"[R
+				if 'all w !!," Load into a new database ("_ns_") ? Y\N " Read R   quit:"q"[R
 				if $g(R)="y"||(all=1) {
 					do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(name,ns,Version,Repo,gn,.error)
 					if $g(error)["<INTERRUPT>" quit
@@ -81,6 +81,29 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 		}
 	}
 	write !,"Log in global ",!,gn
+}
+
+/// do ##class(%ZAPM.ext.zpm).ShowLog()
+/// do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log")
+ClassMethod ShowLog(fn = "") As %Status
+{
+	set gn=..#GN
+	set name=""
+	if fn'="" if ##class(apptools.core.files).OpenFile(fn) 
+	for { set name=$o(@gn@(name)) quit:name=""
+		if '$d(@gn@(name,"install")) {
+			if fn'="" use fn write !,!,name,!,"   ошибка инсталляции, нет "_$zr use 0 continue
+			write !,$$$escGreen(name)_"   ошибка инсталляции, нет "_$zr
+			;do ##class(%ZAPM.ext.zpm).LoadRegistrys(name) 
+			continue
+		}
+		set st=$lg(@gn@(name,"install"),2)
+		if 'st {
+			if fn'="" use fn write !,!,name,!,"   "_$System.Status.GetErrorText(st) use 0 continue
+			write !,$$$escGreen(name),"   ",$$$escRed($System.Status.GetErrorText(st))
+		}
+	}
+	if fn'="" close fn
 }
 
 /// extention zpm commands
@@ -610,7 +633,7 @@ ClassMethod InstallModule(name, ns = "", Version = "", Repo = "", gn = "", err) 
 	set sta=##class(%ZPM.PackageManager).Shell("install "_name)
 	if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
 	if gn'="" {
-		set @gn@(name,"install")=$lb($g(err),sta,Version,Repo)
+		set @gn@(name,"install")=$lb($g(err),sta,Version,Repo,+$h,ns)
 		set @gn@(name,"url")="<a target='_new' href='"_Repo_"'>"_Repo_"</a>"
 	}
 	quit sta
