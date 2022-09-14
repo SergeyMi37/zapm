@@ -11,7 +11,7 @@
 
 [![](https://img.shields.io/badge/InterSystems-IRIS-blue.svg)](https://www.intersystems.com/products/intersystems-iris/)
 <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/SergeyMi37/zapm">
-[![license](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Quality Gate Status](https://community.objectscriptquality.com/api/project_badges/measure?project=intersystems_iris_community%2Fzapm&metric=alert_status)](https://community.objectscriptquality.com/dashboard?id=intersystems_iris_community%2Fzapm)
 
 ZAPM is a shell - extends the ZPM shell and adds any other commands.
 
