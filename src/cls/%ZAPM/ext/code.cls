@@ -400,10 +400,10 @@ ClassMethod ExportResources(Path As %String = "", ExportList As %String = "") As
 /// byte=4 isMapped
 /// byte=5 isDFI
 /// byte=6 isINC
-ClassMethod ExportOneResource(workdir = "", flags, mask = "", ignoremask = "")
+ClassMethod ExportOneResource(workdir, flags, mask = "", ignoremask = "")
 {
-	///zu(12) namespace directory by default
-	If workdir="" Set workdir=zu(12,"")
+	//$zu(12) namespace directory by default
+	//If workdir="" Set workdir=$zu(12,"")
 	#define export(%code, %file) Try {Set sc = $system.OBJ.ExportUDL(%code, %file,"/diffexport")} catch e {s sc=$$$ERROR($$$GeneralError,"Old version")} ##continue
 								 Write:sc "Ok" Do:'sc $system.OBJ.DisplayError(sc)
 

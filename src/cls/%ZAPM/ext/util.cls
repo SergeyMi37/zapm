@@ -72,7 +72,7 @@ ClassMethod MakeZpmProject(namemodule, dir, ByRef resources, desc) As %Status
 	set dirpath=##class(%File).GetDirectory(dir_"src/")
 	write !,dirpath
 	
-	do ##class(%ZAPM.ext.code).ExportOneResource(dirpath,"001001",pack)
+	do ##class(%ZAPM.ext.code).ExportOneResource(dirpath,"001001","%ZAPM")
 	quit $$$OK
 	;do ##class(apptools.core.code).exp(dir_"src","appmsw")
 	;do $classmethod("apptools.core.code","exp",dir_"src","appmsw")

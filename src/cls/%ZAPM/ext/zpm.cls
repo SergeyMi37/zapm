@@ -969,3 +969,4 @@ ClassMethod GetDataURL(url As %String, ByRef data, ByRef req) As %Status
 }
 
 }
+
