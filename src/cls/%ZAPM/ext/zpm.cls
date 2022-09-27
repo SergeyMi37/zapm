@@ -87,25 +87,28 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 /// do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log")
 ClassMethod ShowLog(fn = "") As %Status
 {
-	set gn=..#GN
-	set name=""
-	if fn'="" if ##class(apptools.core.files).OpenFile(fn) 
-	for { set name=$o(@gn@(name)) quit:name=""
-		if '$d(@gn@(name,"install")) {
-			if fn'="" use fn write !,!,name,!,"   ошибка инсталляции, нет "_$zr use 0 continue
-			write !,$$$escGreen(name)_"   ошибка инсталляции, нет "_$zr
-			;do ##class(%ZAPM.ext.zpm).LoadRegistrys(name) 
-			continue
-		}
-		set st=$lg(@gn@(name,"install"),2)
-		if 'st {
-			if fn'="" use fn write !,!,name,!,"   "_$System.Status.GetErrorText(st) use 0 continue
-			write !,$$$escGreen(name),"   ",$$$escRed($System.Status.GetErrorText(st))
-		}
+    set gn=..#GN
+    ;zw @gn q 1
+    set name=""
+    if fn'="" if ##class(apptools.core.files).OpenFile(fn) 
+    for { set name=$o(@gn@(name)) quit:name=""
+	if '$d(@gn@(name,"install")) {
+	    if fn'="" use fn write !,!,name,!,"   ошибка инсталляции, нет "_$zr,!,$$url(),! use 0 continue
+	    write !,$$$escGreen(name)_"   ошибка инсталляции, нет "_$zr,!,$$url(),!
+	    ;do ##class(%ZAPM.ext.zpm).LoadRegistrys(name) 
+	    continue
 	}
-	if fn'="" close fn
+	set st=$lg(@gn@(name,"install"),2)
+	if 'st {
+	    if fn'="" use fn write !,!,name,!,"   "_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
+	    write !,$$$escGreen(name),"   ",$$$escRed($System.Status.GetErrorText(st)),!,$$url(),!
+	}
+    }
+    if fn'="" close fn
+    quit $$$OK
+url()
+    quit $p($p($g(@gn@(name,"url")),"href='",2),"'")
 }
-
 /// extention zpm commands
 /// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
 /// zapp "newdb spool-demo"
