@@ -109,6 +109,7 @@ ClassMethod ShowLog(fn = "") As %Status
 url()
     quit $p($p($g(@gn@(name,"url")),"href='",2),"'")
 }
+
 /// extention zpm commands
 /// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
 /// zapp "newdb spool-demo"
@@ -798,13 +799,31 @@ ClassMethod ZPMColorScheme() As %String
 	quit scheme
 }
 
+/// Get List Modules
+/// example d ##class(%ZAPM.ext.zpm).GetListModules("zpm",.list)
+ClassMethod GetListModules(StartsWith As %String = "", ByRef pList) [ Internal ]
+{
+	Set tQuery = "select Name,VersionString,Description,ExternalName from %ZPM_PackageManager_Developer.""MODULE"""
+	If StartsWith'="" { Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery_ " where name %StartsWith ?",StartsWith) }
+	Else { Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)}
+	If (tRes.%SQLCODE < 0) {
+		Throw ##class(%Exception.SQL).CreateFromSQLCODE(tRes.%SQLCODE,tRes.%Message)
+	}
+	While tRes.%Next(.tSC) {
+		$$$ThrowOnError(tSC)
+		Set pList(tRes.%Get("Name"))=$lb(tRes.%Get("VersionString"),tRes.%Get("Description"),tRes.%Get("ExternalName"))
+		Set:$G(maxlen)<$L(tRes.%Get("Name")) maxlen=$L(tRes.%Get("Name"))
+	}
+	Set:$D(pList) pList=$G(maxlen)
+}
+
 /// Version ZPM 
 /// write ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm)
 ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName)
 {
 	new $namespace
 	set $namespace="%SYS"
-	Do ##class(%ZPM.PackageManager).GetListModules("zpm",.list)
+	Do ..GetListModules("zpm",.list)
 	If $Data(list("zpm")) {
 			set ver=$ListGet(list("zpm"),1)
 	}
