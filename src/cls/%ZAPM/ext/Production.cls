@@ -15,14 +15,14 @@ Parameter SettingsGN = "^%ZAPM.ext.Productions";
 ///  d ##class(%ZAPM.ext.Production).SaveStat(1)
 ClassMethod SaveStat(resave = 0) As %Status
 {
-	s listns=..ListNS(.inf,"NotPref,Ens")
-	s GN=..#SettingsGN
-	i 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y"
+	set listns=..ListNS(.inf,"NotPref,Ens")
+	set GN=..#SettingsGN
+	if 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" read r quit:$zconvert(r,"L")'["y" $$$OK
 	KILL @GN
 	MERGE @GN=inf
-	w !,"Updated "_GN,!!
-	s ns=""
-	f { s ns=$o(inf(ns)) q:ns=""
+	write !,"Updated "_GN,!!
+	set ns=""
+	for { s ns=$o(inf(ns)) q:ns=""
 	 zw inf(ns,"Ens")
 	}
  quit $$$OK
@@ -78,16 +78,17 @@ ClassMethod SaveAndStop() As %Status
 {
 	d ..SaveStat(1)
 	d ..StopAll()
+	quit $$$OK
 }
 
 /// Remove autostart from all products; stop all products in Namespaces before restarting the OS
 /// d ##class(%ZAPM.ext.Production).StopAll()
 ClassMethod StopAll() As %Status
 {
- d ..EnsAction("auto0")
- d ..EnsAction("stop")
+ do ..EnsAction("auto0")
+ do ..EnsAction("stop")
  w !!,"ok"
- q
+ quit $$$OK
 }
 
 /// Check and restore autorun products in Namespaces, run all products that were launched
@@ -97,7 +98,7 @@ ClassMethod StartAll() As %Status
  	d ..EnsAction("auto1")
  	d ..EnsAction("start")
  	w !!,"ok"
- 	q
+ 	quit $$$OK
 }
 
 /// Change products status in Namespaces

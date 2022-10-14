@@ -14,7 +14,7 @@ Parameter GN = "^%ZAPM.ZpmLoad";
 /// Storage of settings
 Parameter GNSET = "^%ZAPM.settings";
 
-/// do ##class(%ZAPM.ext.zpm).LoadRegistrys() 
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys()
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"iris-csv-anonymizer")
 ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = "") As %Status
