@@ -26,11 +26,11 @@ And now ZAPM has survived to the first version and can add any command that I ne
 - fixed vers command
 - added support zpm ver 0.4
 - added `LoadRegistrys` module
- * do ##class(%ZAPM.ext.zpm).LoadRegistrys() ;load all modules from https://pm.community.intersystems.com in different namespaces
- * do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1) ;load `c*` modules
- * do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"isc-dev") ;load only `isc-dev`
+ 1 do ##class(%ZAPM.ext.zpm).LoadRegistrys() ;load all modules from https://pm.community.intersystems.com in different namespaces
+ 2 do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1) ;load `c*` modules
+ 3 do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"isc-dev") ;load only `isc-dev`
 - added `ShowLog` module
- * do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log") ;output log in file `d:\_proj\!\zapm.log`
+ 1 do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log") ;output log in file `d:\_proj\!\zapm.log`
 
 ## Installation with ZPM
 
@@ -38,6 +38,11 @@ If the current ZPM instance is not installed, then in one line you can install t
 ```
 s r=##class(%Net.HttpRequest).%New(),proxy=$System.Util.GetEnviron("https_proxy") Do ##class(%Net.URLParser).Parse(proxy,.pr) s:$G(pr("host"))'="" r.ProxyHTTPS=1,r.ProxyTunnel=1,r.ProxyPort=pr("port"),r.ProxyServer=pr("host") s:$G(pr("username"))'=""&&($G(pr("password"))'="") r.ProxyAuthorization="Basic "_$system.Encryption.Base64Encode(pr("username")_":"_pr("password")) set r.Server="pm.community.intersystems.com",r.SSLConfiguration="ISC.FeatureTracker.SSL.Config" d r.Get("/packages/zpm/latest/installer"),$system.OBJ.LoadStream(r.HttpResponse.Data,"c") zn "%SYS" zpm "install zapm"
 ```
+Or install native from repo latest betta version
+```
+s r=##class(%Net.HttpRequest).%New(),proxy=$System.Util.GetEnviron("https_proxy") Do ##class(%Net.URLParser).Parse(proxy,.pr) s:$G(pr("host"))'="" r.ProxyHTTPS=1,r.ProxyTunnel=1,r.ProxyPort=pr("port"),r.ProxyServer=pr("host") s:$G(pr("username"))'=""&&($G(pr("password"))'="") r.ProxyAuthorization="Basic "_$system.Encryption.Base64Encode(pr("username")_":"_pr("password")) set r.Server="github.com",r.SSLConfiguration="ISC.FeatureTracker.SSL.Config" d r.Get("/intersystems-community/zpm/releases/download/v0.4.1-beta.9/zpm-0.4.1-beta.9.xml"),$system.OBJ.LoadStream(r.HttpResponse.Data,"c")
+```
+
 If ZPM is installed, then ZAPM can be set with the command
 ```
 zpm:USER>install zapm
