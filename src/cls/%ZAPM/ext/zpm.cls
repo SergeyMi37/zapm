@@ -14,7 +14,7 @@ Parameter GN = "^%ZAPM.ZpmLoad";
 /// Storage of settings
 Parameter GNSET = "^%ZAPM.settings";
 
-/// do ##class(%ZAPM.ext.zpm).LoadRegistrys()
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys() 
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"iris-csv-anonymizer")
 ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = "") As %Status
@@ -128,6 +128,7 @@ ClassMethod extcmd(cmd = "") As %Status
 		zpm "ver" 
 		write !,$$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+		if $D(^%apptools.Setting("HomeNamespace"),APPNS) write !,APPNS_"> "_$$$FormattedLine($$$Underlined,$$$escGreen("apptools-admin"))_" "_##class(%ZAPM.ext.zpm).GetVerZpm(,,APPNS,"apptools-admin"),!
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
@@ -817,16 +818,17 @@ ClassMethod GetListModules(StartsWith As %String = "", ByRef pList) [ Internal ]
 	Set:$D(pList) pList=$G(maxlen)
 }
 
-/// Version ZPM 
+/// Version ZPM модуле
 /// write ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm)
-ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName)
+ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName, ns = "%SYS", mod = "zpm")
 {
 	new $namespace
-	set $namespace="%SYS"
-	Do ..GetListModules("zpm",.list)
-	If $Data(list("zpm")) {
-			set ver=$ListGet(list("zpm"),1)
+	set $namespace=ns
+	Do ..GetListModules(mod,.list)
+	If $Data(list(mod)) {
+			set ver=$ListGet(list(mod),1)
 	}
+	quit:mod'="zpm" $g(ver)
 	set IsHspm=0
 	if $p(ver,".",2)=2,$p(ver,".",3)>14 set IsHspm=1
 	if $p(ver,".",2)>2 set IsHspm=1

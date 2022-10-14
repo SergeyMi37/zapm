@@ -5,7 +5,7 @@
 Class %ZAPM.ext.code [ Abstract ]
 {
 
-/// d ##class(%ZAPM.ext.code).exp("d:\_proj\_zapm\zapm\","%ZAPM")
+/// d ##class(%ZAPM.ext.code).exp("d:\_proj\_zapm\zapm\","%ZAPM") 
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  d ..workdir(dir)
