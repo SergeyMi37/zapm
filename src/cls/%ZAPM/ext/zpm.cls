@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.25";
+Parameter VERSION = "1.0.37";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -123,12 +123,11 @@ ClassMethod extcmd(cmd = "") As %Status
 		quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext)
 	}
 
-	if $p(cmd," ")="load" quit ##class(%ZAPM.ext.zpm).LoadFromRepo($p(cmd," ",2,*))
+	if $p(cmd," ")="load" Quit ##class(%ZPM.PackageManager).Shell(cmd)
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
 		write !,$$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
-		if $D(^%apptools.Setting("HomeNamespace"),APPNS) write !,APPNS_"> "_$$$FormattedLine($$$Underlined,$$$escGreen("apptools-admin"))_" "_##class(%ZAPM.ext.zpm).GetVerZpm(,,APPNS,"apptools-admin"),!
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
@@ -515,67 +514,6 @@ ClassMethod GetListModule(ns = {$namespace}, ByRef Mod, OnlyName = 1) As %Status
 	quit $$$OK
 }
 
-/// write ##class(%ZAPM.ext.zpm).LoadFromRepo("https://github.com/Vassil2010/iris-sms")
-ClassMethod LoadFromRepo(path = "") As %Status
-{
-	set sls=$$$slash
-	set st=$$$OK
-	if $e(path,1,4)="http" {
-		set dirrepo=$p($p(path,"/",*),".git")
-		set dirrnd=$tr($zts,".,")
-		Set TempDir = ##class(%File).GetDirectory(##class(%File).GetDirectory($zu(86))_"mgr"_sls_"Temp"_sls_dirrnd_sls)
-		set st=##class(%File).CreateDirectoryChain(TempDir)
-		if 'st  write !,$System.Status.GetErrorText(st) q st
-		;write !,"Create tempory directory "_TempDir
-		//first try
-		set UrlArchive = ..GetUrlRepoArhive(path)
-		if UrlArchive'="" {
-			Do ##class(%Net.URLParser).Parse(UrlArchive,.tComponents)
-			Set tClient = ##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
-			set tRequest = tClient.GetHttpRequest(UrlArchive)
-			Set tRequest.Timeout = 300
-    		Set tSC = tRequest.Get(tComponents("path"))
-    		If $$$ISOK(tSC), tRequest.HttpResponse.StatusCode=200 {
-      			Set tFileBinStream = ##class(%Stream.FileBinary).%New()
-      			Set tFileBinStream.Filename = TempDir_"tmp.zip"
-      			do tFileBinStream.CopyFromAndSave(tRequest.HttpResponse.Data)      
-			}
-		  	If $GET(tFileBinStream)'="" {
-				if $zversion(1)=3 { //for Linux
-					set cmd="cd "_TempDir_" && unzip -q tmp.zip"
-				}
-				else { //for Windows
-					set cmd="cd "_TempDir_" && powershell Expand-Archive -LiteralPath "_TempDir_"tmp.zip -DestinationPath "_TempDir
-				}
-				write !,cmd,!
-				$$$ThrowOnError(##class(%ZPM.PackageManager.Developer.Utils).RunCommandViaZF(cmd,.tLog,.tErr))
-				hang 2
-			}
-		}
-		if $$$FileSize(TempDir_dirrepo_"-master"_sls_"module.xml")>0 {
-			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo_"-master")
-			do ##class(%File).RemoveDirectoryTree(TempDir)
-			if 'st write !,$System.Status.GetErrorText(st)
-			Quit st
-		}
-		//second try
-		set cmd="cd "_TempDir_" && git clone "_path
-		write !,cmd,!
-		$$$ThrowOnError(##class(%ZPM.PackageManager.Developer.Utils).RunCommandViaZF(cmd,.tLog,.tErr))
-		hang 2
-		if $$$FileSize(TempDir_dirrepo_sls_"module.xml")>0 {
-			set st=##class(%ZPM.PackageManager).Shell("load "_TempDir_sls_dirrepo)
-			do ##class(%File).RemoveDirectoryTree(TempDir)
-			if 'st write !,$System.Status.GetErrorText(st)
-			Quit st
-		}
-	}
-	else {
-		Quit ##class(%ZPM.PackageManager).Shell("load "_path)
-	}
-	q $$$OK
-}
-
 /// https://github.com/SergeyMi37/zapm-addcmd.git
 /// https://codeload.github.com/SergeyMi37/zapm/zip/master
 /// write ##class(%ZAPM.ext.zpm).GetUrlRepoArhive("https://github.com/SergeyMi37/zapm-addcmd.git")
@@ -818,17 +756,16 @@ ClassMethod GetListModules(StartsWith As %String = "", ByRef pList) [ Internal ]
 	Set:$D(pList) pList=$G(maxlen)
 }
 
-/// Version ZPM модуле
+/// Version ZPM 
 /// write ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm)
-ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName, ns = "%SYS", mod = "zpm")
+ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName)
 {
 	new $namespace
-	set $namespace=ns
-	Do ..GetListModules(mod,.list)
-	If $Data(list(mod)) {
-			set ver=$ListGet(list(mod),1)
+	set $namespace="%SYS"
+	Do ..GetListModules("zpm",.list)
+	If $Data(list("zpm")) {
+			set ver=$ListGet(list("zpm"),1)
 	}
-	quit:mod'="zpm" $g(ver)
 	set IsHspm=0
 	if $p(ver,".",2)=2,$p(ver,".",3)>14 set IsHspm=1
 	if $p(ver,".",2)>2 set IsHspm=1

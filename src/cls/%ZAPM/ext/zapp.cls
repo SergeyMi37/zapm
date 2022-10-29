@@ -470,7 +470,7 @@ ClassMethod UpdateLanguageExtensionsOne(RoutineName As %String, pTestOnly As %Bo
 		Merge tRtnLines = tGenLines
 	}
 	If (pTestOnly) {
-		Quit $$$OK
+		Quit
 	}
 	Do tRtn.Clear()
 	For i=1:1:tRtnLines {
