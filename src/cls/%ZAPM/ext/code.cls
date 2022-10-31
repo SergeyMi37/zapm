@@ -5,8 +5,8 @@
 Class %ZAPM.ext.code [ Abstract ]
 {
 
-/// d ##class(apptools.core.code).exp("/irisrun/repo/chmod777-R/apptools/","apptools.","apptools.M")
-/// d ##class(apptools.core.code).exp("/irisrun/repo/chmod777-R/zapm/","%ZAPM")
+/// d ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/","apptools.","apptools.M")
+/// d ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/","%ZAPM")
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  new $namespace
