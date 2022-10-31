@@ -17,7 +17,7 @@ ClassMethod SaveStat(resave = 0) As %Status
 {
 	s listns=..ListNS(.inf,"NotPref,Ens")
 	s GN=..#SettingsGN
-	i 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y"
+	i 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y" $$$OK
 	KILL @GN
 	MERGE @GN=inf
 	w !,"Updated "_GN,!!
@@ -78,6 +78,7 @@ ClassMethod SaveAndStop() As %Status
 {
 	d ..SaveStat(1)
 	d ..StopAll()
+	quit $$$OK
 }
 
 /// Remove autostart from all products; stop all products in Namespaces before restarting the OS
@@ -87,7 +88,7 @@ ClassMethod StopAll() As %Status
  d ..EnsAction("auto0")
  d ..EnsAction("stop")
  w !!,"ok"
- q
+ quit $$$OK
 }
 
 /// Check and restore autorun products in Namespaces, run all products that were launched
@@ -97,7 +98,7 @@ ClassMethod StartAll() As %Status
  	d ..EnsAction("auto1")
  	d ..EnsAction("start")
  	w !!,"ok"
- 	q
+ 	quit $$$OK
 }
 
 /// Change products status in Namespaces
