@@ -73,7 +73,7 @@ ClassMethod GetCmd(Command = "", CommandName = "", cmd, id) As %Status
 ClassMethod AddUpdate(Command As %String = "", CommandName = "", Partition = "", moderun = "", Description = "", Namespace = "")
 {
 	#dim obj As %ZAPM.ext.commands = ""
-	Set tQuery = "select * %ZAPM_ext.commands where (1=1) "
+	Set tQuery = "select * from %ZAPM_ext.commands where (1=1) "
 	if Command="" $$$ThrowOnError($$$ERROR($$$GeneralError,"Command is empty"))
 	do ..GetCmd(Command,CommandName,.cmd,.id)
 	;w !,Command,!,CommandName,!,"id = "_$g(id)

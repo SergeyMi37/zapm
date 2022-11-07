@@ -5,21 +5,21 @@
 Class %ZAPM.ext.code [ Abstract ]
 {
 
-/// d ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/","apptools.","apptools.M")
-/// d ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/","%ZAPM")
+/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/","apptools.","apptools.M")
+/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/","%ZAPM")
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  new $namespace
- d ..workdir(dir)
+ do ..workdir(dir)
  if $e(mask,1,8)="apptools" set $namespace=$g(^%apptools.Setting("HomeNamespace"))
- d ..export(,,$e(mask,1)="%",,mask,ignoremask,1,.list)
+ do ..export(,,$e(mask,1)="%",,mask,ignoremask,1,.list)
 }
 
 /// import 
-/// d ##class(%ZAPM.ext.code).imp("/backup/iris/distr/apptools-all/src/xml/")
+/// do ##class(%ZAPM.ext.code).imp("/backup/iris/distr/apptools-all/src/xml/")
 ClassMethod imp(dir = "", mask = "")
 {
- d ..workdir(dir)
+ do ..workdir(dir)
  d ..import(mask)
 }
 

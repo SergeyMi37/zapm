@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.37";
+Parameter VERSION = "1.0.38";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -115,6 +115,7 @@ url()
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
 {
+	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
 	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
 	if $p(cmd," ")="newdb" {
@@ -288,6 +289,29 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 	Quit tSC
 }
 
+ClassMethod prod(extcmd) As %Status
+{
+	if (extcmd)["list" quit ..prodlist()
+	if (extcmd)["export" //todo
+	if (extcmd)["import" //todo
+	if (extcmd)["info" //todo
+	if (extcmd)["start" do ##class(%ZAPM.ext.Production).EnsAction("auto1"),##class(%ZAPM.ext.Production).EnsAction("start")
+	if (extcmd)["stop"	do ##class(%ZAPM.ext.Production).SaveStat(1),##class(%ZAPM.ext.Production).StopAll()
+	quit $$$OK
+}
+
+ClassMethod prodlist() As %Status
+{
+	set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
+	set ns=""
+	for { s ns=$o(inf(ns)) q:ns=""
+	 write !,$$$FormattedLine($$$Magenta,ns)
+	 if '$d(inf(ns,"Ens")) {write " No products"}
+	 else {zw inf(ns,"Ens")}
+	}
+ quit $$$OK
+}
+
 ClassMethod find(extcmd) As %Status
 {
 	if (extcmd)[" -r " set ViewRepo=1
@@ -427,7 +451,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
