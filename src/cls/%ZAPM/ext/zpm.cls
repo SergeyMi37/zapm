@@ -291,6 +291,7 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 
 ClassMethod prod(extcmd) As %Status
 {
+	new $namespace
 	if (extcmd)["list" quit ..prodlist()
 	if (extcmd)["export" //todo
 	if (extcmd)["import" //todo
@@ -303,11 +304,25 @@ ClassMethod prod(extcmd) As %Status
 ClassMethod prodlist() As %Status
 {
 	set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
-	set ns=""
+	set ns="",ex=""
 	for { s ns=$o(inf(ns)) q:ns=""
 	 write !,$$$FormattedLine($$$Magenta,ns)
 	 if '$d(inf(ns,"Ens")) {write " No products"}
-	 else {zw inf(ns,"Ens")}
+	 else {
+		set tProductionName=""
+		for { set tProductionName=$o(inf(ns,"Ens",tProductionName)) quit:tProductionName=""
+			;continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
+			$$$NspGoto(curNs,ns)
+			if ex'="info" write !,tProductionName
+			Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
+			set stat=$s(Stat=1:$$$FormattedLine($$$Green,"Running"),Stat=2:$$$FormattedLine($$$Yellow,"Stopped"),Stat=3:$$$FormattedLine($$$Yellow,"Suspended"),Stat=4:$$$FormattedLine($$$Red,"Troubled"),1:"?")
+			if ex'="info" w " :"_stat
+			if 'sc w $System.Status.DisplayError(sc)
+			s out(ns,tProductionName)=stat
+			;if ex="info" k ou d ..ExtInfo(tProductionName,.ou) m out(ns,tProductionName)=ou
+			$$$NspReturn(curNs)
+		}	
+	 }
 	}
  quit $$$OK
 }
