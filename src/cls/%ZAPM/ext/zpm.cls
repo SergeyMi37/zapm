@@ -293,6 +293,7 @@ ClassMethod prod(extcmd) As %Status
 {
 	new $namespace
 	if (extcmd)["list" quit ..prodlist()
+	if (extcmd)["only" quit ..prodlist("only")
 	if (extcmd)["export" //todo
 	if (extcmd)["import" //todo
 	if (extcmd)["info" //todo
@@ -301,28 +302,29 @@ ClassMethod prod(extcmd) As %Status
 	quit $$$OK
 }
 
-ClassMethod prodlist() As %Status
+ClassMethod prodlist(mode = "") As %Status
 {
 	set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
 	set ns="",ex=""
 	for { s ns=$o(inf(ns)) q:ns=""
-	 write !,$$$FormattedLine($$$Magenta,ns)
-	 if '$d(inf(ns,"Ens")) {write " No products"}
-	 else {
-		set tProductionName=""
-		for { set tProductionName=$o(inf(ns,"Ens",tProductionName)) quit:tProductionName=""
-			;continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
-			$$$NspGoto(curNs,ns)
-			if ex'="info" write !,tProductionName
-			Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
-			set stat=$s(Stat=1:$$$FormattedLine($$$Green,"Running"),Stat=2:$$$FormattedLine($$$Yellow,"Stopped"),Stat=3:$$$FormattedLine($$$Yellow,"Suspended"),Stat=4:$$$FormattedLine($$$Red,"Troubled"),1:"?")
-			if ex'="info" w " :"_stat
-			if 'sc w $System.Status.DisplayError(sc)
-			s out(ns,tProductionName)=stat
-			;if ex="info" k ou d ..ExtInfo(tProductionName,.ou) m out(ns,tProductionName)=ou
-			$$$NspReturn(curNs)
-		}	
-	 }
+		if mode="only",'$d(inf(ns,"Ens")) continue
+	 	write !,$$$FormattedLine($$$Magenta,ns)
+	 	if '$d(inf(ns,"Ens")) {write " No products"}
+	 	else {
+			set tProductionName=""
+			for { set tProductionName=$o(inf(ns,"Ens",tProductionName)) quit:tProductionName=""
+				;continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
+				$$$NspGoto(curNs,ns)
+				if ex'="info" write !,tProductionName
+				Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
+				set stat=$s(Stat=1:$$$FormattedLine($$$Green,"Running"),Stat=2:$$$FormattedLine($$$Yellow,"Stopped"),Stat=3:$$$FormattedLine($$$Yellow,"Suspended"),Stat=4:$$$FormattedLine($$$Red,"Troubled"),1:"?")
+				if ex'="info" w " :"_stat
+				if 'sc w $System.Status.DisplayError(sc)
+				s out(ns,tProductionName)=stat
+				;if ex="info" k ou d ..ExtInfo(tProductionName,.ou) m out(ns,tProductionName)=ou
+				$$$NspReturn(curNs)
+			}	
+		 }
 	}
  quit $$$OK
 }
@@ -338,6 +340,8 @@ ClassMethod find(extcmd) As %Status
 
 ClassMethod help(cmd = "") As %Status
 {
+	new $namespace
+	set $namespace="%SYS"
 	OPEN 2:$j USE 2
 	if '$lf(..cmdzpmext(),cmd) {
 		do ##class(%ZPM.PackageManager).Shell("help "_cmd)
@@ -429,6 +433,19 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !," Added history in list for non-removable."
  	write !!,"hist -add Number_hist [name_cmd] [a/i/n] description"
  	write !," Added history in list commans."
+ }
+ if cmd=""||(cmd="prod")||(cmd="interoperability") {
+	write !!,"interoperability "
+	write !,"  Alias: prod"
+ 	write !," Product handling, startup and shutdown information."
+ 	write !!,"prod list"
+ 	write !," Show all namespaces and productions."
+ 	write !!,"prod only"
+ 	write !," Show only productions."
+ 	write !!,"prod stop"
+ 	write !," Remember the current state of all products, and then stop everything"
+ 	write !!,"prod start"
+ 	write !," start all products"
  }
  if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {

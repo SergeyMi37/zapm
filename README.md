@@ -23,14 +23,12 @@ Then I wanted to improve the color commands and expand the functionality.
 And now ZAPM has survived to the first version and can add any command that I need and remember it so that I can re-execute it.
 
 ## What's new
-- fixed vers command
-- added support zpm ver 0.4
-- added `LoadRegistrys` module
- 1 do ##class(%ZAPM.ext.zpm).LoadRegistrys() ;load all modules from https://pm.community.intersystems.com in different namespaces
- 2 do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1) ;load `c*` modules
- 3 do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"isc-dev") ;load only `isc-dev`
-- added `ShowLog` module
- 1 do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log") ;output log in file `d:\_proj\!\zapm.log`
+
+- added command:
+1 `prod list`
+2 `prod stop`
+3 `prod start`
+4 -help prod`
 
 ## Installation with ZPM
 
