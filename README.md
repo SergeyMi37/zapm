@@ -24,11 +24,12 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 ## What's new
 
-- added command:
-1 `prod list`
-2 `prod stop`
-3 `prod start`
-4 -help prod`
+ - added command:
+ 
+ 1 prod list
+ 2 prod stop
+ 3 prod start
+ 4 help prod
 
 ## Installation with ZPM
 
