@@ -24,12 +24,7 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 ## What's new
 
- - added command:
- 
- -- prod list
- -- prod stop
- -- prod start
- -- help prod
+Added command: prod list, prod stop, prod start, help prod. Working with Products, start and stop in all namespaces.
 
 ## Installation with ZPM
 
