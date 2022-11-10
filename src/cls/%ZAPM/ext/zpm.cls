@@ -293,15 +293,18 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 ClassMethod prod(extcmd) As %Status
 {
 	new $namespace
-	if (extcmd)["list" quit ..prodlist()
-	if (extcmd)["only" quit ..prodlist("only")
+	if (extcmd)="list " quit ..prodlist()
+	if (extcmd)["only " quit ..prodlist("only")
 	if (extcmd)["export" //todo
 	if (extcmd)["import" //todo
 	if (extcmd)["info" //todo
-	if (extcmd)["start" do ##class(%ZAPM.ext.Production).EnsAction("auto1"),##class(%ZAPM.ext.Production).EnsAction("start"),..prodlist()
-	if (extcmd)["save"	do ##class(%ZAPM.ext.Production).SaveStat(1)
-	if (extcmd)["stop"	do ##class(%ZAPM.ext.Production).StopAll(),..prodlist()
-	if (extcmd)["recover" do ##class(%ZAPM.ext.Production).EnsAction("recover")
+	if (extcmd)="start " do ##class(%ZAPM.ext.Production).EnsAction("auto1"),##class(%ZAPM.ext.Production).EnsAction("start"),..prodlist()
+	if $p(extcmd,"start ",2)'="" do ##class(%ZAPM.ext.Production).Start($p($p(extcmd,"start ",2)," ",1)),..prodlist()
+	if (extcmd)="save " do ##class(%ZAPM.ext.Production).SaveStat(1)
+	if (extcmd)="stop " do ##class(%ZAPM.ext.Production).StopAll(),..prodlist()
+	if $p(extcmd,"stop ",2)'="" do ##class(%ZAPM.ext.Production).Stop($p($p(extcmd,"stop ",2)," ",1)),..prodlist()
+	if (extcmd)="recover " do ##class(%ZAPM.ext.Production).EnsAction("recover")
+	if $p(extcmd,"recover ",2)'="" do ##class(%ZAPM.ext.Production).Recover($p($p(extcmd,"recover ",2)," ",1)),..prodlist()
 	quit $$$OK
 }
 
@@ -461,10 +464,16 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !," Save the current status for subsequent recovery after the start. Those products that worked will work, and those that did not work will not."
  	write !!,"prod stop"
  	write !," Remember the current state of all products, and then stop everything"
+ 	write !!,"prod stop NAMESPACE"
+ 	write !," stop production in NAMESPACE"
  	write !!,"prod start"
  	write !," start all products"
+ 	write !!,"prod start NAMESPACE"
+ 	write !," start production in NAMESPACE"
  	write !!,"prod recover"
  	write !," Recover all products"
+ 	write !!,"prod recover NAMESPACE"
+ 	write !," recover production in NAMESPACE"
  }
  if cmd=""||(cmd="task") {
 	write !!,"task "
@@ -475,8 +484,12 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !," Save the current status for subsequent recovery after the start. Those tasks that worked will work, and those that did not work will not."
  	write !!,"task stop"
  	write !," Suspend all user tasks."
+ 	write !!,"task stop ID"
+ 	write !," Suspend task with ID."
  	write !!,"task start"
  	write !," Resume all user tasks."
+ 	write !!,"task start ID"
+ 	write !," Resume task with ID."
  }
  if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {

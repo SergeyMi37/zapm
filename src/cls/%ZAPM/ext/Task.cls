@@ -55,9 +55,11 @@ ClassMethod task(extcmd) As %Status
 	if (extcmd)["export" //todo
 	if (extcmd)["import" //todo
 	if (extcmd)["info" //todo
-	if (extcmd)["start" do ..taskSuspend(0)
+	if (extcmd)="start " do ..taskSuspend(0)
+	if $p(extcmd,"start ",2)'="" do ..taskset($p($p(extcmd,"start ",2)," ",1),0),..tasklist()
 	if (extcmd)["save"	do ..taskSave()
-	if (extcmd)["stop"	do ..taskSuspend(1)
+	if (extcmd)="stop "	do ..taskSuspend(1)
+	if $p(extcmd,"stop ",2)'="" do ..taskset($p($p(extcmd,"stop ",2)," ",1),1),..tasklist()
 	quit $$$OK
 }
 

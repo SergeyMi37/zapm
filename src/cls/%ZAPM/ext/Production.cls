@@ -113,6 +113,51 @@ ClassMethod Init(nsList = "") As %Status
 	q $$$OK
 }
 
+///  d ##class(%ZAPM.ext.Production).Start("user")
+ClassMethod Start(ns) As %Status
+{
+	new $namespace
+	try {
+		set $namespace=ns
+		Set sc = ##class(Ens.Director).StartProduction() ; Quit:$$$ISERR(tSC)
+		if 'sc w $System.Status.DisplayError(sc)
+	}
+	catch e { w $ze 
+	}
+	quit $$$OK
+}
+
+///  d ##class(%ZAPM.ext.Production).Recover("user")
+ClassMethod Recover(ns) As %Status
+{
+	new $namespace
+	try {
+		set $namespace=ns
+		set sc=##class(Ens.Director).RecoverProduction()
+		if 'sc w $System.Status.DisplayError(sc)
+	}
+	catch e { w $ze 
+	}
+	quit $$$OK
+}
+
+///  d ##class(%ZAPM.ext.Production).Stop("user")
+ClassMethod Stop(ns) As %Status
+{
+	new $namespace
+	try {
+		set $namespace=ns
+		s sc=##class(Ens.Director).StopProduction(..#TIMEOUTSTOP)
+		i 'sc {
+			s sc2=##class(Ens.Director).StopProduction(..#TIMEOUTSTOP,1) 
+			i 'sc2 w $System.Status.DisplayError(sc2)
+		}
+	}
+	catch e { w $ze 
+	}
+	quit $$$OK
+}
+
 /// Change products status in Namespaces
 /// d ##class(%ZAPM.ext.Production).EnsAction("restart")
 /// ex= "auto0" - clean all Namespaces of auto start products
