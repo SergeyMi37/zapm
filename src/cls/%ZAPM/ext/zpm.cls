@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.38";
+Parameter VERSION = "1.0.40";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -116,6 +116,7 @@ url()
 ClassMethod extcmd(cmd = "") As %Status
 {
 	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
+	if $lf($lb("task"),$p(cmd," ")) quit ##class(%ZAPM.ext.Task).task($p(cmd," ",2,*)_" ")
 	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
 	if $p(cmd," ")="newdb" {
@@ -297,31 +298,45 @@ ClassMethod prod(extcmd) As %Status
 	if (extcmd)["export" //todo
 	if (extcmd)["import" //todo
 	if (extcmd)["info" //todo
-	if (extcmd)["start" do ##class(%ZAPM.ext.Production).EnsAction("auto1"),##class(%ZAPM.ext.Production).EnsAction("start")
-	if (extcmd)["stop"	do ##class(%ZAPM.ext.Production).SaveStat(1),##class(%ZAPM.ext.Production).StopAll()
+	if (extcmd)["start" do ##class(%ZAPM.ext.Production).EnsAction("auto1"),##class(%ZAPM.ext.Production).EnsAction("start"),..prodlist()
+	if (extcmd)["save"	do ##class(%ZAPM.ext.Production).SaveStat(1)
+	if (extcmd)["stop"	do ##class(%ZAPM.ext.Production).StopAll(),..prodlist()
+	if (extcmd)["recover" do ##class(%ZAPM.ext.Production).EnsAction("recover")
 	quit $$$OK
 }
 
 ClassMethod prodlist(mode = "") As %Status
 {
+	s GN=##class(%ZAPM.ext.Production).#SettingsGN ;et gn="^%ZAPM.ext.Productions"
 	set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
-	set ns="",ex=""
+	set ns="",ex="",fStatus=",1, ,10",fSStatus=",1, ,15"
+	write !,##class(%ZAPM.ext.zapp).writerow("Namespace",",1,.,20","ProductionName",",1,.,48","Status",fStatus,"SaveStatus",fSStatus)
+	write !,##class(%ZAPM.ext.zapp).writerow("---------",",1,.,20","--------------",",1,.,48","------",fStatus,"----------",fSStatus)
+	set colorns=$$$Magenta
 	for { s ns=$o(inf(ns)) q:ns=""
+		set namespace=1
 		if mode="only",'$d(inf(ns,"Ens")) continue
-	 	write !,$$$FormattedLine($$$Magenta,ns)
-	 	if '$d(inf(ns,"Ens")) {write " No products"}
+	 	;write !,$$$FormattedLine($$$Magenta,ns)
+	 	if '$d(inf(ns,"Ens")) {
+		 	write !,##class(%ZAPM.ext.zapp).writerow(ns,$$$Yellow_",1,.,20","No products",$$$Yellow_",1, ,48","",fStatus)
+		}
 	 	else {
 			set tProductionName=""
 			for { set tProductionName=$o(inf(ns,"Ens",tProductionName)) quit:tProductionName=""
 				;continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
 				$$$NspGoto(curNs,ns)
-				if ex'="info" write !,tProductionName
+				;if ex'="info" write !,tProductionName
+				set Stat=""
 				Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
-				set stat=$s(Stat=1:$$$FormattedLine($$$Green,"Running"),Stat=2:$$$FormattedLine($$$Yellow,"Stopped"),Stat=3:$$$FormattedLine($$$Yellow,"Suspended"),Stat=4:$$$FormattedLine($$$Red,"Troubled"),1:"?")
-				if ex'="info" w " :"_stat
-				if 'sc w $System.Status.DisplayError(sc)
-				s out(ns,tProductionName)=stat
-				;if ex="info" k ou d ..ExtInfo(tProductionName,.ou) m out(ns,tProductionName)=ou
+				set colorstat=$s(Stat=1:$$$Green,Stat=2:$$$Yellow,Stat=3:$$$Yellow,Stat=4:$$$Red,1:"")
+				set stat=$s(Stat=1:"Running",Stat=2:"Stopped",Stat=3:"Suspended",Stat=4:"Troubled",1:"?")
+				;if ex'="info" w " :"_stat
+				if 'sc set stat=$System.Status.DisplayError(sc),colorstat=$$$Red
+				if namespace'=ns&&(namespace'="") set namespace=ns,alig="."
+				if $d(@GN@(ns,"Ens",tProductionName)) set save=$lg(@GN@(ns,"Ens",tProductionName),1)
+				else  set save="?"
+				write !,##class(%ZAPM.ext.zapp).writerow(namespace,colorns_",1,"_alig_",20",tProductionName,",1,.,48",stat,colorstat_fStatus,save,fSStatus)
+				set namespace="",alig=" "
 				$$$NspReturn(curNs)
 			}	
 		 }
@@ -436,16 +451,32 @@ ClassMethod exthelp(cmd = "") As %Status
  }
  if cmd=""||(cmd="prod")||(cmd="interoperability") {
 	write !!,"interoperability "
-	write !,"  Alias: prod"
- 	write !," Product handling, startup and shutdown information."
+	write !,"   Alias: prod"
+ 	write !,"Group work with all Products, info status, start and stop."
  	write !!,"prod list"
  	write !," Show all namespaces and productions."
  	write !!,"prod only"
  	write !," Show only productions."
+ 	write !!,"prod save"
+ 	write !," Save the current status for subsequent recovery after the start. Those products that worked will work, and those that did not work will not."
  	write !!,"prod stop"
  	write !," Remember the current state of all products, and then stop everything"
  	write !!,"prod start"
  	write !," start all products"
+ 	write !!,"prod recover"
+ 	write !," Recover all products"
+ }
+ if cmd=""||(cmd="task") {
+	write !!,"task "
+ 	write !,"Group work with all custom tasks, info status, suspend and resume."
+ 	write !!,"task list"
+ 	write !," View all tasks and their statuses."
+ 	write !!,"task save"
+ 	write !," Save the current status for subsequent recovery after the start. Those tasks that worked will work, and those that did not work will not."
+ 	write !!,"task stop"
+ 	write !," Suspend all user tasks."
+ 	write !!,"task start"
+ 	write !," Resume all user tasks."
  }
  if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {
@@ -483,7 +514,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")

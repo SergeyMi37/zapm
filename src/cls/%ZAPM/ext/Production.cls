@@ -29,7 +29,7 @@ ClassMethod SaveStat(resave = 0) As %Status
 }
 
 /// Get a list of domain namespaces separated by commas
-/// w ##class(apptools.core.sys).ListNS(.info,"NotPre,Ens")
+/// w ##class(%ZAPM.ext.Production).ListNS(.info,"NotPre,Ens")
 /// Flag = "Ens" - only where the ensemble is installed
 /// Flag = "NotPre" - exclude prepared
 ClassMethod ListNS(info, Flag = "")
@@ -66,7 +66,7 @@ ClassMethod getEnsProd(name, info)
 }
 
 /// Check whether the namespace is prepared
-/// w ##class(apptools.core.sys).IsPreparedNS("%SYS")
+/// w ##class(%ZAPM.ext.Production).IsPreparedNS("%SYS")
 ClassMethod IsPreparedNS(name)
 {
 	quit $lf($lb("%SYS","%ALL","DOCBOOK","ENSDEMO","ENSEMBLE","SAMPLES","USER"),$zconvert(name,"U"))
@@ -101,6 +101,18 @@ ClassMethod StartAll() As %Status
  	quit $$$OK
 }
 
+/// Initiate all Namespaces for the Ensemble\Interoperability
+/// d ##class(%ZAPM.ext.Production).Init("USER")
+ClassMethod Init(nsList = "") As %Status
+{
+ if nsList="" set nsList=..ListNS(.inf,"NotPref")
+	for i=1:1:$l(nsList) {
+		continue:$p(nsList,",",i)=""
+		do ##class(%EnsembleMgr).EnableNamespace($p(nsList,",",i),1) 
+	}
+	q $$$OK
+}
+
 /// Change products status in Namespaces
 /// d ##class(%ZAPM.ext.Production).EnsAction("restart")
 /// ex= "auto0" - clean all Namespaces of auto start products
@@ -109,6 +121,7 @@ ClassMethod StartAll() As %Status
 /// ex= "restart"  - reload all products
 /// ex= "start"  - run the ones that were started, restore from #SettingsGN(ns)
 /// ex= "status" - output statuses
+/// ex= "recover" - output statuses
 /// ex= "info" - output of additional information about products and services with parameters d ##class(%ZAPM.ext.Production).EnsAction("info",,.out)
 /// out - result ;d ##class(%ZAPM.ext.Production).EnsAction("status",$Namespace,.out)
 ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tProductionName, inf) ]
@@ -121,13 +134,20 @@ ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tPro
 	$$$NspGoto(curN,ns)
 	i '$d(inf(ns,"Ens")) continue
 	s GN=..#SettingsGN
-	i ex'="info" w !!,"--- ",ns
+	if ex'="info" w !!,"--- ",ns
 	if ex="stop" {
 		s sc=##class(Ens.Director).StopProduction(..#TIMEOUTSTOP)
 		i 'sc {
 			s sc2=##class(Ens.Director).StopProduction(..#TIMEOUTSTOP,1) 
 			i 'sc2 w $System.Status.DisplayError(sc2)
 		}
+	}
+	elseif ex="recover" { //This method recovers the last running production whose status is eProductionStateTroubled
+		set sc=##class(Ens.Director).RecoverProduction()
+		write !,"Recover "
+		if 'sc w $System.Status.DisplayError(sc)
+		else  write "OK"
+		
 	}
 	elseif ex="restart" {
 		s sc=##class(Ens.Director).RestartProduction()

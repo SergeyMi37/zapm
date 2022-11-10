@@ -124,6 +124,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb(ecmd,"i","upg","Upgrade modules in namespace")
 	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
+	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
 	set list("zapm",$i(list))=$lb(ecmd,"i","prod","Product handling, startup and shutdown information")
 	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")
@@ -421,6 +422,39 @@ ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", descripti
 	if 'st write $System.Status.GetErrorText(st) quit st
 	else  write !,"added"
 	quit $$$OK
+}
+
+/// do ##class(%ZAPM.ext.zapp).writerow("test",",1,.,40")
+/// "test" - text in columns
+/// "33,1,.,40" - formatting options
+/// 33 - Yellow - escape sequence color code
+/// 1  - left alignment  0 - right alignment  2 - center
+/// .  - character padding
+/// 40 - column width
+ClassMethod writerow(arg...) As %Status
+{
+	set res=""
+	for i=1:2 { quit:'$d(arg(i))
+		set color=$p(arg(i+1),",")
+		if 'color set color=$$$Default
+		set val=arg(i)
+		set aligh=$p(arg(i+1),",",2)
+		set space=$p(arg(i+1),",",3)
+		set width=+$p(arg(i+1),",",4)
+		if width<$l(val) s val=$e(val,1,width)
+		if aligh=1 {
+			set res=res_$$$FormattedLine(color,val)_$tr($j("",width-$l(val))," ",space)_" "
+		}
+		elseif aligh=2 { //center
+			set w1=(width-$l(val))\2
+			set w2=(width-$l(val))-w1
+			set res=res_$tr($j("",w1)," ",space)_$$$FormattedLine(color,val)_$tr($j("",w2)," ",space)_" "
+		}
+		else {
+			set res=res_$tr($j("",width-$l(val))," ",space)_$$$FormattedLine(color,val)_" "
+		}
+	}
+	quit res
 }
 
 /// do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()

@@ -24,7 +24,43 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 ## What's new
 
-Added command: prod list, prod stop, prod start, help prod. Working with Products, start and stop in all namespaces.
+Added commands: Working with Products and Tasks, start and stop in all namespaces.
+```
+ interoperability
+    Alias: prod
+ Group work with all Products, info status, start and stop.
+
+ prod list
+  Show all namespaces and productions.
+
+ prod only
+  Show only productions.
+
+ prod save
+  Save the current status for subsequent recovery after the start. Those products that worked will work, and those that did not work will not.
+
+ prod stop
+  Remember the current state of all products, and then stop everything
+
+ prod start
+  start all products
+ prod recover
+  Recover all products
+ task
+ Group work with all custom tasks, info status, suspend and resume.
+
+ task list
+  View all tasks and their statuses.
+
+ task save
+  Save the current status for subsequent recovery after the start. Those tasks that worked will work, and those that did not work will not.
+
+ task stop
+  Suspend all users tasks.
+
+ task start
+  Resume all users tasks.
+ ```
 
 ## Installation with ZPM
 
