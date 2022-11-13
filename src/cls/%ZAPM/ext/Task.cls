@@ -102,10 +102,10 @@ ClassMethod taskSuspend(set = "") As %Status
 			if '$d(@gn@("Susp",id)) set @gn@("Susp",id)=sus
 			if $d(@gn@("Susp",id)) set sus=@gn@("Susp",id)
 			if set=0,sus continue
+			if result.Data("Status")=-1 continue
 			set st=..taskset(id,set)
 			if 'st set text=$SYSTEM.Status.GetErrorText(st) write !,id_" "_text
 			else  write !,id_" OK"
-
 		}
 	}
 	do ..tasklist()
@@ -116,6 +116,7 @@ ClassMethod taskSuspend(set = "") As %Status
 ClassMethod taskset(id, set) As %Status
 {
 	Set Task=##Class(%SYSTEM.Task).%OpenId(id)
+	if '$iso(Task) quit $$$ERROR($$$GeneralError,"Can't open object id="_id)
 	set Task.Suspended=set
 	set st=Task.%Save()
 	quit st
@@ -125,7 +126,7 @@ ClassMethod taskset(id, set) As %Status
 ClassMethod tasklist() As %Status
 {
 	set query="SELECT ID,Type,Name,NameSpace,RunAsUser,Description,DisplayDayNextScheduled,DisplayEndDate,DisplayErrorDate,DisplayErrorNumber,DisplayFinished, DisplayInterval,DisplayNextScheduled,DisplayNextScheduledBrief,DisplayRun,DisplayStartDate,DisplayStarted,DisplayStatus,Error,SuspendOnError,SuspendTerminated,Suspended,TaskClass FROM %SYS.Task"
-	set q="SELECT ID,Type,Name,NameSpace,DisplayDayNextScheduled,DisplayEndDate,Suspended FROM %SYS.Task"
+	set q="SELECT ID,Type,Name,NameSpace,DisplayDayNextScheduled,DisplayEndDate,Suspended,Status FROM %SYS.Task"
 	set result=##CLASS(%ResultSet).%New("%DynamicQuery:SQL")
 	set tSC=result.Prepare(q)
 	set:tSC tSC=result.Execute()
@@ -134,8 +135,8 @@ ClassMethod tasklist() As %Status
 		set text=$SYSTEM.Status.GetErrorText(tSC)  write !,text QUIT $$$ERROR(text)
 	}
 	else {
-		write !,##class(%ZAPM.ext.zapp).writerow("ID",",1, ,6","Type",",1, ,4","Name",",1, ,40","Suspended",",2,.,9","Save",",2, ,4")
-		write !,##class(%ZAPM.ext.zapp).writerow("--",",1, ,6","----",",1, ,4","----",",1, ,40","---------",",2,.,9","----",",2, ,4")
+		write !,##class(%ZAPM.ext.zapp).writerow("ID",",1, ,6","Type",",1, ,4","Name",",1, ,40","Status",",2,.,9","Suspended",",2,.,9","Save",",2, ,4")
+		write !,##class(%ZAPM.ext.zapp).writerow("--",",1, ,6","----",",1, ,4","----",",1, ,40","------",",2,.,9","---------",",2,.,9","----",",2, ,4")
 		while result.Next() {
 			set id=result.Data("ID")
 			set type=result.Data("Type")
@@ -146,7 +147,10 @@ ClassMethod tasklist() As %Status
 			;set susp=$s(sus:"yes",1:"")
 			set colorname=$s(sus:$$$Red,1:"")
 			set save=$g(@gn@("Susp",id),"?")
-			write !,##class(%ZAPM.ext.zapp).writerow(result.Data("ID"),colortype_",1, ,6",type,colortype_",1, ,4",result.Data("Name"),colorname_",1,.,40",sus,",2,.,9",save,",2, ,4")
+			set status=result.Data("Status")
+			set stat=$s(status=1:"OK",status=-1:"Running",1:$SYSTEM.Status.GetErrorText(status))
+			set clrs=$s(status=1:"",status=-1:$$$Green,1:$$$Red)
+			write !,##class(%ZAPM.ext.zapp).writerow(result.Data("ID"),colortype_",1, ,6",type,colortype_",1, ,4",result.Data("Name"),colorname_",1,.,40",stat,clrs_",2,.,9",sus,",2,.,9",save,",2, ,4")
 		}
 	}
 	quit $$$OK

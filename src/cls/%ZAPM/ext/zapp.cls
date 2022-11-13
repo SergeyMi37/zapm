@@ -98,11 +98,15 @@ ClassMethod IsInstallzpm(modulename, ns = {$namespace}) As %String
 ClassMethod favourite(ByRef list) As %Status
 {
 	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
-	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "sys",     "system status")
-	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","","job examing")
+	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "proc-ss",     "system status")
+	set list("sys",$i(list))=$lb("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head""","i","proc-max-mem","proc max memory")
+	set list("sys",$i(list))=$lb("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head""","i","proc-max-cpu","proc max cpu")
+	set list("sys",$i(list))=$lb("zpipe ""ps ax|grep iris""","i","proc-iris","proc iris")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","job","job examing")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^SECURITY","i","","security utility")
+	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^TASKMGR","i","","Task mgr utility")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
 	set list("sys",$i(list))=$lb("zn ""%SYS"" ","i","zn1","Go to namespace %SYS")
 	set list("sys",$i(list))=$lb("w !,""Host "",$zu(110),!,##class(apptools.core.net).GetURI()_""/csp/sys/%25CSP.Portal.Home.zen"",!,""w ##class(apptools.core.net).GetIP()"",!,##class(apptools.core.net).GetIP(),! do ##class(apptools.core.net).GetIPext(,.IPexternal) zw IPexternal ","i","myip","Show my IP")
@@ -125,6 +129,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
 	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
+	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")
 	set list("zapm",$i(list))=$lb(ecmd,"i","prod","Product handling, startup and shutdown information")
 	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")
@@ -171,6 +176,7 @@ ClassMethod TerminalPrompt(comm = "") As %String
 ClassMethod prompt(comm = "") As %Status
 {
 	set comm=$ZStrip(comm,"<>WC")
+	if comm="" write !,"Welcome to the Package Manager with addons Shell. ver."_##class(%ZAPM.ext.zpm).ver(),!,"Enter q/quit/h to exit the shell. Enter ?/help to view available commands",!
 	for {
 		if comm="" {
 			write !,..TerminalPrompt() 
@@ -395,6 +401,7 @@ ClassMethod help(mask = "") As %Status
 	do ..write("","hist or hist context",$lb("Show history"),1)
 	write !,$$$escBlue("A")_"-Ask before launch, "_$$$escBlue("I")_"-Launch immediately, "_$$$escBlue("N")_"-Do not run"
 	;do ..write("","Q,q,^,h,H",$lb("Quit"),1)
+	write !,"You can add a command with the command:",!,">do ##class(%ZAPM.ext.zapp).addcmd(""D ^JOBEXAM "",""sys"",""i"",""job"",""view proces max mem"")"
 	q $$$OK
 }
 
@@ -413,6 +420,7 @@ ClassMethod write(part, num, cmd, noprompt = 0) As %Status
 }
 
 /// do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow","zpm","i","zshow","Show a zpm modules with extention description")
+/// do ##class(%ZAPM.ext.zapp).addcmd("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head"" ","zapm","i","proc-max-mem","view proces max mem")
 ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", description = "") As %Status
 {
 	if partion="" set partion="other"
@@ -421,6 +429,28 @@ ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", descripti
 	set st=##class(%ZAPM.ext.commands).AddUpdate(cmd,namecmd,partion,moderun,description)
 	if 'st write $System.Status.GetErrorText(st) quit st
 	else  write !,"added"
+	quit $$$OK
+}
+
+ClassMethod log(extcmd) As %Status
+{
+	new $namespace
+	zn "%SYS"
+	;write extcmd,!
+	if (extcmd)="mess " quit ..logmess()
+	if $p(extcmd,"mess ",2)'="" quit ..logmess($p($p(extcmd,"mess ",2)," ",1))
+	quit ..logmess()
+	;quit $$$OK
+}
+
+ClassMethod logmess(extcmd = "") As %Status
+{
+	set msg=$System.Util.ManagerDirectory()_"messages.log"
+	set num=20,cmd="tail -n "_num_" "_msg
+	if extcmd>20 set num=+extcmd,cmd="tail -n "_num_" "_msg
+	if extcmd<4 set cmd="more "_msg_" | grep -E ') 1 \[|) 2 \[|) 3 \['"
+	write !,cmd
+	zpipe cmd
 	quit $$$OK
 }
 

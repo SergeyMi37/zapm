@@ -115,6 +115,7 @@ url()
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
 {
+	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
 	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
 	if $lf($lb("task"),$p(cmd," ")) quit ##class(%ZAPM.ext.Task).task($p(cmd," ",2,*)_" ")
 	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
@@ -128,7 +129,7 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="load" Quit ##class(%ZPM.PackageManager).Shell(cmd)
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
-		write !,$$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET),!
+		write !,..ver(),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
 		write !,$ZVersion,!
 	}
@@ -144,6 +145,12 @@ ClassMethod extcmd(cmd = "") As %Status
 	
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+}
+
+/// write ##class(%ZAPM.ext.zpm).ver()
+ClassMethod ver() As %String
+{
+ 	quit $$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET)
 }
 
 /// write ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm","^%ZAPM.settings","1.0.15")
@@ -491,6 +498,12 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !!,"task start ID"
  	write !," Resume task with ID."
  }
+ if cmd=""||(cmd="log") {
+	write !!,"log "
+ 	write !,"View protocols."
+ 	write !!,"log mess"
+ 	write !," View the last 50 lines of messages.log"
+  }
  if $$EXIST^%R("%ZAPM.ed.a") {
 	if cmd=""||($e(cmd,1,2)="ed") {
 	write !!,"edit-glo - Globals and lockals editor"
@@ -527,7 +540,7 @@ ClassMethod cmdzpm() As %String
 
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
