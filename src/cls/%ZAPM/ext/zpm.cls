@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.40";
+Parameter VERSION = "1.0.41";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -16,9 +16,11 @@ Parameter GNSET = "^%ZAPM.settings";
 
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys()
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys("c*",1)
+/// do ##class(%ZAPM.ext.zpm).LoadRegistrys("app*",0,0) ;app* install manualy
 /// do ##class(%ZAPM.ext.zpm).LoadRegistrys(,,,"iris-csv-anonymizer")
 ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = "") As %Status
 {
+	new $namespace
 	set currns=$namespace
 	set gn=..#GN
 	do ##class(%ZAPM.ext.zpm).GetVerZpm(.IsHspm,.RepoFieldName)	
@@ -31,15 +33,15 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 		for i=1:1 {
 			quit:'rs.%Next()  
 			set name=rs.Get("Name")
-
 			if $g(Starting)="",StartingFrom'="" {
 				i (("@"_name)'[("@"_StartingFrom)) write !,name," Skip" continue
 				set Starting=1
 			}
-			
 			set Version=rs.Get("Version")
 			set Repo=rs.Get(RepoFieldName)
 			set ns=$zconvert($tr(name,"_$.","-S"),"U")
+			if '$d(@gn@(name,"url")) set @gn@(name,"url")="<a target='_blank' href='"_Repo_"'>"_Repo_"</a>"
+			if '$d(@gn@(name,"registry")) set @gn@(name,"registry")=$lb(Version,rs.Get("Description"),Repo)
 			if skipZPM, name["apptools"||(name="zpm")||($e(name,1,4)="zpm-")||(name["appmsw")||($e(name,1,4)="zapm") w !,"Skip "_$$$escGreen(name) continue
 			if $d(@gn@(name)) { ;already load
 				if $d(@gn@(name,"install")) { ;restore
@@ -49,12 +51,18 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 					;set @gn@(name,"url")="<a target='_blank' href='"_Repo_"'>"_Repo_"</a>"
 					if $lg(@gn@(name,"install"),3)'=Version {
 						write !,"Upgrade "_$$$escGreen(name)_" to new version: "_$$$escRed(Version)
-						do ..InstallModule(name, ns, Version, Repo, gn, .err)
+						$$$NspGoto(curN,ns)
+						if $namespace'=ns do ..CreateDBNSAndLoad(name)					
+						else  do ..InstallModule(name, ns, Version, Repo, gn, .err)
 					}
 					if $lg(@gn@(name,"install"),2)'=$$$OK {
 						write !,$$$escGreen(name)_" Last error: "_$$$escRed($lg(@gn@(name,"install"),1))
-						w !!," ReInstall ? Y\N\Q" Read R   quit:R="Q"||(R="q")
-						do:R["y" ..InstallModule(name, ns, Version, Repo, gn, .err)
+						if '$g(NoPrompt) w !!," ReInstall ? Y\N\Q\A" Read R   quit:R="Q"||(R="q")  if R="A" set NoPrompt=1
+						if R["y"||(R["Y")||(R["A")||(R["a") {
+							$$$NspGoto(curN,ns)
+							if $namespace'=ns do ..CreateDBNSAndLoad(name)
+							else  do ..InstallModule(name, ns, Version, Repo, gn, .err)
+						}
 					}
 				}
 				if $lg($g(@gn@(name,"generate")),2)'=""||($lg($g(@gn@(name,"install")),1)'="") {
@@ -80,34 +88,110 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 			}
 		}
 	}
-	write !,"Log in global ",!,gn
+	do ..WriteShowLog(gn)
+	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.zpm).ShowLog()
-/// do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log")
-ClassMethod ShowLog(fn = "") As %Status
+/// do ##class(%ZAPM.ext.zpm).PickUp("zpmshow")
+ClassMethod PickUp(name) As %Status
+{
+	set gn=..#GN
+	write !,"Registry: ",$$$escRed(gn)
+	if 1 {
+		set ver=$lg($g(@gn@(name,"registry")),1)
+		set desc=$lg($g(@gn@(name,"registry")),2)
+		set repo=$p($g(@gn@(name,"url")),"'",4)
+	}
+}
+
+/// do ##class(%ZAPM.ext.zpm).Pick()
+ClassMethod Pick() As %Status
+{
+	set gn=..#GN,name=""
+	write !,"Registry: ",$$$escRed(gn)
+	for num=1:1 { set name=$o(@gn@(name)) quit:name=""
+		set ver=$lg($g(@gn@(name,"registry")),1)
+		set desc=$lg($g(@gn@(name,"registry")),2)
+		set repo=$p($g(@gn@(name,"url")),"'",4)
+		write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
+		write !,"   ",$$$escBlue(repo)
+	}
+	quit $$$OK
+}
+
+ClassMethod WriteShowLog(gn) As %Status
+{
+	write !,"Log in global ",!,gn
+	write !,"do ##class(%ZAPM.ext.zpm).ShowLog() ;or  do ##class(%ZAPM.ext.zpm).ShowLog(""d:\_proj\!\zapm.log"")"
+	quit $$$OK
+}
+
+/// do ##class(%ZAPM.ext.zpm).ShowLog(,1) - output without errors 
+/// do ##class(%ZAPM.ext.zpm).ShowLog() - output with errors 
+/// ;or  do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log")
+ClassMethod ShowLog(fn = "", All = 0) As %Status
 {
     set gn=..#GN
     ;zw @gn q 1
     set name=""
     if fn'="" if ##class(apptools.core.files).OpenFile(fn) 
-    for { set name=$o(@gn@(name)) quit:name=""
-	if '$d(@gn@(name,"install")) {
-	    if fn'="" use fn write !,!,name,!,"   ошибка инсталляции, нет "_$zr,!,$$url(),! use 0 continue
-	    write !,$$$escGreen(name)_"   ошибка инсталляции, нет "_$zr,!,$$url(),!
-	    ;do ##class(%ZAPM.ext.zpm).LoadRegistrys(name) 
-	    continue
-	}
-	set st=$lg(@gn@(name,"install"),2)
-	if 'st {
-	    if fn'="" use fn write !,!,name,!,"   "_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
-	    write !,$$$escGreen(name),"   ",$$$escRed($System.Status.GetErrorText(st)),!,$$url(),!
-	}
+    for num=1:1 { set name=$o(@gn@(name)) quit:name=""
+		if All=1 {
+			write !,num,".",$$$escGreen(name)_" ",!,$$url(),!
+			continue
+		}
+		if '$d(@gn@(name,"install")) {
+		    if fn'="" use fn write !,!,name,!,"   Инсталляции не завершена успешно ",!,$$url(),! use 0 continue
+		    write !,$$$escGreen(name)_"   Инсталляции не завершена успешно ",!,$$url(),!
+		    ;do ##class(%ZAPM.ext.zpm).LoadRegistrys(name) 
+		    continue
+		}
+		set st=$lg(@gn@(name,"install"),2)
+		if 'st {
+		    if fn'="" use fn write !,!,name,!,"   Install:"_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
+		    write !,$$$escGreen(name),"   Install:",$$$escRed($System.Status.GetErrorText(st)),!,$$url(),!
+		}
+		if $d(@gn@(name,"publish")) {
+			set st=$lg(@gn@(name,"publish"),2)
+		    if 'st {
+		 	   if fn'="" use fn write !,!,name,!,"   Publish:"_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
+		    	write !,$$$escGreen(name),"   Publish:",$$$escRed($System.Status.GetErrorText(st)),!,$$url(),!
+		    }
+		}
     }
     if fn'="" close fn
     quit $$$OK
 url()
     quit $p($p($g(@gn@(name,"url")),"href='",2),"'")
+}
+
+/// do ##class(%ZAPM.ext.zpm).Publish2Reg(,1)
+ClassMethod Publish2Reg(modulename = "", all = 0, skipZPM = 1, StartingFrom = "") As %Status
+{
+	new $namespace
+	set gn=..#GN
+	set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
+	set ns=""
+	kill zpmmod
+	for { s ns=$o(inf(ns)) q:ns=""
+		kill list
+		do ##class(%ZPM.PackageManager).GetListModule(ns,.list,1)
+		w !,$$$FormattedLine($$$Magenta,ns)
+		if ns="%SYS" continue
+		zn ns
+		if all {
+			set name=""
+			for { set name=$o(list(name),1,version) quit:name=""
+				if '$d(zpmmod(name,version)) {
+					do ..PublishModule(name, ns, version, "", gn, .err)
+					set zpmmod(name,version)=""
+
+				}
+			}	
+		}
+	}
+	do ..WriteShowLog(gn)
+	quit $$$OK
 }
 
 /// extention zpm commands
@@ -129,6 +213,8 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="load" Quit ##class(%ZPM.PackageManager).Shell(cmd)
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
+		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
+		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry()
 		write !,..ver(),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
 		write !,$ZVersion,!
@@ -151,6 +237,22 @@ ClassMethod extcmd(cmd = "") As %Status
 ClassMethod ver() As %String
 {
  	quit $$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET)
+}
+
+/// Get Default Command of Registry
+/// example d ##class(%ZAPM.ext.zpm).GetDefaultCommandRegistry()
+ClassMethod GetDefaultCommandRegistry()
+{
+	New $Namespace
+	Set $Namespace="%SYS"
+	Set Status=##Class(Config.Startup).Get(.Properties)
+	If Status {
+		Set ServerPort="http://"_$zu(110)_":"_$Get(Properties("WebServerPort"),52773)
+		Write !,"Default commands for the registry"
+		Write !,"View all packets in the browser:",!,"  ",ServerPort_"/registry/packages/-/all"
+		Write !,"Switch to the current registry:",!,"   repo -r -n registry -url "_ServerPort_"/registry/ -user ""_system"" -pass ""SYS""",!
+		
+	}
 }
 
 /// write ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm","^%ZAPM.settings","1.0.15")
@@ -341,6 +443,7 @@ ClassMethod prodlist(mode = "") As %Status
 				set colorstat=$s(Stat=1:$$$Green,Stat=2:$$$Yellow,Stat=3:$$$Yellow,Stat=4:$$$Red,1:"")
 				set stat=$s(Stat=1:"Running",Stat=2:"Stopped",Stat=3:"Suspended",Stat=4:"Troubled",1:"?")
 				;if ex'="info" w " :"_stat
+				;;DO ##CLASS(Ens.Director).GetProductionSummary(.info,name)
 				if 'sc set stat=$System.Status.DisplayError(sc),colorstat=$$$Red
 				if namespace'=ns&&(namespace'="") set namespace=ns,alig="."
 				if $d(@GN@(ns,"Ens",tProductionName)) set save=$lg(@GN@(ns,"Ens",tProductionName),1)
@@ -665,11 +768,12 @@ ClassMethod UnloadAndDeleteDBNS(name, Version = "", Repo = "", gn = {..#GN}) As 
 ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", err) As %Status
 {
 	new $namespace
-	k err w !
+	kill err w !
 	if ns="" s ns=$zconvert($tr(name,"_$.","-S"),"U")
-	s st=##class(%ZAPM.ext.database).CreateDBNS(ns)
-	i 'st s err=$System.Status.GetErrorText(st) w !,err
+	set st=##class(%ZAPM.ext.database).CreateDBNS(ns)
+	if 'st s err=$System.Status.GetErrorText(st) w:err'["Database already existent in this directory." !,err
 	s:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
+	if $g(err)["Database already existent in this directory.",$g(gn)'="" kill @gn@(name,"generate") set st=1
 	if st {
 		;s sta=$zpm("install "_name_" -v")
 		kill err
@@ -689,8 +793,25 @@ ClassMethod InstallModule(name, ns = "", Version = "", Repo = "", gn = "", err) 
 	set sta=##class(%ZPM.PackageManager).Shell("install "_name)
 	if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
 	if gn'="" {
-		set @gn@(name,"install")=$lb($g(err),sta,Version,Repo,+$h,ns)
+		set @gn@(name,"install")=$lb($g(err),sta,Version,Repo,+$h,ns,$zv)
+		set @gn@(name,"instal-Version",Version,"install")=$lb($g(err),sta,Version,Repo,+$h,ns,$zv)
 		set @gn@(name,"url")="<a target='_new' href='"_Repo_"'>"_Repo_"</a>"
+		set @gn@(name,"instal-Version",Version,"url")="<a target='_new' href='"_Repo_"'>"_Repo_"</a>"
+	}
+	quit sta
+}
+
+ClassMethod PublishModule(name, ns = "", Version = "", Repo = "", gn = "", err) As %Status
+{
+	new $namespace
+	zn ns
+	kill err
+	write !,"zpm ""publish "_name_""""
+	set sta=##class(%ZPM.PackageManager).Shell("publish "_name)
+	if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
+	if gn'="" {
+		set @gn@(name,"publish")=$lb($g(err),sta,Version,Repo,+$h,ns,$zv)
+		set @gn@(name,"publish-Version",Version,"publish")=$lb($g(err),sta,Version,Repo,+$h,ns,$zv)
 	}
 	quit sta
 }

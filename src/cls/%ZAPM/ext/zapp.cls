@@ -110,7 +110,6 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" write ##class(Security.System).ExportAll(""/backup/iris/SecureItem-"_$zu(110)_"-"_$p($zu(86),"*",2)_".xml"", .NumExported)","","")
 	set list("sys",$i(list))=$lb("zn ""%SYS"" ","i","zn1","Go to namespace %SYS")
 	set list("sys",$i(list))=$lb("w !,""Host "",$zu(110),!,##class(apptools.core.net).GetURI()_""/csp/sys/%25CSP.Portal.Home.zen"",!,""w ##class(apptools.core.net).GetIP()"",!,##class(apptools.core.net).GetIP(),! do ##class(apptools.core.net).GetIPext(,.IPexternal) zw IPexternal ","i","myip","Show my IP")
-	
 	;sql
 	set list("sql",$i(list))=$lb("do $system.SQL.Shell()","i","sql","Shell SQL")
 	set ecmd="do ##class(%ZAPM.ext.zpm).extcmd(%cmd)"
@@ -118,6 +117,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).LoadRegistrys()","i","zloginst","Install all repos do ##class(%ZAPM.ext.zpm).LoadRegistrys()")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).ShowLog()","i","zloglist","Show log list do ##class(%ZAPM.ext.zpm).ShowLog()")
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
+	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).Pick()","i","pick","Pick module")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
 	set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
@@ -176,7 +176,7 @@ ClassMethod TerminalPrompt(comm = "") As %String
 ClassMethod prompt(comm = "") As %Status
 {
 	set comm=$ZStrip(comm,"<>WC")
-	if comm="" write !,"Welcome to the Package Manager with addons Shell. ver."_##class(%ZAPM.ext.zpm).ver(),!,"Enter q/quit/h to exit the shell. Enter ?/help to view available commands",!
+	if comm="" write !,"Welcome to the Package Manager with addons Shell. "_##class(%ZAPM.ext.zpm).ver(),!,"Enter /q/quit to exit the shell. Enter ?/help to view available commands",!
 	for {
 		if comm="" {
 			write !,..TerminalPrompt() 
@@ -446,11 +446,23 @@ ClassMethod log(extcmd) As %Status
 ClassMethod logmess(extcmd = "") As %Status
 {
 	set msg=$System.Util.ManagerDirectory()_"messages.log"
-	set num=20,cmd="tail -n "_num_" "_msg
-	if extcmd>20 set num=+extcmd,cmd="tail -n "_num_" "_msg
-	if extcmd<4 set cmd="more "_msg_" | grep -E ') 1 \[|) 2 \[|) 3 \['"
-	write !,cmd
-	zpipe cmd
+	if '$$$isWINDOWS {
+		set num=20,cmd="tail -n "_num_" "_msg
+		if extcmd>20 set num=+extcmd,cmd="tail -n "_num_" "_msg
+		if extcmd, extcmd<4 set cmd="more "_msg_" | grep -E ') 1 \[|) 2 \[|) 3 \['"
+		write !,cmd
+		zpipe cmd
+	}
+	else {
+		set f=##class(%File).%New(msg)
+ 		set st=f.Open("RSU")
+ 		if 'st do f.%Close() Quit st
+ 		while 'f.AtEnd {
+     		set str = f.ReadLine()
+     		write !,str
+  		}
+ 		do f.%Close()
+	}
 	quit $$$OK
 }
 

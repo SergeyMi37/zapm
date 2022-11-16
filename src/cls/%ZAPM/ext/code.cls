@@ -7,11 +7,13 @@ Class %ZAPM.ext.code [ Abstract ]
 
 /// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/","apptools.","apptools.M")
 /// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/","%ZAPM")
+/// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/","011","%ZAPM.ZpmLoad.GBL",.app)
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  new $namespace
  do ..workdir(dir)
  if $e(mask,1,8)="apptools" set $namespace=$g(^%apptools.Setting("HomeNamespace"))
+ if $e(mask,1)="%" set $namespace="%SYS"
  do ..export(,,$e(mask,1)="%",,mask,ignoremask,1,.list)
 }
 
@@ -71,7 +73,6 @@ ClassMethod export(generated = 0, system = 0, percent = 0, mapped = 0, mask = ""
 			if ignoremask'="",(("@"_code)[("@"_ignoremask )) continue
 			
 			s filename = ..filename( code )
-			if filename["%" set filename=$tr(filename,"%","_")
 			$$$mkdir( filename )
 			$$$log
 			$$$export( code, filename )
@@ -92,7 +93,6 @@ ClassMethod export(generated = 0, system = 0, percent = 0, mapped = 0, mask = ""
 			if ( '$find( code, mask ) ) continue
 			
 			s filename = ..filename( code )
-			if filename["%" set filename=$tr(filename,"%","_")
 			$$$mkdir( filename )
 			$$$log
 			$$$export( code, filename )
@@ -110,7 +110,6 @@ ClassMethod export(generated = 0, system = 0, percent = 0, mapped = 0, mask = ""
 			s code = rs.Name, filename = ..filename( code_".dfi" )
 			if ( '$find( code, mask ) ) continue
 			if ($L(code,"$TRASH")>1) continue
-			if filename["%" set filename=$tr(filename,"%","_")
 			$$$mkdir( filename )
 			$$$log
 			$$$export(code,filename)
@@ -291,6 +290,7 @@ ClassMethod filename(code)
 		s relpath = dirs _ "/" _ $piece( code, ".", *-1, * ) ;
 		s filename = ##class(%File).NormalizeFilename( relpath, wd )
 	}
+	;if filename["%" set filename=$tr(filename,"%","_")
 	Q filename
 }
 
@@ -528,6 +528,76 @@ ClassMethod Expfilename(code, wd)
 		Set filename = ##class(%File).NormalizeFilename( relpath, wd )
 	}
 	Quit filename
+}
+
+/// do ##class(%ZAPM.ext.code).Export2dir("/backup/repo-iris-test-iris20203/new-pack",,"community.PKG",.app)
+/// byte=1 isGenerated
+/// byte=2 isSystem
+/// byte=3 isPercented
+/// byte=4 isMapped
+/// byte=5 isDFI
+ClassMethod Export2dir(dir, flags = "00000", code = "", ByRef item)
+{
+	#define isGenerated(%code) ##class(%RoutineMgr).IsGenerated( %code )
+	#define isPercented(%code) ("%" = $Extract(%code))
+	#define isMapped(%code) ##class(%RoutineMgr).IsMapped( %code )
+	#define export(%code, %file) try {s sc = $system.OBJ.ExportUDL(%code, %file,"/diffexport")} catch e {s sc=$$$ERROR($$$GeneralError,"Old version")} ##continue
+								 w:sc&($G(%write)) "Ok" d:'sc $system.OBJ.DisplayError(sc)
+	#define log w:$G(%write) !, code, " -> ", $piece(filename,..workdir(),2), " "
+	
+	#define mkdir(%filename) ##continue
+			s path = ##class(%File).GetDirectory( %filename ) ##continue
+			if '##class(%File).DirectoryExists( path ) { ##continue
+				s sc = ##class(%File).CreateDirectoryChain( path ) ##continue
+				w:$G(%write) !, "mkdir ", path, " ", sc ##continue
+			}
+	do ..workdir(dir)
+	write:$G(%write) "#; Exporting to ", dir,!
+	set EXT=$zconvert($p(code,".",*),"U")
+	set mask=$p(code,".",1,*-1)
+	if EXT="PKG"||(EXT="") {
+		#; classes
+		set rs = ##class(%ResultSet).%New("%Dictionary.ClassDefinition:Summary")
+		if rs.Execute() {
+			while rs.%Next(){
+				set code = rs.Name _ ".cls", isSystem = rs.System
+				;w !,code
+				If ( '$Extract(flags,2) && isSystem ) Continue
+				If ( '$Extract(flags,1) && $$$isGenerated( code ) ) Continue
+				If ( '$Extract(flags,3) && $$$isPercented( code ) ) Continue
+				If ( '$Extract(flags,4) && $$$isMapped( code ) ) Continue
+				if mask'="",(("@"_code)'[("@"_mask )) continue
+				set filename = ..filename( code )
+				$$$mkdir( filename )
+				$$$log
+				$$$export( code, filename )
+				set item(code)=""
+			}
+		}
+	}
+	elseif EXT="CLS" {
+		set filename = ..filename(code)
+		$$$mkdir( filename )
+		$$$log
+		$$$export( code, filename )
+		set item(code)=""
+	}
+	elseif EXT="INC" {
+		set filename = ..filename(code)
+		$$$mkdir( filename )
+		$$$log
+		$$$export( code, filename )
+		set item(code)=""
+	}
+	elseif EXT="GBL" {
+		set filename = ..filename(code)
+		$$$mkdir( filename )
+		$$$log
+		set arr(code)=""
+		Write $SYSTEM.OBJ.Export(.arr, filename)
+		set item(code)=""
+	}
+	quit $$$OK
 }
 
 }
