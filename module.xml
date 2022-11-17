@@ -15,6 +15,7 @@
    <SourcesRoot>src</SourcesRoot>
   <Resource Name="%ZAPM.ext.PKG" Directory="cls"/>
   <Resource Name="%ZAPM.ext.Common.INC" Directory="inc"/>
+  <Resource Name="%ZAPM.ZpmLoad.GBL"/>
   <UnitTest Name="/unitest/zapm/" Package="ZAPM.unutest.zapm" Phase="verify"/>
   <Invokes>
    <Invoke Class="%ZAPM.ext.zapp" Method="init"></Invoke>
