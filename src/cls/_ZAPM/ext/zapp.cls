@@ -117,7 +117,6 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).LoadRegistrys()","i","zloginst","Install all repos do ##class(%ZAPM.ext.zpm).LoadRegistrys()")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).ShowLog()","i","zloglist","Show log list do ##class(%ZAPM.ext.zpm).ShowLog()")
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).Pick()","i","pick","Pick module")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
 	set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
@@ -130,6 +129,7 @@ ClassMethod favourite(ByRef list) As %Status
 	;zapm
 	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
 	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")
+	set list("zapm",$i(list))=$lb(ecmd,"i","pick","Pick modeles in global registry")
 	set list("zapm",$i(list))=$lb(ecmd,"i","prod","Product handling, startup and shutdown information")
 	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")

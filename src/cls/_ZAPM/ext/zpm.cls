@@ -92,29 +92,52 @@ ClassMethod LoadRegistrys(modulename = "", all = 0, skipZPM = 1, StartingFrom = 
 	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.zpm).PickUp("zpmshow")
-ClassMethod PickUp(name) As %Status
+/// do ##class(%ZAPM.ext.zpm).GetErrorLog("soap")
+ClassMethod GetErrorLog(name) As %String
 {
-	set gn=..#GN
-	write !,"Registry: ",$$$escRed(gn)
-	if 1 {
-		set ver=$lg($g(@gn@(name,"registry")),1)
-		set desc=$lg($g(@gn@(name,"registry")),2)
-		set repo=$p($g(@gn@(name,"url")),"'",4)
+	quit:name="" ""
+	set gn=..#GN,err=""
+	quit:'$d(@gn@(name)) ""
+	if $D(@gn@(name,"install"),data) {
+		if $lg(data,1)'="" set err="Install: "_$lg(data,1)
 	}
+	if $D(@gn@(name,"publish"),data) {
+		if $lg(data,1)'="" set err=err_"Publish: "_$lg(data,1)
+	}
+	quit err
 }
 
-/// do ##class(%ZAPM.ext.zpm).Pick()
-ClassMethod Pick() As %Status
+/// do ##class(%ZAPM.ext.zpm).Pick("soa")
+ClassMethod Pick(context = "") As %Status
 {
-	set gn=..#GN,name=""
+	set gn=..#GN,name="",num=0
+	if context'="" write !,"Pick *"_context_"* in " 
 	write !,"Registry: ",$$$escRed(gn)
-	for num=1:1 { set name=$o(@gn@(name)) quit:name=""
+	for { set name=$o(@gn@(name)) quit:name=""
+		if context'="",name'[context continue
+		set num=num+1
 		set ver=$lg($g(@gn@(name,"registry")),1)
 		set desc=$lg($g(@gn@(name,"registry")),2)
 		set repo=$p($g(@gn@(name,"url")),"'",4)
 		write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
-		write !,"   ",$$$escBlue(repo)
+		write !,"    ",(repo)
+		set err=##class(%ZAPM.ext.zpm).GetErrorLog(name)
+		if err'="" write !,"    ",$$$escRed($e(err,1,70)_"...")
+		set num(num)=$lb(name,repo)
+	}
+	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n write !
+	if n'="" {
+		if $d(num(n)) {set repository=$lg(num(n),2)}
+		elseif $d(@gn@(n)) {set repository=$p($g(@gn@(n,"url")),"'",4)}
+		if $g(repository)'="" {
+			write !,"Load module: "_repository_" Are you sure? <N> " read yes
+			if yes["y"||(yes["Y") {
+				set sta=##class(%ZPM.PackageManager).Shell("load "_repository)
+				if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
+			}
+		}
+		else { write !,"repository not found"
+		}
 	}
 	quit $$$OK
 }
@@ -192,45 +215,6 @@ ClassMethod Publish2Reg(modulename = "", all = 0, skipZPM = 1, StartingFrom = ""
 	}
 	do ..WriteShowLog(gn)
 	quit $$$OK
-}
-
-/// extention zpm commands
-/// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
-/// zapp "newdb spool-demo"
-ClassMethod extcmd(cmd = "") As %Status
-{
-	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
-	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
-	if $lf($lb("task"),$p(cmd," ")) quit ##class(%ZAPM.ext.Task).task($p(cmd," ",2,*)_" ")
-	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
-	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
-	if $p(cmd," ")="newdb" {
-		set cmdext=$p(cmd," ",2,*)
-		if cmd["zpm ""install " set cmdext=$p($p(cmd,"zpm ""install ",2,*),$c(34))
-		quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext)
-	}
-
-	if $p(cmd," ")="load" Quit ##class(%ZPM.PackageManager).Shell(cmd)
-	if $p(cmd," ")="ver" {
-		zpm "ver" 
-		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
-		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry()
-		write !,..ver(),!
-		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
-		write !,$ZVersion,!
-	}
-	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
-	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
-	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
-	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 
-	if $p(cmd," ")="dbcreate" {
-		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
-		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
-	}
-	if $p(cmd," ")="dbdelete" write !,"Delete database,namespace "_$p(cmd," ",2,*)_": " quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
-	
-	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
-	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
 }
 
 /// write ##class(%ZAPM.ext.zpm).ver()
@@ -399,6 +383,46 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 	Quit tSC
 }
 
+/// extention zpm commands
+/// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
+/// zapp "newdb spool-demo"
+ClassMethod extcmd(cmd = "") As %Status
+{
+	if $lf($lb("pick"),$p(cmd," ")) quit ..Pick($p(cmd," ",2,*))
+	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
+	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
+	if $lf($lb("task"),$p(cmd," ")) quit ##class(%ZAPM.ext.Task).task($p(cmd," ",2,*)_" ")
+	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
+	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
+	if $p(cmd," ")="newdb" {
+		set cmdext=$p(cmd," ",2,*)
+		if cmd["zpm ""install " set cmdext=$p($p(cmd,"zpm ""install ",2,*),$c(34))
+		quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext)
+	}
+
+	if $p(cmd," ")="load" Quit ##class(%ZPM.PackageManager).Shell(cmd)
+	if $p(cmd," ")="ver" {
+		zpm "ver" 
+		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
+		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry()
+		write !,..ver(),!
+		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+		write !,$ZVersion,!
+	}
+	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
+	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
+	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
+	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 
+	if $p(cmd," ")="dbcreate" {
+		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
+		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
+	}
+	if $p(cmd," ")="dbdelete" write !,"Delete database,namespace "_$p(cmd," ",2,*)_": " quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
+	
+	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
+	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+}
+
 ClassMethod prod(extcmd) As %Status
 {
 	new $namespace
@@ -421,38 +445,35 @@ ClassMethod prodlist(mode = "") As %Status
 {
 	s GN=##class(%ZAPM.ext.Production).#SettingsGN ;et gn="^%ZAPM.ext.Productions"
 	set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
-	set ns="",ex="",fStatus=",1, ,10",fSStatus=",1, ,15"
-	write !,##class(%ZAPM.ext.zapp).writerow("Namespace",",1,.,20","ProductionName",",1,.,48","Status",fStatus,"SaveStatus",fSStatus)
-	write !,##class(%ZAPM.ext.zapp).writerow("---------",",1,.,20","--------------",",1,.,48","------",fStatus,"----------",fSStatus)
+	set ns="",ex="",fStatus=",1, ,10",fSStatus=",1, ,6"
+	write !,##class(%ZAPM.ext.zapp).writerow("Namespace",",1,.,20","ProductionName",",1,.,40","Status",fStatus,"Save",fSStatus)
+	write !,##class(%ZAPM.ext.zapp).writerow("---------",",1,.,20","--------------",",1,.,40","------",fStatus,"----",fSStatus)
 	set colorns=$$$Magenta
 	for { s ns=$o(inf(ns)) q:ns=""
 		set namespace=1
 		if mode="only",'$d(inf(ns,"Ens")) continue
 	 	;write !,$$$FormattedLine($$$Magenta,ns)
 	 	if '$d(inf(ns,"Ens")) {
-		 	write !,##class(%ZAPM.ext.zapp).writerow(ns,$$$Yellow_",1,.,20","No products",$$$Yellow_",1, ,48","",fStatus)
+			write !,##class(%ZAPM.ext.zapp).writerow(ns,$$$Yellow_",1,.,20","No products",$$$Yellow_",1, ,40","",fStatus)
 		}
 	 	else {
 			set tProductionName=""
 			for { set tProductionName=$o(inf(ns,"Ens",tProductionName)) quit:tProductionName=""
-				;continue:'$lg(@GN@(ns,"Ens",tProductionName),4)
 				$$$NspGoto(curNs,ns)
-				;if ex'="info" write !,tProductionName
 				set Stat=""
-				Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
+				set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
 				set colorstat=$s(Stat=1:$$$Green,Stat=2:$$$Yellow,Stat=3:$$$Yellow,Stat=4:$$$Red,1:"")
 				set stat=$s(Stat=1:"Running",Stat=2:"Stopped",Stat=3:"Suspended",Stat=4:"Troubled",1:"?")
-				;if ex'="info" w " :"_stat
-				;;DO ##CLASS(Ens.Director).GetProductionSummary(.info,name)
+					;DO ##CLASS(Ens.Director).GetProductionSummary(.info,name)
 				if 'sc set stat=$System.Status.DisplayError(sc),colorstat=$$$Red
 				if namespace'=ns&&(namespace'="") set namespace=ns,alig="."
 				if $d(@GN@(ns,"Ens",tProductionName)) set save=$lg(@GN@(ns,"Ens",tProductionName),1)
 				else  set save="?"
-				write !,##class(%ZAPM.ext.zapp).writerow(namespace,colorns_",1,"_alig_",20",tProductionName,",1,.,48",stat,colorstat_fStatus,save,fSStatus)
+				write !,##class(%ZAPM.ext.zapp).writerow(namespace,colorns_",1,"_alig_",20",tProductionName,",1,.,40",stat,colorstat_fStatus,save,fSStatus)
 				set namespace="",alig=" "
 				$$$NspReturn(curNs)
 			}	
-		 }
+		}
 	}
  quit $$$OK
 }
@@ -462,7 +483,22 @@ ClassMethod find(extcmd) As %Status
 	if (extcmd)[" -r " set ViewRepo=1
 	if (extcmd)[" -d " set ViewFromModule=1
 	if (extcmd)[" -u " set ViewUrl=$p($p(extcmd," -u ",2)," ")
-	do ##class(%ZAPM.ext.zpm).Description($p(extcmd," "),$GET(ViewUrl),$GET(ViewRepo),$GET(ViewFromModule))
+	kill num
+	do ##class(%ZAPM.ext.zpm).Description($p(extcmd," "),$GET(ViewUrl),$GET(ViewRepo),$GET(ViewFromModule),.num)
+	write !,$$$escMagenta($namespace),"> Install module (number or name): " read n write !
+	if n'="" {
+		if $d(num(n)) {set name=num(n)}
+		elseif $d(n(0,n)) {set name=n }
+		if $g(name)'="" {
+			write !,"Install module: "_name_" Are you sure? <N> " read yes
+			if yes["y"||(yes["Y") {
+				set sta=##class(%ZPM.PackageManager).Shell("install "_name)
+				if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
+			}
+		}
+		else { write !,"name not found"
+		}
+	}
 	quit $$$OK
 }
 
@@ -636,14 +672,16 @@ ClassMethod exthelp(cmd = "") As %Status
 	quit $$$OK
 }
 
+/// command zpm
 ClassMethod cmdzpm() As %String
 {
 	quit $lb("ver","quit","help","namespace","orphans","list-dependents","list-installed","reload","compile","test","package","verify","publish","load","zn","help","install","uninstall","manage","list","find","search","version","repo","config","generate")
 }
 
+/// command zapm
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
@@ -1010,11 +1048,11 @@ ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName)
 
 /// Show description 
 /// do ##class(%ZAPM.ext.zpm).Description("z*","/rcep",1)
-ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule = 0)
+ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule = 0, num)
 {
 	#define gn "^||tmpDesc"
 	Kill @$$$gn
-	Set tRegistry = ""
+	Set tRegistry = "",num=0
 	If (tModuleName["/") {
 		set $lb(tRegistry, tModuleName) = $lfs(tModuleName, "/")
 	}
@@ -1046,12 +1084,14 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 			set (Description,desc)=rs.Get("Description")
 			Set (repo,url)=rs.Get(RepoFieldName)
 			If $Zconvert(url,"L")'[$Zconvert($Get(UrlInc),"L") Continue
+			set num=num+1
 			if desc="",ViewFromModule	{
 				Do ..GetDescFromRepo(url,.desc,.repo,.modxml)
 				if desc="" { set desc="not yet"}
 				else { set desc="from module.xml: "_desc}
 			}
-			Write !,$$$escGreen(name)
+			set num(num)=name
+			Write !,num_"."_$$$escGreen(name)
 				,?(maxlenname+1),rs.Get("Version")
 				,?(maxlenname+8),$$$escYellow("Desc: ")_desc
 			if $Get(UrlInc)'="",repo'="" set repo=$replace(repo,UrlInc,$$$escRed(UrlInc))

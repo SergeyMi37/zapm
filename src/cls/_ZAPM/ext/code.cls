@@ -5,9 +5,10 @@
 Class %ZAPM.ext.code [ Abstract ]
 {
 
-/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/","apptools.","apptools.M")
-/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/","%ZAPM")
-/// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/","011","%ZAPM.ZpmLoad.GBL",.app)
+/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/src/","apptools.","apptools.M")
+/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/src/","%ZAPM")
+/// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ZpmLoad.GBL",.app)
+/// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ext.Common.INC",.app)
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  new $namespace
@@ -282,15 +283,16 @@ ClassMethod filename(code)
 
 	s filename = ##class(%File).NormalizeFilename( code, wd )
 	#; lowercase file extension
+	if ext="gbl" set ext="xml"
 	s $p(filename,".",*)=ext
 	//B:code="DPRep.Rest.JSON.cls" "L"
 	#; for *.cls Package.Subpackage.ClassName.cls -> Folder/Subfolder/ClassName.cls
-	if ext ="cls" {
+	if ext ="cls"||(ext ="inc") {
 		s dirs = $piece( code, ".",1, *-2 ), dirs = $translate( dirs, ".", "/" )
 		s relpath = dirs _ "/" _ $piece( code, ".", *-1, * ) ;
 		s filename = ##class(%File).NormalizeFilename( relpath, wd )
 	}
-	;if filename["%" set filename=$tr(filename,"%","_")
+	if filename["%" set filename=$tr(filename,"%","_")
 	Q filename
 }
 
@@ -597,6 +599,15 @@ ClassMethod Export2dir(dir, flags = "00000", code = "", ByRef item)
 		Write $SYSTEM.OBJ.Export(.arr, filename)
 		set item(code)=""
 	}
+	quit $$$OK
+}
+
+/// do ##class(%ZAPM.ext.code).ExportUDL("d:\!\zapm\src\")
+ClassMethod ExportUDL(dir)
+{
+	do ##class(%ZAPM.ext.code).exp(dir,"%ZAPM")
+	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ZpmLoad.GBL",.app)
+	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ext.Common.INC",.app)
 	quit $$$OK
 }
 
