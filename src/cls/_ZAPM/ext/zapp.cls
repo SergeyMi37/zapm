@@ -353,7 +353,7 @@ write(date="")
 	set num=num+1
 	set cmdline=$lg(cmd,1)
 	if $D(@gn@("cmd",cmd,"nonrem")) set cmdline=$$$escRed(cmdline)
-	write !,date_$$$escRed(num)_"."_$$$escMagenta($lg(cmd,3))_" "_cmdline_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
+	write !,date_" "_num_"."_$$$escMagenta($lg(cmd,3))_" "_cmdline_$select($lg(cmd,4)="":"",1:" //")_$lg(cmd,4)
 	set %zapm(num)=cmd
  quit
 }
@@ -417,17 +417,21 @@ ClassMethod write(part, num, cmd, noprompt = 0) As %Status
 	set prompt=$lg(cmd,2)
 	;if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"Ask before launch",prompt="n":"Launch immediately",1:"Do not run"))
 	if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="a":"A",prompt="i":"I",prompt="n":"N",1:"N"))
-	write !,$$$escRed(num)_"."_$$$escMagenta($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
+	write !,num_"."_$$$escMagenta($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
  quit $$$OK
 }
 
 /// do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow","zpm","i","zshow","Show a zpm modules with extention description")
 /// do ##class(%ZAPM.ext.zapp).addcmd("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head"" ","zapm","i","proc-max-mem","view proces max mem")
-ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", description = "") As %Status
+ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", description = "", noprompt = "") As %Status
 {
 	if partion="" set partion="other"
 	do ##class(%ZAPM.ext.commands).GetCmd("",namecmd,.comman)
-	if comman'="" write !,"command name '"_namecmd_"' already exist" q $$$OK
+	if comman'="",'noprompt {
+		
+		write !,"command name '"_namecmd_"' already exist" 
+		q $$$OK
+	}
 	set st=##class(%ZAPM.ext.commands).AddUpdate(cmd,namecmd,partion,moderun,description)
 	if 'st write $System.Status.GetErrorText(st) quit st
 	else  write !,"added"

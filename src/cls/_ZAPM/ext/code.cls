@@ -603,9 +603,15 @@ ClassMethod Export2dir(dir, flags = "00000", code = "", ByRef item)
 	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.code).ExportUDL("d:\!\zapm\src\")
-ClassMethod ExportUDL(dir)
+/// do ##class(%ZAPM.ext.code).ExportUDL()
+ClassMethod ExportUDL(dir = "")
 {
+	if dir'="" set @gn@("ExpoPath")=dir
+	set gn=##class(%ZAPM.ext.zpm).#GNSET  ;= "^%ZAPM.settings";
+	set dir=$g(@gn@("ExpoPath"))
+	write !,"Enter path <",dir,"> " read dir
+	quit:dir=""
+	if dir'="" set @gn@("ExpoPath")=dir
 	do ##class(%ZAPM.ext.code).exp(dir,"%ZAPM")
 	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ZpmLoad.GBL",.app)
 	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ext.Common.INC",.app)

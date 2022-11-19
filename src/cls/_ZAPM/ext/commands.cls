@@ -68,6 +68,22 @@ ClassMethod GetCmd(Command = "", CommandName = "", cmd, id) As %Status
 	quit $$$OK
 }
 
+/// Delete command
+/// write $System.Status.GetErrorText(##class(%ZAPM.ext.commands).Delete("job"))
+ClassMethod Delete(Command)
+{
+	do ##class(%ZAPM.ext.commands).GetCmd(,Command,.cmd,.id)
+	if $g(id) {
+		set obj=..%OpenId(id)
+		if $iso(obj) {
+			Set tQuery = "delete from %ZAPM_ext.commands where CommandName = '"_Command_"'"
+			Set tRes = ##class(%SQL.Statement).%ExecDirect(,tQuery)
+			quit tRes
+		}
+	}
+	quit $$$ERROR($$$GeneralError,"Command is udefined")
+}
+
 /// Add new command
 /// write $System.Status.GetErrorText(##class(%ZAPM.ext.commands).AddUpdate("new $namespace zn ""zpmshow"" do ^zpmshow","zshow","zpm","n","Show a zpm modules with extention description"))
 ClassMethod AddUpdate(Command As %String = "", CommandName = "", Partition = "", moderun = "", Description = "", Namespace = "")

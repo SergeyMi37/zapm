@@ -110,9 +110,9 @@ ClassMethod GetErrorLog(name) As %String
 /// do ##class(%ZAPM.ext.zpm).reg() ;view registrys
 ClassMethod reg(context = "") As %Status
 {
-	q 1
 	set gn=..#GN,name="",num=0
 	write !,"Registry: ",$$$escRed(gn)
+	q 1
 	for { set name=$o(@gn@(name)) quit:name=""
 		if context'="",name'[context continue
 	}
