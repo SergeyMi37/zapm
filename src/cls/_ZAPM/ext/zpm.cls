@@ -107,8 +107,20 @@ ClassMethod GetErrorLog(name) As %String
 	quit err
 }
 
-/// do ##class(%ZAPM.ext.zpm).Pick("soa")
-ClassMethod Pick(context = "") As %Status
+/// do ##class(%ZAPM.ext.zpm).reg() ;view registrys
+ClassMethod reg(context = "") As %Status
+{
+	q 1
+	set gn=..#GN,name="",num=0
+	write !,"Registry: ",$$$escRed(gn)
+	for { set name=$o(@gn@(name)) quit:name=""
+		if context'="",name'[context continue
+	}
+	quit $$$OK
+}
+
+/// do ##class(%ZAPM.ext.zpm).pick("soa")
+ClassMethod pick(context = "") As %Status
 {
 	set gn=..#GN,name="",num=0
 	if context'="" write !,"Pick *"_context_"* in " 
@@ -126,7 +138,7 @@ ClassMethod Pick(context = "") As %Status
 		set num(num)=$lb(name,repo)
 	}
 	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n write !
-	if n'="" {
+	if n'="",$d(num) {
 		if $d(num(n)) {set repository=$lg(num(n),2)}
 		elseif $d(@gn@(n)) {set repository=$p($g(@gn@(n,"url")),"'",4)}
 		if $g(repository)'="" {
@@ -388,7 +400,8 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
 {
-	if $lf($lb("pick"),$p(cmd," ")) quit ..Pick($p(cmd," ",2,*))
+	if $lf($lb("reg"),$p(cmd," ")) quit ..registry($p(cmd," ",2,*))
+	if $lf($lb("pick"),$p(cmd," ")) quit ..pick($p(cmd," ",2,*))
 	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
 	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
 	if $lf($lb("task"),$p(cmd," ")) quit ##class(%ZAPM.ext.Task).task($p(cmd," ",2,*)_" ")
@@ -486,7 +499,7 @@ ClassMethod find(extcmd) As %Status
 	kill num
 	do ##class(%ZAPM.ext.zpm).Description($p(extcmd," "),$GET(ViewUrl),$GET(ViewRepo),$GET(ViewFromModule),.num)
 	write !,$$$escMagenta($namespace),"> Install module (number or name): " read n write !
-	if n'="" {
+	if n'="",$d(num) {
 		if $d(num(n)) {set name=num(n)}
 		elseif $d(n(0,n)) {set name=n }
 		if $g(name)'="" {

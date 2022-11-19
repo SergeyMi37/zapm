@@ -2,6 +2,7 @@
 /// test.dfi -> /dfi/test.dfi
 /// testpkg.test.cls -> /cls/testpkg/test.cls
 /// Fork from https://github.com/intersystems-ru/cache-udl
+/// do ##class(%ZAPM.ext.code).ExportUDL("d:\!\zapm\src\") ;export zapm project
 Class %ZAPM.ext.code [ Abstract ]
 {
 
@@ -292,7 +293,7 @@ ClassMethod filename(code)
 		s relpath = dirs _ "/" _ $piece( code, ".", *-1, * ) ;
 		s filename = ##class(%File).NormalizeFilename( relpath, wd )
 	}
-	if filename["%" set filename=$tr(filename,"%","_")
+	if filename["%",(ext'="inc")  set filename=$tr(filename,"%","_") ;zpm bug ? (ext'="inc") 
 	Q filename
 }
 

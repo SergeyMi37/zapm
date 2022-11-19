@@ -36,7 +36,7 @@ ClassMethod AddLine2Rou(line, rou As %String = "%ZLANGC00", err, r) As %Status
 	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.zapp).init()
+/// do ##class(%ZAPM.ext.zapp).init(1)
 ClassMethod init(NoExt = 0) As %Status
 {
 	new $namespace
@@ -127,6 +127,8 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb(ecmd,"i","upg","Upgrade modules in namespace")
 	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL(""d:\_proj\!\zapm\src\"")","a","export-zapm","export zapm project")
+	set list("zapm",$i(list))=$lb(ecmd,"i","reg","Choice registrys")
 	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
 	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")
 	set list("zapm",$i(list))=$lb(ecmd,"i","pick","Pick modeles in global registry")
