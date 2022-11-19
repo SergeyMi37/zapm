@@ -609,7 +609,7 @@ ClassMethod ExportUDL(dir = "")
 	if dir'="" set @gn@("ExpoPath")=dir
 	set gn=##class(%ZAPM.ext.zpm).#GNSET  ;= "^%ZAPM.settings";
 	set dir=$g(@gn@("ExpoPath"))
-	write !,"Enter path <",dir,"> " read dir
+	write !,"Enter path <",dir,">",!," [q]-quit :" read r quit:r="q" $$$OK  if r'="" set dir=r
 	quit:dir=""
 	if dir'="" set @gn@("ExpoPath")=dir
 	do ##class(%ZAPM.ext.code).exp(dir,"%ZAPM")

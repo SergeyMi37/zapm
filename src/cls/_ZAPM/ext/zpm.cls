@@ -413,8 +413,6 @@ ClassMethod extcmd(cmd = "") As %Status
 		if cmd["zpm ""install " set cmdext=$p($p(cmd,"zpm ""install ",2,*),$c(34))
 		quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext)
 	}
-
-	if $p(cmd," ")="load" Quit ##class(%ZPM.PackageManager).Shell(cmd)
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
 		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
@@ -542,6 +540,9 @@ ClassMethod help(cmd = "") As %Status
  	}
  	KILL ^SPOOL($j)
 	write !,help
+	;do ..write("","Q,q,^,h,H",$lb("Quit"),1)
+	write !!,"You can add a command with the command:",!,"do ##class(%ZAPM.ext.zapp).addcmd(""D ^JOBEXAM "",""sys"",""i"",""job"",""view proces max mem"")"
+	write !,"or delete : do ##class(%ZAPM.ext.commands).Delete(""job"")"
 	quit $$$OK
 }
 
@@ -696,13 +697,12 @@ ClassMethod cmdzpm() As %String
 /// command zapm
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("reg","pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
 ClassMethod SetColorScheme(scheme = {$s($zversion(1)=3:"dark",1:"white")}) As %Status
 {
-	write !,1,scheme,1
 	Quit ##class(%ZPM.PackageManager).Shell("config set ColorScheme "_scheme)
 }
 

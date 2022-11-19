@@ -78,7 +78,7 @@ ClassMethod init(NoExt = 0) As %Status
 			 }
 			}
 		}
-		do ##class(%ZAPM.ext.zpm).SetColorScheme()
+		;do ##class(%ZAPM.ext.zpm).SetColorScheme()
 		write !,"To work in the shell, enter 'zapm' in the terminal, and then 'cmd' or '?' "
 		do ##class(%ZAPM.ext.zpm).SetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET,##class(%ZAPM.ext.zpm).#VERSION)
 	} 
@@ -117,9 +117,9 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).LoadRegistrys()","i","zloginst","Install all repos do ##class(%ZAPM.ext.zpm).LoadRegistrys()")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).ShowLog()","i","zloglist","Show log list do ##class(%ZAPM.ext.zpm).ShowLog()")
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
-	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
+	;set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
+	;set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
 	set list("zpm",$i(list))=$lb(ecmd,"i","help","Extension help command")
 	set list("zpm",$i(list))=$lb(ecmd,"i","ver","Extension show version")
 	set list("zpm",$i(list))=$lb(ecmd,"i","find","Show modules")
@@ -127,7 +127,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb(ecmd,"i","upg","Upgrade modules in namespace")
 	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL(""d:\_proj\!\zapm\src\"")","a","export-zapm","export zapm project")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL()","i","export-zapm","export zapm project")
 	set list("zapm",$i(list))=$lb(ecmd,"i","reg","Choice registrys")
 	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
 	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")
@@ -136,8 +136,8 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")
 	set list("zapm",$i(list))=$lb(ecmd,"a","dbdelete","delete database, namespace and role")
-	set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
-	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
+	;set list("zapm",$i(list))=$lb("write ##class(%ZAPM.ext.zpm).LoadFromRepo(""https://github.com/Vassil2010/iris-sms"")","","","Example Load module from repo")
+	;set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.zapp).addcmd(""new $namespace zn """"zpmshow"""" do ^zpmshow"",""zpm"",""i"",""zshow"",""Show a zpm modules with extention description"")","","","Example added command")
 	set list("zapm",$i(list))=$lb(ecmd,"i","edz","navigator for zpm")
 	set list("zapm",$i(list))=$lb(ecmd,"i","edit-zpm","navigator for zpm")
 	set list("zapm",$i(list))=$lb(ecmd,"i","edg","globals edotor")
@@ -153,7 +153,6 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zapm",$i(list))=$lb(ecmd,"i","edit-job","navigator for jobs")
 	set list("zapm",$i(list))=$lb(ecmd,"i","edl","Locktab navigator")
 	set list("zapm",$i(list))=$lb(ecmd,"i","edit-lock","Locktab navigator")
-	set list("zapm",$i(list))=$lb("do ##class(apptools.MSW.dev).ExportMy()","i","expo","Export projects")
 	q $$$OK
 }
 
@@ -402,8 +401,6 @@ ClassMethod help(mask = "") As %Status
 	do ..write("","cmd or cmd context",$lb("Show help"),1)
 	do ..write("","hist or hist context",$lb("Show history"),1)
 	write !,$$$escBlue("A")_"-Ask before launch, "_$$$escBlue("I")_"-Launch immediately, "_$$$escBlue("N")_"-Do not run"
-	;do ..write("","Q,q,^,h,H",$lb("Quit"),1)
-	write !,"You can add a command with the command:",!,">do ##class(%ZAPM.ext.zapp).addcmd(""D ^JOBEXAM "",""sys"",""i"",""job"",""view proces max mem"")"
 	q $$$OK
 }
 
