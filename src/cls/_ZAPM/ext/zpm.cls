@@ -137,8 +137,9 @@ ClassMethod pick(context = "") As %Status
 		if err'="" write !,"    ",$$$escRed($e(err,1,70)_"...")
 		set num(num)=$lb(name,repo)
 	}
+	quit:$d(num)<10 $$$OK
 	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n write !
-	if n'="",$d(num) {
+	if n'="" {
 		if $d(num(n)) {set repository=$lg(num(n),2)}
 		elseif $d(@gn@(n)) {set repository=$p($g(@gn@(n,"url")),"'",4)}
 		if $g(repository)'="" {
@@ -498,6 +499,7 @@ ClassMethod find(extcmd) As %Status
 	if (extcmd)[" -u " set ViewUrl=$p($p(extcmd," -u ",2)," ")
 	kill num
 	do ##class(%ZAPM.ext.zpm).Description($p(extcmd," "),$GET(ViewUrl),$GET(ViewRepo),$GET(ViewFromModule),.num)
+	quit:$d(num)<10 $$$OK
 	write !,$$$escMagenta($namespace),"> Install module (number or name): " read n write !
 	if n'="",$d(num) {
 		if $d(num(n)) {set name=num(n)}
