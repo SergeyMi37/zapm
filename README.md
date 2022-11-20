@@ -24,43 +24,9 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 ## What's new
 
-Added commands: Working with Products and Tasks, start and stop in all namespaces.
-```
- interoperability
-    Alias: prod
- Group work with all Products, info status, start and stop.
+Added command: `pick`
 
- prod list
-  Show all namespaces and productions.
-
- prod only
-  Show only productions.
-
- prod save
-  Save the current status for subsequent recovery after the start. Those products that worked will work, and those that did not work will not.
-
- prod stop
-  Remember the current state of all products, and then stop everything
-
- prod start
-  start all products
- prod recover
-  Recover all products
- task
- Group work with all custom tasks, info status, suspend and resume.
-
- task list
-  View all tasks and their statuses.
-
- task save
-  Save the current status for subsequent recovery after the start. Those tasks that worked will work, and those that did not work will not.
-
- task stop
-  Suspend all users tasks.
-
- task start
-  Resume all users tasks.
- ```
+This is an analogue of the `find` and `install` command for viewing and loading packages from alternative sources directly from the repositories.
 
 ## Installation with ZPM
 
@@ -193,6 +159,44 @@ USER>zapm "zshow"
 - or from the zapm shell
 
 ![](https://raw.githubusercontent.com/SergeyMi37/zapm/master/doc/Screenshot_6_zshow.png)
+
+Added commands: Working with Products and Tasks, start and stop in all namespaces.
+```
+ interoperability
+    Alias: prod
+ Group work with all Products, info status, start and stop.
+
+ prod list
+  Show all namespaces and productions.
+
+ prod only
+  Show only productions.
+
+ prod save
+  Save the current status for subsequent recovery after the start. Those products that worked will work, and those that did not work will not.
+
+ prod stop
+  Remember the current state of all products, and then stop everything
+
+ prod start
+  start all products
+ prod recover
+  Recover all products
+ task
+ Group work with all custom tasks, info status, suspend and resume.
+
+ task list
+  View all tasks and their statuses.
+
+ task save
+  Save the current status for subsequent recovery after the start. Those tasks that worked will work, and those that did not work will not.
+
+ task stop
+  Suspend all users tasks.
+
+ task start
+  Resume all users tasks.
+ ```
 
 
 This solution can replace not only the zpm shell but also the main terminal shell. 
