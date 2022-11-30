@@ -90,5 +90,31 @@ ClassMethod MakeZpmProject(namemodule, dir, ByRef resources, desc) As %Status
     return $$$OK
 }
 
+/// Code from Robert Cemper https://github.com/rcemper/Zpipe
+/// write ##class(%ZAPM.ext.util).cpipe("ping -c 3 community.intersystems.com")
+ClassMethod cpipe(command = "", test = 0) As %Status
+{
+ //Zpipe  quit ; CPIPE example to run host console command
+ //cmd(command="",test=0) ;
+ if command="" set command="dir"
+ set dev="|CPIPE|1"
+ set $zt="cls"
+ set empty=0
+ open dev:command:0 
+ write:test $test,! 
+ else  write "pipe failed",! quit 0 
+ while empty<3 {
+    use dev read line 
+    set empty=$s($l(line):0,1:$i(empty))
+    use 0 write line,!  ;;; or do any kind of analysis of the line 
+    }
+
+cls ;
+ set $zt="" use 0 
+ close dev 
+ if $ze'["<ENDOFFILE>" w $ze,!
+ quit $t
+}
+
 }
 

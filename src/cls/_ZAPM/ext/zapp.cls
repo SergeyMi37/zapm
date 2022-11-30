@@ -60,9 +60,6 @@ ClassMethod init(NoExt = 0) As %Status
 				;set cls=##class(%File).TempFilename("cls"), tFile = ##class(%Stream.FileBinary).%New(), tFile.Filename = xml do tFile.CopyFromAndSave(req.HttpResponse.Data) do ht.%Close(), $system.OBJ.Load(xml,"ck") do ##class(%File).Delete(xml)
 				do $system.OBJ.LoadStream(req.HttpResponse.Data,"c") 
 			}
-			if ##class(%ZPM.PackageManager).Shell("install zpipe") {
-				do ##class(%ZAPM.ext.zapp).AddLine2Rou("ZPIPE(%a) new $namespace zn """_$namespace_""" do cmd^Zpipe(%a) quit","%ZLANGC00",.err)
-			}
 		}
 		if $zversion(1)=3 {  //Linux
 			set dir="/opt/irisapp/src/"
@@ -99,9 +96,9 @@ ClassMethod favourite(ByRef list) As %Status
 {
 	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
 	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "proc-ss",     "system status")
-	set list("sys",$i(list))=$lb("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head""","i","proc-max-mem","proc max memory")
-	set list("sys",$i(list))=$lb("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head""","i","proc-max-cpu","proc max cpu")
-	set list("sys",$i(list))=$lb("zpipe ""ps ax|grep iris""","i","proc-iris","proc iris")
+	set list("sys",$i(list))=$lb("cpipe ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head","i","proc-max-mem","proc max memory")
+	set list("sys",$i(list))=$lb("cpipe ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head","i","proc-max-cpu","proc max cpu")
+	set list("sys",$i(list))=$lb("cpipe ps ax|grep iris","i","proc-iris","proc iris")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","job","job examing")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
@@ -128,6 +125,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
 	;zapm
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL()","i","export-zapm","export zapm project")
+	set list("zapm",$i(list))=$lb(ecmd,"i","cpipe","Run host console command")
 	set list("zapm",$i(list))=$lb(ecmd,"i","reg","Choice registrys")
 	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
 	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")
@@ -419,7 +417,6 @@ ClassMethod write(part, num, cmd, noprompt = 0) As %Status
 }
 
 /// do ##class(%ZAPM.ext.zapp).addcmd("new $namespace zn ""zpmshow"" do ^zpmshow","zpm","i","zshow","Show a zpm modules with extention description")
-/// do ##class(%ZAPM.ext.zapp).addcmd("zpipe ""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head"" ","zapm","i","proc-max-mem","view proces max mem")
 ClassMethod addcmd(cmd = "", partion = "", moderun = "", namecmd = "", description = "", noprompt = "") As %Status
 {
 	if partion="" set partion="other"
@@ -454,7 +451,7 @@ ClassMethod logmess(extcmd = "") As %Status
 		if extcmd>20 set num=+extcmd,cmd="tail -n "_num_" "_msg
 		if extcmd, extcmd<4 set cmd="more "_msg_" | grep -E ') 1 \[|) 2 \[|) 3 \['"
 		write !,cmd
-		zpipe cmd
+		do ##class(%ZAPM.ext.util).cpipe(cmd)
 	}
 	else {
 		set f=##class(%File).%New(msg)

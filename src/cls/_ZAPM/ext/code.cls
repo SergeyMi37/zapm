@@ -603,18 +603,18 @@ ClassMethod Export2dir(dir, flags = "00000", code = "", ByRef item)
 	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.code).ExportUDL()
+/// do ##class(%ZAPM.ext.code).ExportUDL("/irisrun/repo/chmod777-R/zapm/src/")
 ClassMethod ExportUDL(dir = "")
 {
-	if dir'="" set @gn@("ExpoPath")=dir
 	set gn=##class(%ZAPM.ext.zpm).#GNSET  ;= "^%ZAPM.settings";
+	if dir'="" set @gn@("ExpoPath")=dir
 	set dir=$g(@gn@("ExpoPath"))
 	write !,"Enter path <",dir,">",!," [q]-quit :" read r quit:r="q" $$$OK  if r'="" set dir=r
 	quit:dir=""
 	if dir'="" set @gn@("ExpoPath")=dir
 	do ##class(%ZAPM.ext.code).exp(dir,"%ZAPM")
 	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ZpmLoad.GBL",.app)
-	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ext.Common.INC",.app)
+	do ##class(%ZAPM.ext.code).ExportOneResource(dir,"000001","%ZAPM.ext.Common.inc",.app)
 	quit $$$OK
 }
 

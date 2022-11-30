@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.41";
+Parameter VERSION = "1.0.42";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -401,6 +401,7 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
 {
+	if $lf($lb("cpipe"),$p(cmd," ")) quit ##class(%ZAPM.ext.util).cpipe($p(cmd," ",2,*)_" ")
 	if $lf($lb("reg"),$p(cmd," ")) quit ..registry($p(cmd," ",2,*))
 	if $lf($lb("pick"),$p(cmd," ")) quit ..pick($p(cmd," ",2,*))
 	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
@@ -697,7 +698,7 @@ ClassMethod cmdzpm() As %String
 /// command zapm
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("reg","pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("cpipe","reg","pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")
