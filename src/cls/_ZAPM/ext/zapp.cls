@@ -96,9 +96,6 @@ ClassMethod favourite(ByRef list) As %Status
 {
 	;sys		           execute code     prompt:yes,no,never=""  name-cmd   description
 	set list("sys",$i(list))=$lb("do 1^%SS","i",                    "proc-ss",     "system status")
-	set list("sys",$i(list))=$lb("cpipe ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head","i","proc-max-mem","proc max memory")
-	set list("sys",$i(list))=$lb("cpipe ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head","i","proc-max-cpu","proc max cpu")
-	set list("sys",$i(list))=$lb("cpipe ps ax|grep iris","i","proc-iris","proc iris")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^JOBEXAM","a","job","job examing")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do display^GLOBUFF(25)","i","globuff","show global buffer")
 	set list("sys",$i(list))=$lb("new $namespace zn ""%SYS"" do ^LOCKTAB","i","","show lock table")
@@ -126,6 +123,11 @@ ClassMethod favourite(ByRef list) As %Status
 	;zapm
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL()","i","export-zapm","export zapm project")
 	set list("zapm",$i(list))=$lb(ecmd,"i","cpipe","Run host console command")
+
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.util).cpipe(""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head"")","i","proc-max-mem","proc max memory")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.util).cpipe(""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head"")","i","proc-max-cpu","proc max cpu")
+	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.util).cpipe(""ps ax|grep iris"")","i","proc-iris","proc iris")
+
 	set list("zapm",$i(list))=$lb(ecmd,"i","reg","Choice registrys")
 	set list("zapm",$i(list))=$lb(ecmd,"i","task","Group work with all custom tasks")
 	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")

@@ -614,7 +614,7 @@ ClassMethod ExportUDL(dir = "")
 	if dir'="" set @gn@("ExpoPath")=dir
 	do ##class(%ZAPM.ext.code).exp(dir,"%ZAPM")
 	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ZpmLoad.GBL",.app)
-	do ##class(%ZAPM.ext.code).ExportOneResource(dir,"000001","%ZAPM.ext.Common.inc",.app)
+	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ext.Common.inc",.app)
 	quit $$$OK
 }
 
