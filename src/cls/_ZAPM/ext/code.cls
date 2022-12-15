@@ -7,7 +7,8 @@ Class %ZAPM.ext.code [ Abstract ]
 {
 
 /// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/src/","apptools.","apptools.M")
-/// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/zapm/src/","%ZAPM")
+/// do ##class(%ZAPM.ext.code).exp("/irisdev/app/chmod777-R/zapm/src/","%ZAPM")
+/// do ##class(%ZAPM.ext.code).exp("/irisdev/app/chmod777-R/zapm/preload/","%ZAPM.ext.preload")
 /// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ZpmLoad.GBL",.app)
 /// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ext.Common.INC",.app)
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
