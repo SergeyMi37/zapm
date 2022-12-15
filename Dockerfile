@@ -1,4 +1,4 @@
-ARG IMAGE=intersystemsdc/iris-ml-community:latest as build
+ARG IMAGE=intersystemsdc/irishealth-community:latest
 
 FROM $IMAGE
 
