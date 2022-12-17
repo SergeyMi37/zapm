@@ -1,4 +1,4 @@
-Class %ZAPM.ext.preload Extends %ZPM.PackageManager.Developer.Lifecycle.Module
+Class %ZAPM.ext.Lifecycle Extends %ZPM.PackageManager.Developer.Lifecycle.Module
 {
 
 Method %Activate(ByRef pParams) As %Status
@@ -27,3 +27,4 @@ Method %Activate(ByRef pParams) As %Status
 }
 
 }
+
