@@ -607,7 +607,7 @@ ClassMethod Export2dir(dir, flags = "00000", code = "", ByRef item)
 }
 
 /// do ##class(%ZAPM.ext.code).ExportUDL("/irisrun/repo/chmod777-R/zapm/")
-/// do ##class(%ZAPM.ext.code).ExportUDL("d:\_proj\!\zapm\")
+/// do ##class(%ZAPM.ext.code).ExportUDL("d:\_proj\_mygirhub\zapm\")
 ClassMethod ExportUDL(dir = "")
 {
 	set gn=##class(%ZAPM.ext.zpm).#GNSET  ;= "^%ZAPM.settings";

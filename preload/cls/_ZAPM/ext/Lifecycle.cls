@@ -6,7 +6,9 @@ ClassMethod RunOnLoad() [ CodeMode = objectgenerator ]
 	
 	Set sc = $$$OK
 	Try {
-		;Write !,"Doing ...RunOnLoad",!,$Namespace,!,$zv
+		if $Namespace'="%SYS" {
+			$$$ThrowOnError($$$ERROR($$$GeneralError,"This application must be installed in the ""%SYS"" namespace "))
+		}
 		;$$$ThrowOnError($$$ERROR($$$GeneralError,"some error"))
 	} Catch e {
 		Set sc = e.AsStatus()
