@@ -7,8 +7,7 @@ ClassMethod RunOnLoad() [ CodeMode = objectgenerator ]
 	Set sc = $$$OK
 	Try {
 		Write !,"Doing ...RunOnLoad",!,$Namespace,!,$zv
-		set ^tmp=$g(^tmp)_" RunOnLoad"
-		zt "zaaaaaa"
+		$$$ThrowOnError($$$ERROR($$$GeneralError,"some error"))
 	} Catch e {
 		Set sc = e.AsStatus()
 	}
