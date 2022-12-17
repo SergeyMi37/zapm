@@ -1,6 +1,20 @@
 Class %ZAPM.ext.Lifecycle Extends %ZPM.PackageManager.Developer.Lifecycle.Module
 {
 
+ClassMethod RunOnLoad() [ CodeMode = objectgenerator ]
+{
+	
+	Set sc = $$$OK
+	Try {
+		Write !,"Doing ...RunOnLoad",!,$Namespace,!,$zv
+		set ^tmp="RunOnLoad"
+	} Catch e {
+		Set sc = e.AsStatus()
+	}
+	Return sc
+}
+
+
 Method %Activate(ByRef pParams) As %Status
 {
 	Set tSC = $$$OK
