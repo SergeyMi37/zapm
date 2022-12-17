@@ -11,8 +11,8 @@ Method %Activate(ByRef pParams) As %Status
 		}
 		
 		Set tRootDirectory = $Get(pParams("RootDirectory"))
-		Set tVerbose = $Get(pParams("Verbose"),0)
-		Write:tVerbose !,"Doing ..."
+		Set tVerbose = 1 ;$Get(pParams("Verbose"),0)
+		Write:tVerbose !,"Doing ...",!,$namespace,!,$zv
 		;Set tSC = ##class(PMML.Interop.Utils).GenerateOperation("Demo.SampleModels.GolfModel")
 		;$$$ThrowOnError(tSC)
 		;#; do ##class(HoleFoods.Utils).BuildData()
