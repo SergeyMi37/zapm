@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2022.1 (Build 209U)" ts="2022-11-30 17:38:55">
+<Export generator="IRIS" version="26">
 <Global>
 <Node><Sub>^%ZAPM.ZpmLoad</Sub>
 <Node><Sub>alwo-goselector</Sub>

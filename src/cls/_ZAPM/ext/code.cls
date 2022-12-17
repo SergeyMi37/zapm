@@ -1,3 +1,5 @@
+Include %ZAPM.ext.Common
+
 /// Export different types of modules in different subfolders in UDL (plain) format
 /// test.dfi -> /dfi/test.dfi
 /// testpkg.test.cls -> /cls/testpkg/test.cls
@@ -604,8 +606,8 @@ ClassMethod Export2dir(dir, flags = "00000", code = "", ByRef item)
 	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.code).ExportUDL("/irisrun/repo/chmod777-R/zapm/src/")
-/// do ##class(%ZAPM.ext.code).ExportUDL("d:\_proj\!\zapm\src\")
+/// do ##class(%ZAPM.ext.code).ExportUDL("/irisrun/repo/chmod777-R/zapm/")
+/// do ##class(%ZAPM.ext.code).ExportUDL("d:\_proj\!\zapm\")
 ClassMethod ExportUDL(dir = "")
 {
 	set gn=##class(%ZAPM.ext.zpm).#GNSET  ;= "^%ZAPM.settings";
@@ -614,9 +616,12 @@ ClassMethod ExportUDL(dir = "")
 	write !,"Enter path <",dir,">",!," [q]-quit :" read r quit:r="q" $$$OK  if r'="" set dir=r
 	quit:dir=""
 	if dir'="" set @gn@("ExpoPath")=dir
-	do ##class(%ZAPM.ext.code).exp(dir,"%ZAPM")
-	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ZpmLoad.GBL",.app)
-	do ##class(%ZAPM.ext.code).Export2dir(dir,"011","%ZAPM.ext.Common.inc",.app)
+	set dirsrc=dir_"src"_$$$slash
+	do ##class(%ZAPM.ext.code).exp(dirsrc,"%ZAPM","%ZAPM.ext.Lifecycle")
+	do ##class(%ZAPM.ext.code).Export2dir(dirsrc,"011","%ZAPM.ZpmLoad.GBL",.app)
+	do ##class(%ZAPM.ext.code).Export2dir(dirsrc,"011","%ZAPM.ext.Common.inc",.app)
+	set dirpre=dir_$$$slash_"preload"_$$$slash
+	do ##class(%ZAPM.ext.code).exp(dirpre,"%ZAPM.ext.Lifecycle")
 	quit $$$OK
 }
 
