@@ -617,7 +617,8 @@ ClassMethod ExportUDL(dir = "")
 	quit:dir=""
 	if dir'="" set @gn@("ExpoPath")=dir
 	set dirsrc=dir_"src"_$$$slash
-	do ##class(%ZAPM.ext.code).exp(dirsrc,"%ZAPM","%ZAPM.ext.Lifecycle")
+	;do ##class(%ZAPM.ext.code).exp(dirsrc,"%ZAPM","%ZAPM.ext.Lifecycle")
+	do ##class(%ZAPM.ext.code).exp(dirsrc,"%ZAPM")
 	do ##class(%ZAPM.ext.code).Export2dir(dirsrc,"011","%ZAPM.ZpmLoad.GBL",.app)
 	do ##class(%ZAPM.ext.code).Export2dir(dirsrc,"011","%ZAPM.ext.Common.inc",.app)
 	set dirpre=dir_$$$slash_"preload"_$$$slash

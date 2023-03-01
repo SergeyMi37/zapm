@@ -177,20 +177,20 @@ ClassMethod ShowLog(fn = "", All = 0) As %Status
 			continue
 		}
 		if '$d(@gn@(name,"install")) {
-		    if fn'="" use fn write !,!,name,!,"   Инсталляции не завершена успешно ",!,$$url(),! use 0 continue
+		    if fn'="" use fn write !,!,num_": "_name,!,"   Инсталляции не завершена успешно ",!,$$url(),! use 0 continue
 		    write !,$$$escGreen(name)_"   Инсталляции не завершена успешно ",!,$$url(),!
 		    ;do ##class(%ZAPM.ext.zpm).LoadRegistrys(name) 
 		    continue
 		}
 		set st=$lg(@gn@(name,"install"),2)
 		if 'st {
-		    if fn'="" use fn write !,!,name,!,"   Install:"_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
+		    if fn'="" use fn write !,!,num_": "_name,!,"   Install:"_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
 		    write !,$$$escGreen(name),"   Install:",$$$escRed($System.Status.GetErrorText(st)),!,$$url(),!
 		}
 		if $d(@gn@(name,"publish")) {
 			set st=$lg(@gn@(name,"publish"),2)
 		    if 'st {
-		 	   if fn'="" use fn write !,!,name,!,"   Publish:"_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
+		 	   if fn'="" use fn write !,!,num_": "_name,!,"   Publish:"_$System.Status.GetErrorText(st),!,$$url(),! use 0 continue
 		    	write !,$$$escGreen(name),"   Publish:",$$$escRed($System.Status.GetErrorText(st)),!,$$url(),!
 		    }
 		}
@@ -401,6 +401,7 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
 {
+
 	if $lf($lb("cpipe"),$p(cmd," ")) quit ##class(%ZAPM.ext.util).cpipe($p(cmd," ",2,*)_" ")
 	if $lf($lb("reg"),$p(cmd," ")) quit ..registry($p(cmd," ",2,*))
 	if $lf($lb("pick"),$p(cmd," ")) quit ..pick($p(cmd," ",2,*))
@@ -423,6 +424,7 @@ ClassMethod extcmd(cmd = "") As %Status
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
+	if $p(cmd," ")="load" set st=##class(%ZPM.PackageManager).Shell(cmd) quit st
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
 	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 

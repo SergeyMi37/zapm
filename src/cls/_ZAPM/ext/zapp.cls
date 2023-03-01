@@ -113,7 +113,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb("zpm ""zn *"" ","i","zna","navigate to namespases")
 	;set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).SetColorScheme()","i","setcolor","set default color scheme")
 	set list("zpm",$i(list))=$lb("do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(""zppretty"")","a","","create new db,namespace and install module")
-	;set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
+	set list("zpm",$i(list))=$lb(ecmd,"i","load","Extension Load module from repo")
 	set list("zpm",$i(list))=$lb(ecmd,"i","help","Extension help command")
 	set list("zpm",$i(list))=$lb(ecmd,"i","ver","Extension show version")
 	set list("zpm",$i(list))=$lb(ecmd,"i","find","Show modules")
