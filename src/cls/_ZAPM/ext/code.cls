@@ -13,6 +13,8 @@ Class %ZAPM.ext.code [ Abstract ]
 /// do ##class(%ZAPM.ext.code).exp("/irisdev/app/chmod777-R/zapm/preload/","%ZAPM.ext.preload")
 /// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ZpmLoad.GBL",.app)
 /// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ext.Common.INC",.app)
+/// do ##class(%ZAPM.ext.code).exp("d:\_proj\!\passless\src\","dc.passwordless.cls")
+/// do ##class(%ZAPM.ext.code).exp("d:\_proj\!\passless\src\","ZAUTHENTICATE.MAC")
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  new $namespace

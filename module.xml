@@ -3,7 +3,7 @@
 <Document name="zapm.ZPM">
 <Module>
  <Name>zapm</Name>
-  <Version>1.0.42</Version>
+  <Version>1.0.43</Version>
   <Description>Zapm is a shell - extends the zpm shell and adds any other commands.</Description>
   <Keywords>Extension Package Manager</Keywords>
   <Author>
@@ -12,7 +12,6 @@
    <License>MIT</License>
   </Author>
   <Packaging>module</Packaging>
-   <SourcesRoot>src</SourcesRoot>
   <Resource Name="%ZAPM.ext.PKG" Directory="cls"/>
   <Resource Name="%ZAPM.ext.Common.INC" Directory="inc"/>
   <Resource Name="%ZAPM.ZpmLoad.GBL"/>
