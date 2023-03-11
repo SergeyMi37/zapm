@@ -65,7 +65,7 @@ ClassMethod init(NoExt = 0) As %Status
 			set dir="/opt/irisapp/src/"
 			set dir2="/irisdev/" 
 			;set outputpath="/usr/irissys/mgr/Temp/"
-			if ##class(%File).DirectoryExists(dir) {
+			if 0,##class(%File).DirectoryExists(dir) {
 			 if '##class(%File).DirectoryExists(dir2) {	;for demo  GCR
 				for name="webterminal" {
 					if '##class(%ZAPM.ext.zapp).IsInstallzpm(name) {
