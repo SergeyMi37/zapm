@@ -55,7 +55,7 @@ ClassMethod init(NoExt = 0) As %Status
 		if 'NoExt {
 			do ##class(%ZAPM.ext.zapp).UpdateLanguageExtensions()
 			do ##class(%ZPM.PackageManager).UpdateLanguageExtensions()
-			if $System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL("https://raw.githubusercontent.com/SergeyMi37/zpm/master/src/%ZPM/Repo/Remote/PublishService.cls",.o,.req)) { 
+			if 0,$System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL("https://raw.githubusercontent.com/SergeyMi37/zpm/master/src/%ZPM/Repo/Remote/PublishService.cls",.o,.req)) { 
 				;set $namespace="%SYS", name="DefaultSSL" do:'##class(Security.SSLConfigs).Exists(name) ##class(Security.SSLConfigs).Create(name) set url="https://pm.community.intersystems.com/packages/zpm/latest/installer" Do ##class(%Net.URLParser).Parse(url,.comp) set ht = ##class(%Net.HttpRequest).%New(), ht.Server = comp("host"), ht.Port = 443, ht.Https=1, ht.SSLConfiguration=name, st=ht.Get(comp("path")) quit:'st $System.Status.GetErrorText(st) 
 				;set cls=##class(%File).TempFilename("cls"), tFile = ##class(%Stream.FileBinary).%New(), tFile.Filename = xml do tFile.CopyFromAndSave(req.HttpResponse.Data) do ht.%Close(), $system.OBJ.Load(xml,"ck") do ##class(%File).Delete(xml)
 				do $system.OBJ.LoadStream(req.HttpResponse.Data,"c") 
