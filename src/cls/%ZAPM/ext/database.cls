@@ -422,5 +422,15 @@ ClassMethod DismountDB(Database) As %Status
 	q st
 }
 
+/// write $System.Status.GetErrorText(##class(%ZAPM.ext.database).SetReadOnly())
+ClassMethod SetReadOnly(Database = "irislib", readonly = 1) As %Status
+{
+	new $namespace
+	zn "%sys"
+	Set db=##Class(SYS.Database).%OpenId(Database)
+	set db.ReadOnly=readonly
+	quit db.%Save()
+}
+
 }
 

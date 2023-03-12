@@ -3,12 +3,12 @@
 <Document name="zapm.ZPM">
 <Module>
  <Name>zapm</Name>
-  <Version>1.0.44</Version>
+  <Version>1.0.45</Version>
   <Description>Zapm is a shell - extends the zpm shell and adds any other commands.</Description>
   <Keywords>Extension Package Manager</Keywords>
   <Author>
    <Person>Mikhaylenko Sergey</Person>
-   <CopyrightDate>2022</CopyrightDate>
+   <CopyrightDate>2023</CopyrightDate>
    <License>MIT</License>
   </Author>
   <Packaging>module</Packaging>

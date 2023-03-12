@@ -15,13 +15,17 @@ Class %ZAPM.ext.code [ Abstract ]
 /// do ##class(%ZAPM.ext.code).Export2dir("/irisrun/repo/chmod777-R/zapm/src/","011","%ZAPM.ext.Common.INC",.app)
 /// do ##class(%ZAPM.ext.code).exp("d:\_proj\!\passless\src\","dc.passwordless.cls")
 /// do ##class(%ZAPM.ext.code).exp("d:\_proj\!\passless\src\","ZAUTHENTICATE.MAC")
+/// do ##class(%ZAPM.ext.code).exp("d:\_proj\!\zen\src\","%ZEN")
 ClassMethod exp(dir = "", mask = "", ignoremask = "", ByRef list)
 {
  new $namespace
+ set system=0
  do ..workdir(dir)
  if $e(mask,1,8)="apptools" set $namespace=$g(^%apptools.Setting("HomeNamespace"))
  if $e(mask,1)="%" set $namespace="%SYS"
- do ..export(,,$e(mask,1)="%",,mask,ignoremask,1,.list)
+ if $e(mask,1,4)="%ZEN" quit ..ExportOneResource(dir,"011106",mask)
+ do ..export(,system,$e(mask,1)="%",,mask,ignoremask,1,.list)
+ quit
 }
 
 /// import 
@@ -70,8 +74,10 @@ ClassMethod export(generated = 0, system = 0, percent = 0, mapped = 0, mask = ""
 
 		while rs.%Next(){
 
-			s code = rs.Name _ ".cls", isSystem = rs.System
-			;w !,code
+			s code = rs.Name _ ".cls",
+			isSystem = rs.System
+			;if code["%ZEN" w !,code," ",isSystem," ",$$$isGenerated( code )," ",$$$isMapped( code )
+			
 			if ( 'system && isSystem ) continue
 			if ( 'generated && $$$isGenerated( code ) ) continue
 			if ( 'percent && $$$isPercented( code ) ) continue
