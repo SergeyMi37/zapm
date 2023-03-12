@@ -2,6 +2,12 @@
 
 zn "%SYS"
 Do ##class(Security.Users).UnExpireUserPasswords("*")
+
+Set db=##Class(SYS.Database).%OpenId("irislib")
+set db.ReadOnly=0
+write !,"set ReadOnly=0 "
+write db.%Save()
+
 ;zpm "install zpm"
 ;zpm "load https://github.com/intersystems/ipm.git"
 ;zpm "load https://github.com/SergeyMi37/zapm.git"
