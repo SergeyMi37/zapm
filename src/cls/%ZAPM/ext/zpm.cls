@@ -6,7 +6,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.zpm [ Abstract ]
 {
 
-Parameter VERSION = "1.0.42";
+Parameter VERSION = "1.0.46";
 
 /// Storage of work history
 Parameter GN = "^%ZAPM.ZpmLoad";
@@ -347,8 +347,8 @@ ClassMethod info(extcmd) As %Status
 ClassMethod DrawArray(ByRef Array As %String, ListDir = "") As %Status
 {
 	set i="" for  {set i=$o(Array(i),1,str) q:i=""  
-		if ListDir="" write !,$$$escRed(str) continue
-		if $lg(str,2)="F" write !,$$$escRed($p($lg(str,1),ListDir,2))
+		if ListDir="" write !,$$$escYellow(str) continue
+		if $lg(str,2)="F" write !,$$$escYellow($p($lg(str,1),ListDir,2))
 	}
 }
 
@@ -403,7 +403,7 @@ ClassMethod extcmd(cmd = "") As %Status
 {
 
 	if $lf($lb("cpipe"),$p(cmd," ")) quit ##class(%ZAPM.ext.util).cpipe($p(cmd," ",2,*)_" ")
-	if $lf($lb("reg"),$p(cmd," ")) quit ..registry($p(cmd," ",2,*))
+	if $lf($lb("reg"),$p(cmd," ")) quit ..registry($p(cmd," ",2,*)) ;TODO 
 	if $lf($lb("pick"),$p(cmd," ")) quit ..pick($p(cmd," ",2,*))
 	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
 	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
@@ -413,7 +413,9 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="newdb" {
 		set cmdext=$p(cmd," ",2,*)
 		if cmd["zpm ""install " set cmdext=$p($p(cmd,"zpm ""install ",2,*),$c(34))
-		quit ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext)
+		if $e(cmdext,1,5)="https" set fromrepo=cmdext, cmdext=$p($p(cmdext,"/",*),".")
+		do ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad(cmdext,.nspace,,,,,$g(fromrepo))
+		try {zn nspace} catch e {}
 	}
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
@@ -821,32 +823,38 @@ ClassMethod UnloadAndDeleteDBNS(name, Version = "", Repo = "", gn = {..#GN}) As 
 }
 
 /// d ##class(%ZAPM.ext.zpm).CreateDBNSAndLoad("isc-tar")
-ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", err) As %Status
+ClassMethod CreateDBNSAndLoad(name, ns = "", Version = "", Repo = "", gn = "", err, fromrepo = "") As %Status
 {
 	new $namespace
 	kill err w !
 	if ns="" s ns=$zconvert($tr(name,"_$.","-S"),"U")
 	set st=##class(%ZAPM.ext.database).CreateDBNS(ns)
-	if 'st s err=$System.Status.GetErrorText(st) w:err'["Database already existent in this directory." !,err
-	s:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
+	if 'st s err=$System.Status.GetErrorText(st) write:err'["Database already existent in this directory." !,err
+	set:gn'="" @gn@(name,"generate")=$lb(ns,$g(err),st)
 	if $g(err)["Database already existent in this directory.",$g(gn)'="" kill @gn@(name,"generate") set st=1
-	if st {
+	if 1 {
 		;s sta=$zpm("install "_name_" -v")
 		kill err
-		do ..InstallModule(name, ns, Version, Repo, gn, .err)
+		do ..InstallModule(name, ns, Version, Repo, gn, .err,fromrepo)
 		if $g(err)["<INTERRUPT>" quit sta
 	}
 	q $$$OK
 }
 
-ClassMethod InstallModule(name, ns = "", Version = "", Repo = "", gn = "", err) As %Status
+ClassMethod InstallModule(name, ns = "", Version = "", Repo = "", gn = "", err, fromrepo = "") As %Status
 {
 	new $namespace
 	zn ns
 	;s sta=$zpm("install "_name_" -v")
 	kill err
-	write !,"zpm ""install "_name_""""
-	set sta=##class(%ZPM.PackageManager).Shell("install "_name)
+	if fromrepo'="" {
+		write !,"zpm ""load "_fromrepo_""""
+		set sta=##class(%ZPM.PackageManager).Shell("load "_fromrepo)
+	}
+	else {
+		write !,"zpm ""install "_name_""""
+		set sta=##class(%ZPM.PackageManager).Shell("install "_name)
+	}
 	if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
 	if gn'="" {
 		set @gn@(name,"install")=$lb($g(err),sta,Version,Repo,+$h,ns,$zv)

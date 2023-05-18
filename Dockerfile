@@ -1,5 +1,5 @@
 # ARG IMAGE=intersystemsdc/irishealth-community:latest
-ARG IMAGE=intersystemsdc/iris-community
+ARG IMAGE=intersystemsdc/irishealth-ml-community
 FROM $IMAGE
 
 USER root   
