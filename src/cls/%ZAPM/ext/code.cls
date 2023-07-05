@@ -8,6 +8,7 @@ Include %ZAPM.ext.Common
 Class %ZAPM.ext.code [ Abstract ]
 {
 
+/// do ##class(%ZAPM.ext.code).exp("/iris-backup/!!/zapm/src/","%ZAPM")
 /// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/src/","apptools.","apptools.M")
 /// do ##class(%ZAPM.ext.code).exp("/irisdev/app/chmod777-R/zapm/src/","%ZAPM")
 /// do ##class(%ZAPM.ext.code).exp("/irisdev/app/chmod777-R/zapm/preload/","%ZAPM.ext.preload")

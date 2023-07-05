@@ -210,23 +210,29 @@ ClassMethod Publish2Reg(modulename = "", all = 0, skipZPM = 1, StartingFrom = ""
 	set ns=""
 	kill zpmmod
 	for { s ns=$o(inf(ns)) q:ns=""
-		kill list
-		do ##class(%ZPM.PackageManager).GetListModule(ns,.list,1)
-		w !,$$$FormattedLine($$$Magenta,ns)
 		if ns="%SYS" continue
-		zn ns
-		if all {
-			set name=""
-			for { set name=$o(list(name),1,version) quit:name=""
-				if '$d(zpmmod(name,version)) {
-					do ..PublishModule(name, ns, version, "", gn, .err)
-					set zpmmod(name,version)=""
-
-				}
-			}	
-		}
+		do ##class(%ZAPM.ext.zpm).Publish2ns(ns,.zpmmod,,gn)
 	}
 	do ..WriteShowLog(gn)
+	quit $$$OK
+}
+
+/// write ##class(%ZAPM.ext.zpm).Publish2ns("USER",.arr)
+ClassMethod Publish2ns(ns, zpmmod, all = 1, gn) As %Status
+{
+	new $namespace
+	set $namespace=ns
+	do ##class(%ZPM.PackageManager).GetListModule(ns,.list,1)
+	w !,$$$FormattedLine($$$Magenta,ns)
+	if all {
+		set name=""
+		for { set name=$o(list(name),1,version) quit:name=""
+			if '$d(zpmmod(name,version)) {
+				do ..PublishModule(name, ns, version, "", gn, .err)
+				set zpmmod(name,version)=""
+			}
+		}	
+	}
 	quit $$$OK
 }
 
@@ -427,6 +433,12 @@ ClassMethod extcmd(cmd = "") As %Status
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
 	if $p(cmd," ")="load" set st=##class(%ZPM.PackageManager).Shell(cmd) quit st
+	if $p(cmd," ")="publish" {
+		set gn=..#GN
+		if $p(cmd," ",2,*)="*" {do ##class(%ZAPM.ext.zpm).Publish2ns($namespace,.arr,,gn)}
+		elseif $p(cmd," ",2,*)="**" {do ##class(%ZAPM.ext.zpm).Publish2Reg(,1)}
+		else { quit ##class(%ZPM.PackageManager).Shell(cmd)}
+	}
 	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
 	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 
@@ -591,6 +603,10 @@ ClassMethod exthelp(cmd = "") As %Status
  if cmd=""||(cmd="find")||(cmd="search") {
 	write !!,"find app* -d  load description from modules, and the description is always displayed"
  	write !!,"find app* -u /rcemper  show modules only including context from repository"
+ }
+ if cmd=""||(cmd="publish") {
+	write !!,"publish *   Publish all modules from a namedspace"
+ 	write !,"publish **  Publish all modules from the entire instance"
  }
 
  if cmd=""||(cmd="cmd") {
