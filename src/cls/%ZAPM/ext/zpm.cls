@@ -565,12 +565,10 @@ ClassMethod help(cmd = "") As %Status
 
 ClassMethod exthelp(cmd = "") As %Status
 {
- if cmd="" {
-	write !!,"Available commands extention:"
-	write !,"-----------------------------"
- }
+ write $$$NL_"ZAPM commands extention:"_$$$NL_"-----------------------------"
  if cmd=""||(cmd="newdb") {
-	write !!,"newdb <module>"
+	write !!,"newdb <module_name>"
+	write !!,"newdb http://git-repo/developer-name/repo-name"
  	write !," Create a new database and an Namespace with a name derived from the name of the module and Install the module into it,"
  }
  if cmd=""||(cmd="dbcreate") {
