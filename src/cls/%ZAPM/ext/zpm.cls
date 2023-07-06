@@ -466,10 +466,17 @@ ClassMethod extcmd(cmd = "") As %Status
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
 		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
 	}
-	if $p(cmd," ")="dbdelete" write !,"Delete database,namespace "_$p(cmd," ",2,*)_": " quit ##class(%ZAPM.ext.database).DeleteDBNS($p(cmd," ",2,*))
-	
+	if $p(cmd," ")="dbdelete" {
+		set ns=$p(cmd," ",2,*)
+		if ns="" set msg="db name '"_ns_"' is empty" write !,msg quit $$$ERROR($$$GeneralError,msg)
+		set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
+		if '$d(inf($zconvert(ns,"U"))) set msg="db name '"_ns_"' is not exist" write !,msg quit $$$ERROR($$$GeneralError,msg)
+		write !,"Delete database,namespace "_ns_": " 
+		quit ##class(%ZAPM.ext.database).DeleteDBNS(ns)
+	}
 	;if $p(cmd," ")="rolecreate" quit ##class(%ZAPM.ext.database).CreateRole($p(cmd," ",2,*))
 	;if $p(cmd," ")="roledelete" quit ##class(%ZAPM.ext.database).DeleteRole($p(cmd," ",2,*))
+	quit $$$OK
 }
 
 ClassMethod prod(extcmd) As %Status
