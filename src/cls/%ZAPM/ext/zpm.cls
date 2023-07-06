@@ -137,6 +137,26 @@ ClassMethod pick(context = "") As %Status
 		if err'="" write !,"    ",$$$escRed($e(err,1,70)_"...")
 		set num(num)=$lb(name,repo)
 	}
+	if $d(num)<10 {
+		if context["install " set context=$p($p(context,"install ",2),$c(34))
+		set url="https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-"_context
+		set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.str,,"superuser","SYS")
+		if st { 
+			write !,{}.$$$jsonFromJSON(str).status
+			set json={}.$$$jsonFromJSON(str).repo
+			if json'="" {
+				set ver=json.version,num=1
+				set desc=json.description,name=context
+				set repo=json.repository
+				write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
+				write !,"    ",(repo)
+				set num(1)=$lb(name,repo)
+			}
+		}
+		else {
+			w !,url,!,$System.Status.GetErrorText(st),! zw str
+		}
+	}
 	quit:$d(num)<10 $$$OK
 	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n write !
 	if n'="" {
@@ -607,7 +627,7 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !,"publish **  Publish all modules from the entire instance"
  }
  if cmd=""||(cmd="curl") {
-	write !!,"curl <url>   Get query result by url"  //set st=$System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL(url,.out,.req) write req.HttpResponse.StatusCode"
+	write !!,"curl <url>   Get query result by url"  //set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.out,.req) write req.HttpResponse.StatusCode"
 	write !,"curl https://openexchange.intersystems.com/mpapi/packages/find_pagination?term=&cats=&ww=&ind=&sorting=t.asc&zpm=1&pageSize=1"
 	write !,"curl https://pm.community.intersystems.com/packages/-/all"
  }
@@ -1207,7 +1227,7 @@ ClassMethod SetProxy(ByRef req) As %Status
 }
 
 /// write $System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL("https://raw.githubusercontent.com/intersystems-community/zpm/master/module.xml",.o)) w o
-ClassMethod GetDataURL(url As %String, ByRef data, ByRef req) As %Status
+ClassMethod GetDataURL(url As %String, ByRef data, ByRef req, user = "", pass = "") As %Status
 {
 	New $Namespace
 	Set data=""
@@ -1228,7 +1248,10 @@ ClassMethod GetDataURL(url As %String, ByRef data, ByRef req) As %Status
 		Set:$g(port)="" port=443
 	}
 	do ..SetProxy(.req)
-
+	if user'="" {
+		set req.Username=user
+		set req.Password=pass
+	}
 	Set:$Get(port)="" port=80
 	Set req.Server=server
 	Set req.Port=port
