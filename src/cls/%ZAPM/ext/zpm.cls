@@ -407,7 +407,7 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 /// zapp "newdb spool-demo"
 ClassMethod extcmd(cmd = "") As %Status
 {
-
+	if $lf($lb("curl"),$p(cmd," "))	set st=$System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL($p(cmd," ",2,*),.%out)) w !,%out quit st
 	if $lf($lb("cpipe"),$p(cmd," ")) quit ##class(%ZAPM.ext.util).cpipe($p(cmd," ",2,*)_" ")
 	if $lf($lb("reg"),$p(cmd," ")) quit ..registry($p(cmd," ",2,*)) ;TODO 
 	if $lf($lb("pick"),$p(cmd," ")) quit ..pick($p(cmd," ",2,*))
@@ -551,7 +551,7 @@ ClassMethod help(cmd = "") As %Status
  	for { set i=$o(^SPOOL($j,i),1,s) q:i=""
  		set s=" "_s
  		if $o(^SPOOL($j,i)) {
-	 		for cm=1:1:$ll(cmds) if s[(" "_$lg(cmds,cm)_" ") set s=$replace(s," "_$lg(cmds,cm)_" "," "_$$$escMagenta($lg(cmds,cm))_" ")
+	 		for cm=1:1:$ll(cmds) if s[(" "_$lg(cmds,cm)_" ") set s=$replace(s," "_$lg(cmds,cm)_" "," "_$$$escYellow($lg(cmds,cm))_" ")
  			set help=help_s
  		}
  	}
@@ -606,7 +606,11 @@ ClassMethod exthelp(cmd = "") As %Status
 	write !!,"publish *   Publish all modules from a namedspace"
  	write !,"publish **  Publish all modules from the entire instance"
  }
-
+ if cmd=""||(cmd="curl") {
+	write !!,"curl <url>   Get query result by url"  //set st=$System.Status.GetErrorText(##class(%ZAPM.ext.zpm).GetDataURL(url,.out,.req) write req.HttpResponse.StatusCode"
+	write !,"curl https://openexchange.intersystems.com/mpapi/packages/find_pagination?term=&cats=&ww=&ind=&sorting=t.asc&zpm=1&pageSize=1"
+	write !,"curl https://pm.community.intersystems.com/packages/-/all"
+ }
  if cmd=""||(cmd="cmd") {
 	write !!,"cmd "
  	write !,"  Alias: ?"
@@ -716,7 +720,7 @@ ClassMethod cmdzpm() As %String
 /// command zapm
 ClassMethod cmdzpmext() As %String
 {
-	quit $lb("cpipe","reg","pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
+	quit $lb("curl","cpipe","reg","pick","log","task","interoperability","prod","newdb","cmd","hist","dbcreate","dbdelete","upg","info","edit-tab","edt","edit-glo","edg","edit-lock","edl","edj","edit-job","edr","edit-rou","edz","edit-zpm","edf","edit-file","eds","edit-sql")
 }
 
 /// do ##class(%ZAPM.ext.zpm).SetColorScheme("dark")

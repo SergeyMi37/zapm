@@ -123,7 +123,7 @@ ClassMethod favourite(ByRef list) As %Status
 	;zapm
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL()","i","export-zapm","export zapm project")
 	set list("zapm",$i(list))=$lb(ecmd,"i","cpipe","Run host console command")
-
+	set list("zapm",$i(list))=$lb(ecmd,"i","curl","Get query result by url")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.util).cpipe(""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head"")","i","proc-max-mem","proc max memory")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.util).cpipe(""ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head"")","i","proc-max-cpu","proc max cpu")
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.util).cpipe(""ps ax|grep iris"")","i","proc-iris","proc iris")
@@ -183,7 +183,7 @@ ClassMethod prompt(comm = "") As %Status
 		if comm="" {
 			write !,..TerminalPrompt() 
 			read cmd
-			set cmd=$ZStrip(cmd,"<>WC")
+			set cmd=$ZStrip(cmd,"<>WC"),%cmd=""
 		}
 		else {
 			set cmd=comm
@@ -285,7 +285,10 @@ addhist(cmd,namecmd="",desc="") ;add to history
 	quit:cmd=+cmd
 	quit:cmd=""
 	set gn=..#GN
-	if '$lv(cmd) s cmd=$lb(cmd,"a",namecmd,desc)
+	if $g(%cmd)'="" {set cmd=$lb(%cmd,"a",namecmd,desc)
+	}
+	elseif '$lv(cmd) {set cmd=$lb(cmd,"a",namecmd,desc)
+	}
 	set @gn@("cmd",cmd)=$GET(@gn@("cmd",cmd))+1
 	set @gn@("cmd",cmd,"date")=$h
 	quit 1
@@ -315,7 +318,8 @@ ClassMethod history(mask = "") As %Status
 		if comman'="" write !,"command name '"_name_"' already exist" q $$$OK
 		if '$lf($lb("i","a","n"),type) write !,"command type '"_type_"' invalid" q $$$OK
 		do ##class(%ZAPM.ext.zapp).addcmd($lg(cmd,1),"hist",type,name,desc) 
-		write !,"added in list of commands" q $$$OK
+		write !,"added in list of commands" 
+		quit $$$OK
 	}
 	if $e(mask,1,4)="-del" { //flag added Number_hist <name_cmd> description
 		set days=$p($p(mask,"-del ",2,*)," ",1)
@@ -343,7 +347,7 @@ ClassMethod history(mask = "") As %Status
 	if $e(mask,1)="-"||($e(mask,1)="+") set mask=$e(mask,2,*)
 	do ..CreateHistArray(.list)
 	set h="" for { set h=$o(list(h),order) q:h=""
-		set cmd=""	for { set cmd=$Order(list(h,cmd)) q:cmd=""  do write($$$escBlue($zd(h,3))_" ") }
+		set cmd=""	for { set cmd=$Order(list(h,cmd)) q:cmd=""  do write($$$escCyan($zd(h,3))_" ") }
 	}
 	;for { set cmd=$Order(@gn@("cmd",cmd)) q:cmd=""  
 	;do write() }
@@ -401,7 +405,7 @@ ClassMethod help(mask = "") As %Status
 	}
 	do ..write("","cmd or cmd context",$lb("Show help"),1)
 	do ..write("","hist or hist context",$lb("Show history"),1)
-	write !,$$$escBlue("A")_"-Ask before launch, "_$$$escBlue("I")_"-Launch immediately, "_$$$escBlue("N")_"-Do not run"
+	write !,$$$escCyan("A")_"-Ask before launch, "_$$$escCyan("I")_"-Launch immediately, "_$$$escCyan("N")_"-Do not run"
 	q $$$OK
 }
 
@@ -413,8 +417,8 @@ ClassMethod write(part, num, cmd, noprompt = 0) As %Status
 		w !,$$$escGreen(part)	
 	}
 	set prompt=$lg(cmd,2)
-	;if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="y":"Ask before launch",prompt="n":"Launch immediately",1:"Do not run"))
-	if 'noprompt set prompt=" //"_$$$escBlue($s(prompt="a":"A",prompt="i":"I",prompt="n":"N",1:"N"))
+	;if 'noprompt set prompt=" //"_$$$escCyan($s(prompt="y":"Ask before launch",prompt="n":"Launch immediately",1:"Do not run"))
+	if 'noprompt set prompt=" //"_$$$escCyan($s(prompt="a":"A",prompt="i":"I",prompt="n":"N",1:"N"))
 	write !,num_"."_$$$escMagenta($lg(cmd,3))_" "_$lg(cmd,1)_prompt_" "_$lg(cmd,4)
  quit $$$OK
 }
