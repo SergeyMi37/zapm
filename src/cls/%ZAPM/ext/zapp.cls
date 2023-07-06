@@ -133,6 +133,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zapm",$i(list))=$lb(ecmd,"i","log","View protocols")
 	set list("zapm",$i(list))=$lb(ecmd,"i","pick","Pick modeles in global registry")
 	set list("zapm",$i(list))=$lb(ecmd,"i","prod","Product handling, startup and shutdown information")
+	set list("zapm",$i(list))=$lb(ecmd,"i","publish","Publish module to current repo")
 	set list("zapm",$i(list))=$lb(ecmd,"i","newdb","create new db,namespace and install module")
 	set list("zapm",$i(list))=$lb(ecmd,"i","dbcreate","create new database and namespace and role")
 	set list("zapm",$i(list))=$lb(ecmd,"a","dbdelete","delete database, namespace and role")
