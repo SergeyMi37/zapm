@@ -15,17 +15,17 @@ Parameter SettingsGN = "^%ZAPM.ext.Productions";
 ///  d ##class(%ZAPM.ext.Production).SaveStat(1)
 ClassMethod SaveStat(resave = 0) As %Status
 {
-	s listns=..ListNS(.inf,"NotPref,Ens")
-	s GN=..#SettingsGN
-	i 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y"
+	set listns=..ListNS(.inf,"NotPref,Ens")
+	set GN=..#SettingsGN
+	if 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y"
 	KILL @GN
 	MERGE @GN=inf
-	w !,"Updated "_GN,!!
-	s ns=""
-	f { s ns=$o(inf(ns)) q:ns=""
+	write !,"Updated "_GN,!!
+	set ns=""
+	for { s ns=$o(inf(ns)) quit:ns=""
 	 zw inf(ns,"Ens")
 	}
- quit $$$OK
+ 	quit $$$OK
 }
 
 /// Get a list of domain namespaces separated by commas
@@ -34,7 +34,7 @@ ClassMethod SaveStat(resave = 0) As %Status
 /// Flag = "NotPre" - exclude prepared
 ClassMethod ListNS(info, Flag = "")
 {
-	s disp=""
+	set disp=""
 	$$$NspGoto(curNs,"%SYS")	
 	set tRS = ##class(%ResultSet).%New("Config.Namespaces:List")
 	if '$isobject(tRS) q ""
@@ -48,21 +48,21 @@ ClassMethod ListNS(info, Flag = "")
 	}
 	d tRS.Close()
 	$$$NspReturn(curNs)	
-	Q $g(disp)
+	Quit $g(disp)
 }
 
 /// Get a list of products in namespace
 /// w ##class(apptools.core.sys).getEnsProd("ENSDEMO",.info)
 ClassMethod getEnsProd(name, info)
 {
-	s sc=$$$OK
+	set sc=$$$OK
 	try {
 		$$$NspGoto(curNs,name) KILL info
 		DO ##CLASS(Ens.Director).GetProductionSummary(.info,name)
 	}
 	catch e { s sc=$$$ERROR($$$GeneralError,$ze)}
 	$$$NspReturn(curNs)
-	Q sc
+	Quit sc
 }
 
 /// Check whether the namespace is prepared
@@ -76,28 +76,29 @@ ClassMethod IsPreparedNS(name)
 ///  d ##class(%ZAPM.ext.Production).SaveAndStop()
 ClassMethod SaveAndStop() As %Status
 {
-	d ..SaveStat(1)
-	d ..StopAll()
+	do ..SaveStat(1)
+	do ..StopAll()
+	quit $$$OK
 }
 
 /// Remove autostart from all products; stop all products in Namespaces before restarting the OS
 /// d ##class(%ZAPM.ext.Production).StopAll()
 ClassMethod StopAll() As %Status
 {
- d ..EnsAction("auto0")
- d ..EnsAction("stop")
- w !!,"ok"
- q
+	 do ..EnsAction("auto0")
+	 do ..EnsAction("stop")
+	 write !!,"ok"
+	 quit $$$OK
 }
 
 /// Check and restore autorun products in Namespaces, run all products that were launched
 /// d ##class(%ZAPM.ext.Production).StartAll()
 ClassMethod StartAll() As %Status
 {
- 	d ..EnsAction("auto1")
- 	d ..EnsAction("start")
- 	w !!,"ok"
- 	q
+ 	do ..EnsAction("auto1")
+ 	do ..EnsAction("start")
+ 	write !!,"ok"
+ 	quit $$$OK
 }
 
 /// Change products status in Namespaces
@@ -113,12 +114,12 @@ ClassMethod StartAll() As %Status
 ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tProductionName, inf) ]
 {
 	;get all namespace with ensemble
-	s listns=..ListNS(.inf,"NotPref,Ens")
+	set listns=..ListNS(.inf,"NotPref,Ens")
 	#define NotSaveStat " settings not saved, to do ##class(%ZAPM.ext.Production).SaveStat(1) "
 	$$$forAll(ns,inf)
-	i nsOnly'="",nsOnly'=ns continue
+	if nsOnly'="",nsOnly'=ns continue
 	$$$NspGoto(curN,ns)
-	i '$d(inf(ns,"Ens")) continue
+	if '$d(inf(ns,"Ens")) continue
 	s GN=..#SettingsGN
 	i ex'="info" w !!,"--- ",ns
 	if ex="stop" {
