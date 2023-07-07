@@ -459,7 +459,11 @@ ClassMethod extcmd(cmd = "") As %Status
 		elseif $p(cmd," ",2,*)="**" {do ##class(%ZAPM.ext.zpm).Publish2Reg(,1)}
 		else { quit ##class(%ZPM.PackageManager).Shell(cmd)}
 	}
-	if $p(cmd," ")="repo" set st=##class(%ZPM.PackageManager).Shell(cmd) do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") quit st
+	if $p(cmd," ")="repo" {
+		set st=##class(%ZPM.PackageManager).Shell(cmd) 
+		;do:cmd'="repo -list"&&(cmd["repo -r -n ") ##class(%ZPM.PackageManager).Shell("repo -list") 
+		quit st
+	}
 	if $p(cmd," ")="upg" quit ##class(%ZAPM.ext.zpm).Upgrade($p(cmd," ",2,*))
 	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 
 	if $p(cmd," ")="dbcreate" {
@@ -637,6 +641,7 @@ ClassMethod exthelp(cmd = "") As %Status
 	write !!,"curl <url>   Get query result by url"  //set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.out,.req) write req.HttpResponse.StatusCode"
 	write !,"curl https://openexchange.intersystems.com/mpapi/packages/find_pagination?term=&cats=&ww=&ind=&sorting=t.asc&zpm=1&pageSize=1"
 	write !,"curl https://pm.community.intersystems.com/packages/-/all"
+	write !,"curl https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-zapm"
  }
  if cmd=""||(cmd="cmd") {
 	write !!,"cmd "
