@@ -17,7 +17,7 @@ ClassMethod SaveStat(resave = 0) As %Status
 {
 	set listns=..ListNS(.inf,"NotPref,Ens")
 	set GN=..#SettingsGN
-	if 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" r r q:$zconvert(r,"L")'["y"
+	if 'resave,$d(@GN) w !,"Settings have already been saved. Rewrite ? [Y/N] <N>" read r quit:$zconvert(r,"L")'["y" $$$OK
 	KILL @GN
 	MERGE @GN=inf
 	write !,"Updated "_GN,!!
