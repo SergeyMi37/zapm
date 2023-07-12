@@ -130,7 +130,8 @@ ClassMethod pick(context = "") As %Status
 		set num=num+1
 		set ver=$lg($g(@gn@(name,"registry")),1)
 		set desc=$lg($g(@gn@(name,"registry")),2)
-		set repo=$p($g(@gn@(name,"url")),"'",4)
+		set repo=$p($g(@gn@(name,"url")),"'",4) 
+		if repo="",name="zpm" set repo="https://github.com/intersystems/ipm.git"
 		write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
 		write !,"    ",(repo)
 		set err=##class(%ZAPM.ext.zpm).GetErrorLog(name)
@@ -142,7 +143,7 @@ ClassMethod pick(context = "") As %Status
 		set url="https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-"_context
 		set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.str,,"superuser","SYS")
 		if st { 
-			write !,{}.$$$jsonFromJSON(str).status
+			write !,url,!,{}.$$$jsonFromJSON(str).status
 			set json={}.$$$jsonFromJSON(str).repo
 			if json'="" {
 				set ver=json.version,num=1
@@ -654,7 +655,7 @@ ClassMethod exthelp(cmd = "") As %Status
  }
  if cmd=""||(cmd="hist") {
 	write !!,"hist "
-	write !,"  Alias: ??"
+	write !," Alias: ??"
  	write !," Show all history."
  	write !!,"hist <context>"
  	write !," Show all history including context."
@@ -665,9 +666,15 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !!,"hist -del Number_day"
  	write !," Delete all history older than the number of days."
  	write !!,"hist -add Number_hist"
- 	write !," Added history in list for non-removable."
+ 	write !," Add history in list for non-removable."
  	write !!,"hist -add Number_hist [name_cmd] [a/i/n] description"
- 	write !," Added history in list commans."
+ 	write !," Add history in list commans."
+ 	write !!,"hist -addcmd command on objectscript"
+ 	write !," Add in history some comman."
+ }
+  if cmd=""||(cmd="pick") {
+ 	write !!,"pick <context>"
+ 	write !," Pick modules by name or context and load from repository."
  }
  if cmd=""||(cmd="prod")||(cmd="interoperability") {
 	write !!,"interoperability "

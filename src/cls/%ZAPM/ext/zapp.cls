@@ -306,12 +306,18 @@ ClassMethod AddHist(cmd, namecmd = "", desc = "") As %Status
 	quit $$$OK
 }
 
-/// hist 
-/// do ##class(%ZAPM.ext.zapp).history("dark")
+/// hist
 ClassMethod history(mask = "") As %Status
 {
 	set gn=..#GN
 	set mask=$ZStrip(mask,"<>WC")
+	if $e(mask,1,7)="-addcmd" { //zapm "hist -addcmd write !,$zv //add noname command"
+		set cmd=$p(mask,"-addcmd ",2,*)
+		if cmd="" quit $$$OK
+		do ##class(%ZAPM.ext.zapp).AddHist(cmd)
+		write !,"added in list of commands" 
+		quit $$$OK
+	}
 	if $e(mask,1,4)="-add" { //flag added Number_hist <name_cmd> description
 		set num=$p($p(mask,"-add ",2,*)," ")
 		if '$D(%zapm(num),cmd) write !,"number invalid" q $$$OK
