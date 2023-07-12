@@ -178,7 +178,13 @@ ClassMethod TerminalPrompt(comm = "") As %String
 ClassMethod prompt(comm = "") As %Status
 {
 	set comm=$ZStrip(comm,"<>WC")
-	if comm="" write !,"Welcome to the Package Manager with addons Shell. "_##class(%ZAPM.ext.zpm).ver(),!,"Enter /q/quit to exit the shell. Enter ?/help to view available commands",!
+	if comm="" {
+		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm", .list)
+		write !,"Welcome to the Package Manager with addons Shell. "_##class(%ZAPM.ext.zpm).ver(),
+			!,"Enter /q/quit to exit the shell. Enter ?/help to view available commands"
+		if $d(list(1,"modules",1),data) write !,"Based on "_$lg(data,3)_" "_$$$escGreen($lg(data,1))_" "_$$$escCyan($lg(data,2)),!
+			
+	}
 	for {
 		if comm="" {
 			write !,..TerminalPrompt() 

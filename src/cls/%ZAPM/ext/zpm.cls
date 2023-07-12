@@ -260,12 +260,12 @@ ClassMethod Publish2ns(ns, zpmmod, all = 1, gn) As %Status
 /// write ##class(%ZAPM.ext.zpm).ver()
 ClassMethod ver() As %String
 {
- 	quit $$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET)
+ 	quit $$$FormattedLine($$$Underlined,$$$escGreen("zapm"))_" "_$$$escCyan(##class(%ZAPM.ext.zpm).GetModuleVersion("zapm",##class(%ZAPM.ext.zpm).#GNSET))
 }
 
 /// Get Default Command of Registry
 /// example d ##class(%ZAPM.ext.zpm).GetDefaultCommandRegistry()
-ClassMethod GetDefaultCommandRegistry()
+ClassMethod GetDefaultCommandRegistry(ServerPort)
 {
 	New $Namespace
 	Set $Namespace="%SYS"
@@ -447,9 +447,13 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $p(cmd," ")="ver" {
 		zpm "ver" 
 		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
-		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry()
+		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry(.ServerPort)
 		write !,..ver(),!
 		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+		Do ##class(%ZPM.PackageManager).GetListModules("*", "devbox", .list) 
+		if $D(list(1,"modules",1),data),$lg(data,1)="devbox" write !,$$$escGreen("DevBox")," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_"/devbox/DevBox.Index.cls"
+		Do ##class(%ZPM.PackageManager).GetListModules("*", "webterminal", .list) 
+		if $D(list(1,"modules",1),data),$lg(data,1)="webterminal" write !,$$$escGreen("WebTerminal")," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_"/terminal/"
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
