@@ -119,12 +119,45 @@ ClassMethod reg(context = "") As %Status
 	quit $$$OK
 }
 
+/// do ##class(%ZAPM.ext.zpm).PickOexMap("oex-mappi")
+ClassMethod PickOexMap(context, ByRef num) As %Status
+{
+	new $namespace
+	set zpmname="oex-mapping"
+	Do ##class(%ZPM.PackageManager).GetListModules("*",zpmname , .list) 
+	if $D(list(1,"modules",1),data),$lg(data,1)=zpmname {
+		;write !,$$$escGreen(zpmname)," "_$$$escCyan($lg(data,2))
+		set nspace=$lg(list(1),1)
+		zn nspace
+		set sql="select * from oex.map where zpmmodul like '%"_context_"%'"
+			,rs=##class(%ResultSet).%New()
+			,sc=rs.Prepare(sql)
+		set:sc sc=rs.Execute("")
+		write !,"--- Looking for in :",sql
+		if sc {
+			for i=1:1 {
+				quit:'rs.%Next()  
+				set num=$g(num)+1
+				set ver=rs.Get("version")
+				set name=rs.Get("zpmmodul")
+				set repo=rs.Get("repo")
+				set desc=rs.Get("label")
+				set num(num)=$lb(name,repo,ver,desc,err,"oex")
+				set num(0,name)=num
+				;write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
+				;write !,"    ",(repo)
+			}
+		}
+	}
+	quit $$$OK
+}
+
 /// do ##class(%ZAPM.ext.zpm).pick("soa")
 ClassMethod pick(context = "") As %Status
 {
 	set gn=..#GN,name="",num=0
 	if context'="" write !,"Pick *"_context_"* in " 
-	write !,"Registry: ",$$$escRed(gn)
+	write !,"Pick in ",gn
 	for { set name=$o(@gn@(name)) quit:name=""
 		if context'="",name'[context continue
 		set num=num+1
@@ -132,37 +165,44 @@ ClassMethod pick(context = "") As %Status
 		set desc=$lg($g(@gn@(name,"registry")),2)
 		set repo=$p($g(@gn@(name,"url")),"'",4) 
 		if repo="",name="zpm" set repo="https://github.com/intersystems/ipm.git"
-		write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
-		write !,"    ",(repo)
 		set err=##class(%ZAPM.ext.zpm).GetErrorLog(name)
-		if err'="" write !,"    ",$$$escRed($e(err,1,70)_"...")
-		set num(num)=$lb(name,repo)
+		set num(num)=$lb(name,repo,ver,desc,err,"glo")
+		set num(0,name)=num
 	}
 	if $d(num)<10 {
 		if context["install " set context=$p($p(context,"install ",2),$c(34))
 		set url="https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-"_context
 		set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.str,,"superuser","SYS")
 		if st { 
-			write !,url,!,{}.$$$jsonFromJSON(str).status
+			write !,"Find ",url,!,{}.$$$jsonFromJSON(str).status
 			set json={}.$$$jsonFromJSON(str).repo
 			if json'="" {
 				set ver=json.version,num=1
 				set desc=json.description,name=context
 				set repo=json.repository
-				write !,num,". ",$$$escGreen(name)," ",ver," ",$$$escYellow(desc)
-				write !,"    ",(repo)
-				set num(1)=$lb(name,repo)
+				set num(1)=$lb(name,repo,ver,desc,err,"app")
+				set num(0,name)=num
 			}
 		}
 		else {
 			w !,url,!,$System.Status.GetErrorText(st),! zw str
 		}
 	}
+	do ..PickOexMap(context, .num)
+	
 	quit:$d(num)<10 $$$OK
+	set name=""
+	for n=1:1 { set name=$o(num(0,name),1,nn) quit:name=""
+		;zw num(nn) 
+		write !,n,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escYellow($lg(num(nn),4))_" "_$$$escGreen($lg(num(nn),6))
+		write !,"    ",($lg(num(nn),2))
+		if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
+		set nnn(n)=num(nn)
+	}
 	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n write !
 	if n'="" {
-		if $d(num(n)) {set repository=$lg(num(n),2)}
-		elseif $d(@gn@(n)) {set repository=$p($g(@gn@(n,"url")),"'",4)}
+		if $d(nnn(n)) {set repository=$lg(nnn(n),2)}
+		elseif $d(num(0,n),number) {set repository=$lg($g(num(number)),2)}
 		if $g(repository)'="" {
 			write !,"Load module: "_repository_" Are you sure? <N> " read yes
 			if yes["y"||(yes["Y") {
@@ -459,6 +499,7 @@ ClassMethod extcmd(cmd = "") As %Status
 		write !,..ver(),!
 		;if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
 		Do ..WriteFavorite("zapm-editor", "", "zapm ""edit-glo""","https://github.com/SergeyMi37/zapm-editor.git") 
+		Do ..WriteFavorite("oex-mapping", "", "job ##class(oex.map).total(30) //select * from oex.map","https://github.com/rcemper/oex-mapping.git") 
 		Do ..WriteFavorite("devbox", .ServerPort, "/devbox/DevBox.Index.cls","https://github.com/SeanConnelly/DevBox.git") 
 		Do ..WriteFavorite("webterminal", .ServerPort, "/terminal/","https://github.com/intersystems-community/webterminal.git") 
 		Do ..WriteFavorite("objectscript-visual-editor", .ServerPort, "/VisualEditor/","https://github.com/intersystems-community/objectscript-visual-editor.git") 
@@ -481,7 +522,10 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $e(cmd,1,2)="ed" quit ##class(%ZAPM.ext.zpm).editor(cmd) 
 	if $p(cmd," ")="dbcreate" {
 		if ($p(cmd," ",2,*))[" -p " set path=$p($p(cmd," -p ",2)," ")
-		 quit ##class(%ZAPM.ext.database).CreateDBNS($p(cmd," ",2),,$GET(path))
+		set nspace=$p(cmd," ",2)
+		set st=##class(%ZAPM.ext.database).CreateDBNS(nspace,,$GET(path))
+		try {zn nspace} catch e {}
+		quit st
 	}
 	if $p(cmd," ")="dbdelete" {
 		set ns=$p(cmd," ",2,*)
