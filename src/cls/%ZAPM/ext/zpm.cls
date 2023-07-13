@@ -423,6 +423,14 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 	Quit tSC
 }
 
+ClassMethod WriteFavorite(zpmname, ServerPort, url = "", repo = "") As %Status
+{
+	Do ##class(%ZPM.PackageManager).GetListModules("*", zpmname, .list) 
+	if $D(list(1,"modules",1),data),$lg(data,1)=zpmname write !,$$$escGreen(zpmname)," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_url
+	else  write !,$$$escGreen(zpmname)," "_$$$escRed("to install in a new namespace, run:")_" newdb "_repo
+	quit $$$OK
+}
+
 /// extention zpm commands
 /// do ##class(%ZAPM.ext.zpm).extcmd("load https://github.com/Vassil2010/iris-sms")
 /// zapp "newdb spool-demo"
@@ -449,11 +457,11 @@ ClassMethod extcmd(cmd = "") As %Status
 		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
 		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry(.ServerPort)
 		write !,..ver(),!
-		if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
-		Do ##class(%ZPM.PackageManager).GetListModules("*", "devbox", .list) 
-		if $D(list(1,"modules",1),data),$lg(data,1)="devbox" write !,$$$escGreen("DevBox")," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_"/devbox/DevBox.Index.cls"
-		Do ##class(%ZPM.PackageManager).GetListModules("*", "webterminal", .list) 
-		if $D(list(1,"modules",1),data),$lg(data,1)="webterminal" write !,$$$escGreen("WebTerminal")," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_"/terminal/"
+		;if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+		Do ..WriteFavorite("zapm-editor", "", "zapm ""edit-glo""","https://github.com/SergeyMi37/zapm-editor.git") 
+		Do ..WriteFavorite("devbox", .ServerPort, "/devbox/DevBox.Index.cls","https://github.com/SeanConnelly/DevBox.git") 
+		Do ..WriteFavorite("webterminal", .ServerPort, "/terminal/","https://github.com/intersystems-community/webterminal.git") 
+		Do ..WriteFavorite("objectscript-visual-editor", .ServerPort, "/VisualEditor/","https://github.com/intersystems-community/objectscript-visual-editor.git") 
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
