@@ -427,7 +427,7 @@ ClassMethod WriteFavorite(zpmname, ServerPort, url = "", repo = "") As %Status
 {
 	Do ##class(%ZPM.PackageManager).GetListModules("*", zpmname, .list) 
 	if $D(list(1,"modules",1),data),$lg(data,1)=zpmname write !,$$$escGreen(zpmname)," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_url
-	else  write !,$$$escGreen(zpmname)," "_$$$escRed("to install in a new namespace, run:")_" newdb "_repo
+	else  write !,$$$escGreen(zpmname)," "_$$$escRed("to install, run:")_" newdb "_repo
 	quit $$$OK
 }
 
@@ -1141,6 +1141,22 @@ ClassMethod GetVerZpm(ByRef IsHspm, ByRef RepoFieldName)
 	Quit $Get(ver)
 }
 
+/// Get URL currently repository 
+/// if ##class(%ZAPM.ext.zpm).GetCurrRepo(.url) zw url
+ClassMethod GetCurrRepo(Url = "")
+{
+	set sc=$$$OK
+	set sql="select URL from %ZPM_PackageManager_Client.RemoteServerDefinition where Enabled = 1"
+		,rs=##class(%ResultSet).%New()
+		,sc=rs.Prepare(sql)
+	Set:sc sc=rs.Execute("")
+	If sc {
+			Quit:'rs.%Next()  
+			Set Url=rs.Get("URL")
+	}
+	quit sc
+}
+
 /// Show description 
 /// do ##class(%ZAPM.ext.zpm).Description("z*","/rcep",1)
 ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule = 0, num)
@@ -1165,7 +1181,7 @@ ClassMethod Description(tModuleName, UrlInc = "", RepoView = "0", ViewFromModule
 	If UrlInc'="" set RepoView=1 Write !,"Search by owner repository "_$$$escRed(UrlInc) Set where=where_" order by "_RepoFieldName_" "
 	If where="" Write !,"Search the entire repository"
 	Else  Write !,"Search the repository context "_Module
-	
+	if ##class(%ZAPM.ext.zpm).GetCurrRepo(.url) write !,"Current repository ",$G(url),!
 	//Load the list info registry modules
 	Set sql="select Name, Version, "_RepoFieldName_", Description from %ZPM_PackageManager_Developer.Utils_GetModuleList('registry') "_where
 		,rs=##class(%ResultSet).%New()
