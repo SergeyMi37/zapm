@@ -120,6 +120,7 @@ ClassMethod favourite(ByRef list) As %Status
 	set list("zpm",$i(list))=$lb(ecmd,"i","repo","Show repository")
 	set list("zpm",$i(list))=$lb(ecmd,"i","upg","Upgrade modules in namespace")
 	set list("zpm",$i(list))=$lb(ecmd,"i","info","Show more complete information about modules")
+	set list("zpm",$i(list))=$lb(ecmd,"i","list"," Lists modules installed")
 	;zapm
 	set list("zapm",$i(list))=$lb("do ##class(%ZAPM.ext.code).ExportUDL()","i","export-zapm","export zapm project")
 	set list("zapm",$i(list))=$lb(ecmd,"i","cpipe","Run host console command")

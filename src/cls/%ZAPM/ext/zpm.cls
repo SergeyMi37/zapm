@@ -199,7 +199,7 @@ ClassMethod pick(context = "") As %Status
 		if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
 		set nnn(n)=num(nn)
 	}
-	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n write !
+	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n:15 write !
 	if n'="" {
 		if $d(nnn(n)) {set repository=$lg(nnn(n),2)}
 		elseif $d(num(0,n),number) {set repository=$lg($g(num(number)),2)}
@@ -379,34 +379,45 @@ appinstall()
 
 ClassMethod info(extcmd) As %Status
 {
+	;if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
+	Do ..WriteFavorite("zapm-editor", "", "zapm ""edit-glo""","https://github.com/SergeyMi37/zapm-editor.git") 
+	Do ..WriteFavorite("oex-mapping", "", "job ##class(oex.map).total(30) //select * from oex.map","https://github.com/rcemper/oex-mapping.git") 
+	Do ..WriteFavorite("devbox", .ServerPort, "/devbox/DevBox.Index.cls","https://github.com/SeanConnelly/DevBox.git") 
+	Do ..WriteFavorite("webterminal", .ServerPort, "/terminal/","https://github.com/intersystems-community/webterminal.git") 
+	Do ..WriteFavorite("objectscript-visual-editor", .ServerPort, "/VisualEditor/","https://github.com/intersystems-community/objectscript-visual-editor.git") 
+ quit $$$OK
+}
+
+ClassMethod list(extcmd) As %Status
+{
 	set tDesc=1 ;+$g(pCommandInfo("data","Desc"))
 	quit:'..GetListModule(,.tModMap,'tDesc)
-		Set tMod = ""
-		For { Set tMod = $Order(tModMap(tMod),1,tVersion)
-			Quit:(tMod="")
-			Write !,$$$escGreen(tMod)," ",tVersion_" "
-			If tDesc,$Data(tModMap(tMod,"L"),Lock) {
-				Set maxlenname=$L(tMod_" "_tVersion_" ")
-				Do ..DrawColumn($$$escYellow("Description: ")_$ListGet(Lock,2))
-				Set au=3 
-				For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" { 
-					Set au=au+1
-					set audata=$ListGet(Lock,au)
-					Write:audata'="" !
-					,?(maxlenname)
-					,..DrawColumn($$$escMagenta(a_": ")_audata)
-				}
-				set dirroot=$ListGet(Lock,3)
-				Write !
-					,?(maxlenname)
-					,..DrawColumn($$$escMagenta("Root: ")_dirroot)
-				if $Data(tModMap(tMod,"R"),Rem) {
-					write !,$ListGet(Rem,3)
-				}
-				if (extcmd)["-r " kill out do ..GetFileLines(dirroot_"README.md",.out),..DrawArray(.out)
-				if (extcmd)["-m " kill out do ..GetFileLines(dirroot_"module.xml",.out),..DrawArray(.out)
-				if (extcmd)["-f " kill out do ..GetAllDir(dirroot,,.out),..DrawArray(.out,dirroot)
+	Set tMod = ""
+	For { Set tMod = $Order(tModMap(tMod),1,tVersion)
+		Quit:(tMod="")
+		Write !,$$$escGreen(tMod)," ",tVersion_" "
+		If tDesc,$Data(tModMap(tMod,"L"),Lock) {
+			Set maxlenname=$L(tMod_" "_tVersion_" ")
+			Do ..DrawColumn($$$escYellow("Description: ")_$ListGet(Lock,2))
+			Set au=3 
+			For a="Author_CopyrightDate", "Author_License", "Author_Notes", "Author_Organization", "Author_Person" { 
+				Set au=au+1
+				set audata=$ListGet(Lock,au)
+				Write:audata'="" !
+				,?(maxlenname)
+				,..DrawColumn($$$escMagenta(a_": ")_audata)
 			}
+			set dirroot=$ListGet(Lock,3)
+			Write !
+				,?(maxlenname)
+				,..DrawColumn($$$escMagenta("Root: ")_dirroot)
+			if $Data(tModMap(tMod,"R"),Rem) {
+				write !,$ListGet(Rem,3)
+			}
+			if (extcmd)["-r " kill out do ..GetFileLines(dirroot_"README.md",.out),..DrawArray(.out)
+			if (extcmd)["-m " kill out do ..GetFileLines(dirroot_"module.xml",.out),..DrawArray(.out)
+			if (extcmd)["-f " kill out do ..GetAllDir(dirroot,,.out),..DrawArray(.out,dirroot)
+		}
 		}
 	quit $$$OK
 }
@@ -497,15 +508,22 @@ ClassMethod extcmd(cmd = "") As %Status
 		Do ##class(%ZPM.PackageManager).GetListModules("*", "zpm-registry", .list)
 		if $D(list(1,"modules",1),data),$lg(data,1)="zpm-registry" do ..GetDefaultCommandRegistry(.ServerPort)
 		write !,..ver(),!
-		;if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
-		Do ..WriteFavorite("zapm-editor", "", "zapm ""edit-glo""","https://github.com/SergeyMi37/zapm-editor.git") 
-		Do ..WriteFavorite("oex-mapping", "", "job ##class(oex.map).total(30) //select * from oex.map","https://github.com/rcemper/oex-mapping.git") 
-		Do ..WriteFavorite("devbox", .ServerPort, "/devbox/DevBox.Index.cls","https://github.com/SeanConnelly/DevBox.git") 
-		Do ..WriteFavorite("webterminal", .ServerPort, "/terminal/","https://github.com/intersystems-community/webterminal.git") 
-		Do ..WriteFavorite("objectscript-visual-editor", .ServerPort, "/VisualEditor/","https://github.com/intersystems-community/objectscript-visual-editor.git") 
 		write !,$ZVersion,!
 	}
-	if $p(cmd," ")="info" quit ##class(%ZAPM.ext.zpm).info($p(cmd," ",2,*)_" ")
+	if $p(cmd," ")="info" quit ..info($p(cmd," ",2,*)_" ")
+	if $p(cmd," ")="list" { ;if $p(cmd," ",2,*)="" quit ##class(%ZPM.PackageManager).Shell("list")
+		if $p(cmd," ",2,*)["*" {
+			new $namespace
+			set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
+			set ns=""
+			for { s ns=$o(inf(ns)) q:ns=""
+				zn ns
+				do ..list($p(cmd," ",2,*)_" ")
+			}			
+			quit $$$OK
+		}
+		quit ..list($p(cmd," ",2,*)_" ")
+	}
 	if $p(cmd," ")="load" set st=##class(%ZPM.PackageManager).Shell(cmd) quit st
 	if $p(cmd," ")="publish" {
 		set gn=..#GN
@@ -669,14 +687,18 @@ ClassMethod exthelp(cmd = "") As %Status
  	write !," Delete database and an Namespace,"
  }
  if cmd=""||(cmd="info") {
-	write !!,"info "
- 	write !," Show more complete information about modules in the current namespace."
-	write !,"info -m module"
+	write !!,"info"
+ 	write !," Show meaningful information for the current implementation of the extension pack"
+ }
+ if cmd=""||(cmd="list") {
+	write !!,"list *"
+ 	write !," Show more complete information about modules in all namespace."
+	write !,"list -m module"
  	write !," Show file module.xml."
-	write !,"info -f module"
+	write !,"list -f module"
  	write !," List file in repository."
-	write !,"info -r module"
- 	write !," Show file readme.md."
+	write !,"list -r module"
+ 	write !," Show file Readme.MD"
  }
  if cmd=""||(cmd="upg") {
 	write !!,"upg "
