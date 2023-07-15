@@ -193,8 +193,9 @@ ClassMethod pick(context = "") As %Status
 	quit:$d(num)<10 $$$OK
 	set name=""
 	for n=1:1 { set name=$o(num(0,name),1,nn) quit:name=""
-		;zw num(nn) 
-		write !,n,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escYellow($lg(num(nn),4))_" "_$$$escGreen($lg(num(nn),6))
+		set store=$lg(num(nn),6) ;$s($lg(num(nn),6)="oex":".",$lg(num(nn),6)="glo":":",1:";")
+		write !,n,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escYellow($lg(num(nn),4))
+		write " "_$$$escMagenta(store)
 		write !,"    ",($lg(num(nn),2))
 		if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
 		set nnn(n)=num(nn)
@@ -284,7 +285,7 @@ ClassMethod Publish2ns(ns, zpmmod, all = 1, gn) As %Status
 	new $namespace
 	set $namespace=ns
 	do ##class(%ZPM.PackageManager).GetListModule(ns,.list,1)
-	w !,$$$FormattedLine($$$Magenta,ns)
+	write !,$$$FormattedLine($$$Magenta,ns)
 	if all {
 		set name=""
 		for { set name=$o(list(name),1,version) quit:name=""
@@ -379,6 +380,7 @@ appinstall()
 
 ClassMethod info(extcmd) As %Status
 {
+	do ..GetDefaultCommandRegistry(.ServerPort)
 	;if $$EXIST^%R("%ZAPM.ed.a") write !,$$$escGreen("zapm-editor")_" "_##class(%ZAPM.ext.zpm).GetModuleVersion("zapm-editor",##class(%ZAPM.ext.zpm).#GNSET),!
 	Do ..WriteFavorite("zapm-editor", "", "zapm ""edit-glo""","https://github.com/SergeyMi37/zapm-editor.git") 
 	Do ..WriteFavorite("oex-mapping", "", "job ##class(oex.map).total(30) //select * from oex.map","https://github.com/rcemper/oex-mapping.git") 
@@ -511,14 +513,15 @@ ClassMethod extcmd(cmd = "") As %Status
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ..info($p(cmd," ",2,*)_" ")
-	if $p(cmd," ")="list" { ;if $p(cmd," ",2,*)="" quit ##class(%ZPM.PackageManager).Shell("list")
+	if $p(cmd," ")="list" { if $p(cmd," ",2,*)="" quit ##class(%ZPM.PackageManager).Shell("list")
 		if $p(cmd," ",2,*)["*" {
 			new $namespace
 			set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
 			set ns=""
 			for { s ns=$o(inf(ns)) q:ns=""
-				zn ns
-				do ..list($p(cmd," ",2,*)_" ")
+				zn ns w !,$$$FormattedLine($$$Magenta,ns_">"),!
+				if $p(cmd," ",2,*)="*" do ##class(%ZPM.PackageManager).Shell("list")
+				else  do ..list($p(cmd," ",2,*)_" ")
 			}			
 			quit $$$OK
 		}
@@ -831,7 +834,7 @@ ClassMethod exthelp(cmd = "") As %Status
 /// command zpm
 ClassMethod cmdzpm() As %String
 {
-	quit $lb("ver","quit","help","namespace","orphans","list-dependents","list-installed","reload","compile","test","package","verify","publish","load","zn","help","install","uninstall","manage","list","find","search","version","repo","config","generate")
+	quit $lb("unpublish","ver","quit","help","namespace","orphans","list-dependents","list-installed","reload","compile","test","package","verify","publish","load","zn","help","install","uninstall","manage","list","find","search","version","repo","config","generate")
 }
 
 /// command zapm
