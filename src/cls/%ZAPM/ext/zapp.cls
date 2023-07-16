@@ -269,9 +269,10 @@ ClassMethod prompt(comm = "") As %Status
 			}
 			if yes="i" {
 				write !,"Executing "_$lg(command,1),!
-				xecute $lg(command,1) 
-				do ..AddHist(command,$lg(command,3),$lg(command,4))
-				quit:cmd=comm
+				set st=$zapm($lg(command,1))
+				;xecute $lg(command,1) 
+				;do ..AddHist(command,$lg(command,3),$lg(command,4))
+				;quit:cmd=comm
 				continue
 			}
 			else {
