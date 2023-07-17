@@ -496,7 +496,10 @@ ClassMethod extcmd(cmd = "") As %Status
 	if $lf($lb("log"),$p(cmd," ")) w cmd,! quit ##class(%ZAPM.ext.zapp).log($p(cmd," ",2,*)_" ")
 	if $lf($lb("prod","interoperability"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).prod($p(cmd," ",2,*)_" ")
 	if $lf($lb("task"),$p(cmd," ")) quit ##class(%ZAPM.ext.Task).task($p(cmd," ",2,*)_" ")
-	if $lf($lb("find","search"),$p(cmd," ")) quit ##class(%ZAPM.ext.zpm).find($p(cmd," ",2,*)_" ")
+	if $lf($lb("find","search"),$p(cmd," ")) {
+		if $p(cmd," ",2,*)["-versions" quit ##class(%ZPM.PackageManager).Shell(cmd)
+		quit ..find($p(cmd," ",2,*)_" ")
+	}
 	if $p(cmd," ")="help" quit ##class(%ZAPM.ext.zpm).help($p(cmd," ",2,*))
 	if $p(cmd," ")="newdb" {
 		set cmdext=$p(cmd," ",2,*)
@@ -513,7 +516,7 @@ ClassMethod extcmd(cmd = "") As %Status
 		write !,$ZVersion,!
 	}
 	if $p(cmd," ")="info" quit ..info($p(cmd," ",2,*)_" ")
-	if $p(cmd," ")="list" { if $p(cmd," ",2,*)="" quit ##class(%ZPM.PackageManager).Shell("list")
+	if $p(cmd," ")="list" {
 		if $p(cmd," ",2,*)["*" {
 			new $namespace
 			set listns=##class(%ZAPM.ext.Production).ListNS(.inf,"NotPref,Ens")
@@ -525,7 +528,8 @@ ClassMethod extcmd(cmd = "") As %Status
 			}			
 			quit $$$OK
 		}
-		quit ..list($p(cmd," ",2,*)_" ")
+		if $p(cmd," ",2,*)["-f "||($p(cmd," ",2,*)["-m ")||($p(cmd," ",2,*)["-r ") quit ..list($p(cmd," ",2,*)_" ")
+		quit ##class(%ZPM.PackageManager).Shell(cmd)
 	}
 	if $p(cmd," ")="load" set st=##class(%ZPM.PackageManager).Shell(cmd) quit st
 	if $p(cmd," ")="publish" {
