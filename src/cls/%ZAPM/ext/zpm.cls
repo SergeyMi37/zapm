@@ -153,7 +153,7 @@ ClassMethod PickApp(context, ByRef num, ByRef json) As %Status
 	}
 	quit $$$OK
 addnum(context,num,name,ver,desc,repo)
-	quit:name'[context
+	if '(name[context || (desc[context) || (repo[context)) quit
 	set num=$g(num)+1
 	set num(num)=$lb(name,repo,ver,desc,err,"app")
 	set num(0,name)=num
@@ -170,7 +170,7 @@ ClassMethod PickOexMap(context, ByRef num) As %Status
 		;write !,$$$escGreen(zpmname)," "_$$$escCyan($lg(data,2))
 		set nspace=$lg(list(1),1)
 		zn nspace
-		set sql="select * from oex.map where zpmmodul like '%"_context_"%'"
+		set sql="select * from oex.map where ( zpmmodul like '%"_context_"%' or label like '%"_context_"%' or repo like '%"_context_"%' ) and zpmmodul is not null"
 			,rs=##class(%ResultSet).%New()
 			,sc=rs.Prepare(sql)
 		set:sc sc=rs.Execute("")
@@ -200,34 +200,15 @@ ClassMethod pick(context = "") As %Status
 	if context'="" write !,"Pick *"_context_"* in " 
 	write !,"Pick in ",gn
 	for { set name=$o(@gn@(name)) quit:name=""
-		if context'="",name'[context continue
-		set num=num+1
 		set ver=$lg($g(@gn@(name,"registry")),1)
 		set desc=$lg($g(@gn@(name,"registry")),2)
 		set repo=$p($g(@gn@(name,"url")),"'",4) 
 		if repo="",name="zpm" set repo="https://github.com/intersystems/ipm.git"
+		if '(name[context || (desc[context) || (repo[context)) continue
+		set num=num+1		
 		set err=##class(%ZAPM.ext.zpm).GetErrorLog(name)
 		set num(num)=$lb(name,repo,ver,desc,err,"glo")
 		set num(0,name)=num
-	}
-	if $d(num)<10 {
-		if context["install " set context=$p($p(context,"install ",2),$c(34))
-		set url="https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-"_context
-		set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.str,,"superuser","SYS")
-		if st { 
-			write !,"Find ",url,!,{}.$$$jsonFromJSON(str).status
-			set json={}.$$$jsonFromJSON(str).repo
-			if json'="" {
-				set ver=json.version,num=1
-				set desc=json.description,name=context
-				set repo=json.repository
-				set num(1)=$lb(name,repo,ver,desc,err,"app")
-				set num(0,name)=num
-			}
-		}
-		else {
-			w !,url,!,$System.Status.GetErrorText(st),! zw str
-		}
 	}
 	do ..PickOexMap(context, .num)
 	do ..PickApp(context,.num)
