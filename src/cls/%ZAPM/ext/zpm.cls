@@ -119,6 +119,47 @@ ClassMethod reg(context = "") As %Status
 	quit $$$OK
 }
 
+/// do ##class(%ZAPM.ext.zpm).PickApp("zapm",.num, .js)
+ClassMethod PickApp(context, ByRef num, ByRef json) As %Status
+{
+	new $namespace
+	set url="https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-" ;_context
+	set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.str,.req,"superuser","SYS")
+	if st { 
+		S obj=##class(%Library.DynamicAbstractObject).%FromJSON(req.HttpResponse.Data)
+		write !,"Find ",url,!
+		set jtyp=$s(obj.%IsA("%Library.DynamicObject"):"object",1:"array")
+		if jtyp="object" {
+			;w !,"===" zw obj 
+			do addnum(context,.num, obj.name,obj.version,obj.description,obj.repository)
+			;"name":"zapm","version":"1.0.50","description":"Zapm is a shell - extends the zpm shell and adds any other commands.","repository"
+		}
+		else {
+			set ito=obj.%GetIterator()
+		    For {
+	        	I ito.%GetNext(.key,.ob) {
+         		    ;w !,"---" zw ob
+         		    ;{"name":"zprofile","description":"Line by line profiler for ObjectScript with Execution Stack view","repository":"https://github.com/caretdev/zprofile/","origin":"","versions":["1.0.2"],"is_owner":0}
+         		    do addnum(context,.num, ob.name,ob.version,ob.description,ob.repository)
+	            }
+	            else {
+		            quit
+	            }
+			}
+		}
+	}
+	else {
+		w !,url,!,$System.Status.GetErrorText(st),! zw str
+	}
+	quit $$$OK
+addnum(context,num,name,ver,desc,repo)
+	quit:name'[context
+	set num=$g(num)+1
+	set num(num)=$lb(name,repo,ver,desc,err,"app")
+	set num(0,name)=num
+ quit
+}
+
 /// do ##class(%ZAPM.ext.zpm).PickOexMap("oex-mappi")
 ClassMethod PickOexMap(context, ByRef num) As %Status
 {
@@ -140,7 +181,7 @@ ClassMethod PickOexMap(context, ByRef num) As %Status
 				set num=$g(num)+1
 				set ver=rs.Get("version")
 				set name=rs.Get("zpmmodul")
-				set repo=rs.Get("repo")
+				set repo=$p(rs.Get("repo"),"/",1,5)
 				set desc=rs.Get("label")
 				set num(num)=$lb(name,repo,ver,desc,err,"oex")
 				set num(0,name)=num
@@ -189,7 +230,7 @@ ClassMethod pick(context = "") As %Status
 		}
 	}
 	do ..PickOexMap(context, .num)
-	
+	do ..PickApp(context,.num)
 	quit:$d(num)<10 $$$OK
 	set name=""
 	for n=1:1 { set name=$o(num(0,name),1,nn) quit:name=""
