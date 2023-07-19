@@ -140,7 +140,8 @@ ClassMethod PickApp(context, ByRef num, ByRef json) As %Status
 	        	I ito.%GetNext(.key,.ob) {
          		    ;w !,"---" zw ob
          		    ;{"name":"zprofile","description":"Line by line profiler for ObjectScript with Execution Stack view","repository":"https://github.com/caretdev/zprofile/","origin":"","versions":["1.0.2"],"is_owner":0}
-         		    do addnum(context,.num, ob.name,ob.version,ob.description,ob.repository)
+         		    set ver=ob.versions.%Get(ob.versions.%Size()-1)
+         		    do addnum(context,.num, ob.name,ver,ob.description,ob.repository)
 	            }
 	            else {
 		            quit
