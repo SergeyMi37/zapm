@@ -502,8 +502,12 @@ ClassMethod GetFileLines(pFileName As %String, Output pOutput) As %Status
 ClassMethod WriteFavorite(zpmname, ServerPort, url = "", repo = "") As %Status
 {
 	Do ##class(%ZPM.PackageManager).GetListModules("*", zpmname, .list) 
-	if $D(list(1,"modules",1),data),$lg(data,1)=zpmname write !,$$$escGreen(zpmname)," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_url
-	else  write !,$$$escGreen(zpmname)," "_$$$escRed("to install, run:")_" newdb "_repo
+	if $D(list(1,"modules",1),data),$lg(data,1)=zpmname {
+		set ns=$lg(list(1,"modules",1),1)
+		write !,$$$escMagenta(ns),">  "_$$$escGreen(zpmname)," "_$$$escCyan($lg(data,2))_" "_$g(ServerPort)_url,!,"  "_$$$escRed("to reload:")_" load "_repo		
+	}
+	else { write !,$$$escGreen(zpmname)," "_$$$escRed("to install:")_" newdb "_repo
+	}
 	quit $$$OK
 }
 
@@ -1251,6 +1255,20 @@ ClassMethod GetCurrRepo(Url = "")
 			Set Url=rs.Get("URL")
 	}
 	quit sc
+}
+
+/// Get Version modules
+/// example do ##class(%ZPM.PackageManager).GetVersion("zpm,zpm-registry",.out,.list)
+ClassMethod GetVersion(ModuleName, ByRef out, list)
+{
+ Do ..GetListModules("*", ModuleName, .list)
+ for i=1:1 { quit:'$d(list(i),ns)
+ 	set ns=$lg(ns,1)
+ 	for ii=1:1 { quit:'$d(list(i,"modules",ii),module)
+ 		set out($lg(module,1))=$lb(ns,$lg(module,2))
+ 	}
+ }
+ Quit $$$OK
 }
 
 /// Show description 
