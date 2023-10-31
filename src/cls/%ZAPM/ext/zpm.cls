@@ -198,7 +198,7 @@ ClassMethod PickOexMap(context, ByRef num) As %Status
 ClassMethod pickupd(gn) As %Status
 {
 	if $d(@gn) quit $$$OK
-	write "...Updating OEX repos ..."_gn
+	write "...Updating OEX repos ..."_gn set @gn=$zd(+$h,3)
 	set urloex="https://openexchange.intersystems.com/mpapi/packages/find_pagination?term=&cats=&ww=&ind=&sorting=t.asc&pageSize=1000"
 	set urloexget="https://openexchange.intersystems.com/mpapi/packages/get/" ;appmsw-sql2xlsx"
 	try {
@@ -246,10 +246,12 @@ ClassMethod pick(context = "") As %Status
 	set gn=..#GN,name="",num=0
 	set gnr=$na(@gn@("+")) ;,+$h)) ;todo prev kill
 	if context["-u" KILL @gnr
+	if context["-a" set all=1,context=""
+	if context["-p" set file=$p(context,"-p ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,1,gnr) quit 1
 	do ..pickupd(gnr)
 	if context'="" write !,"Pick *"_context_"* in " 
-	write !,"Pick in ",gn
-	for { set name=$o(@gn@(name)) quit:name=""
+	write !,"Pick in ",gn_" Updated "_$g(@gnr)
+	for { set name=$o(@gn@(name)) quit:name=""  if $g(all) quit
 		set ver=$lg($g(@gn@(name,"registry")),1)
 		set desc=$lg($g(@gn@(name,"registry")),2)
 		set repo=$p($g(@gn@(name,"url")),"'",4) 
@@ -267,7 +269,7 @@ ClassMethod pick(context = "") As %Status
 	}
 	set name=""	
 	for { set name=$o(@gnr@(name),1,data) quit:name=""
-		if '$lg(data,5) continue
+		if '$g(all), '$lg(data,5) continue
 		set ver=$lg(data,2)
 		set desc=$lg(data,4)
 		set repo=$lg(data,3)
@@ -318,14 +320,15 @@ ClassMethod WriteShowLog(gn) As %Status
 /// do ##class(%ZAPM.ext.zpm).ShowLog(,1) - output without errors 
 /// do ##class(%ZAPM.ext.zpm).ShowLog() - output with errors 
 /// ;or  do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log")
-ClassMethod ShowLog(fn = "", All = 0) As %Status
+ClassMethod ShowLog(fn = "", All = 0, gn = "") As %Status
 {
-    set gn=..#GN
+    set:gn="" gn=..#GN
     ;zw @gn q 1
     set name=""
     if fn'="" if ##class(apptools.core.files).OpenFile(fn) 
     for num=1:1 { set name=$o(@gn@(name)) quit:name=""
 		if All=1 {
+			if fn'="" use fn write !,!,num_": "_name,!,$$url(),! use 0 continue
 			write !,num,".",$$$escGreen(name)_" ",!,$$url(),!
 			continue
 		}
@@ -351,6 +354,13 @@ ClassMethod ShowLog(fn = "", All = 0) As %Status
     if fn'="" close fn
     quit $$$OK
 url()
+    if gn["+" {	set data=@gn@(name)
+    	set ver=$lg(data,2)
+		set desc=$lg(data,4)
+		set zpm=$lg(data,5)
+		set repo=$lg(data,3)
+		quit "ipm:"_zpm_" ver. "_ver_" "_desc_$$$NL_repo
+    }
     quit $p($p($g(@gn@(name,"url")),"href='",2),"'")
 }
 
@@ -855,6 +865,9 @@ ClassMethod exthelp(cmd = "") As %Status
   if cmd=""||(cmd="pick") {
  	write !!,"pick <context>"
  	write !," Pick modules by name or context and load from repository."
+ 	write !," Pick -u Upgrade load from repository."
+ 	write !," Pick -a Output all information from the OEX repository."
+ 	write !," Pick -p </dir/filename.log> Output all information from the OEX repository to a file."
  }
  if cmd=""||(cmd="prod")||(cmd="interoperability") {
 	write !!,"interoperability "
