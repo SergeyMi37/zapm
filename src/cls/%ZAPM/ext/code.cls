@@ -9,8 +9,8 @@ Class %ZAPM.ext.code [ Abstract ]
 {
 
 /// do ##class(%ZAPM.ext.code).exp("/iris-backup/apptools/zapm/src/","%ZAPM")
-/// do ##class(%ZAPM.ext.code).Export2dir("/iris-backup/!!/zapm/src/","011","%ZAPM.ZpmLoad.GBL",.app)
-/// do ##class(%ZAPM.ext.code).Export2dir("/iris-backup/!!/zapm/src/","011","%ZAPM.ext.Common.INC",.app)
+/// do ##class(%ZAPM.ext.code).Export2dir("/iris-backup/apptools/zapm/src/","011","%ZAPM.ZpmLoad.GBL",.app)
+/// do ##class(%ZAPM.ext.code).Export2dir("/iris-backup/apptools/zapm/src/","011","%ZAPM.ext.Common.INC",.app)
 /// do ##class(%ZAPM.ext.code).exp("/irisrun/repo/chmod777-R/apptools/src/","apptools.","apptools.M")
 /// do ##class(%ZAPM.ext.code).exp("d:\vbox\share\repo\zapm\src\","%ZAPM")
 /// do ##class(%ZAPM.ext.code).exp("/irisdev/app/chmod777-R/zapm/preload/","%ZAPM.ext.preload")

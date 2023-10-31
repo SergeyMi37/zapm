@@ -194,10 +194,59 @@ ClassMethod PickOexMap(context, ByRef num) As %Status
 	quit $$$OK
 }
 
+/// do ##class(%ZAPM.ext.zpm).pickupd(gn) ; -u - update everything
+ClassMethod pickupd(gn) As %Status
+{
+	if $d(@gn) quit $$$OK
+	write "...Updating OEX repos ..."_gn
+	set urloex="https://openexchange.intersystems.com/mpapi/packages/find_pagination?term=&cats=&ww=&ind=&sorting=t.asc&pageSize=1000"
+	set urloexget="https://openexchange.intersystems.com/mpapi/packages/get/" ;appmsw-sql2xlsx"
+	try {
+        set req = ##class(%SYS.Python).Import("requests") 
+		;set json = ##class(%SYS.Python).Import("json") 
+    } catch err {
+        do ..InstallPy("requests")
+		;do ..InstallPy("json")
+        set req = ##class(%SYS.Python).Import("requests") 
+		;set json = ##class(%SYS.Python).Import("json") 
+    }
+	;set verify=0
+	;set headers = {"Accept": "application/json;odata=verbose"}
+	set resp = req.get(urloex) ;,verify=verify,headers=headers)
+	;zw resp
+	set list = resp.json()
+	set total = list."__getitem__"("total")
+	;zwrite list."__getitem__"("items")
+	s items=list."__getitem__"("items")
+	for i=0:1:total-1 {
+		set name=items."__getitem__"(i)."__getitem__"("nameWithoutSpaces")
+		w !,i_" "_name_" "
+		set PublishPM=items."__getitem__"(i)."__getitem__"("PublishPM")
+		set DownloadsCount=items."__getitem__"(i)."__getitem__"("DownloadsCount")
+		set Stars=items."__getitem__"(i)."__getitem__"("Stars")
+		set Rating=items."__getitem__"(i)."__getitem__"("Rating")
+		try {
+			set st=##class(%ZAPM.ext.zpm).GetDataURL(urloexget_name,.data)
+			if st {
+				set res = {}.%FromJSON(data)
+				w res.Version_" "_res.Github
+				set @gn@(name)=$lb(1,res.Version,res.Github,res.Description,PublishPM,res.ApprovalDate,res.ProductURL,res.FirstApprovalDate,res.DownloadsCount,DownloadsCount,Stars,Rating)
+			}
+		}
+		catch e {
+			set @gn@(name)=$lb($ze) write $$$escRed($ze)
+		}
+	}
+	quit $$$OK
+}
+
 /// do ##class(%ZAPM.ext.zpm).pick("soa")
 ClassMethod pick(context = "") As %Status
 {
 	set gn=..#GN,name="",num=0
+	set gnr=$na(@gn@("+")) ;,+$h)) ;todo prev kill
+	if context["-u" KILL @gnr
+	do ..pickupd(gnr)
 	if context'="" write !,"Pick *"_context_"* in " 
 	write !,"Pick in ",gn
 	for { set name=$o(@gn@(name)) quit:name=""
@@ -205,14 +254,33 @@ ClassMethod pick(context = "") As %Status
 		set desc=$lg($g(@gn@(name,"registry")),2)
 		set repo=$p($g(@gn@(name,"url")),"'",4) 
 		if repo="",name="zpm" set repo="https://github.com/intersystems/ipm.git"
+		if $d(@gnr@(name),data), $lg(data,1) , $lg(data,5){
+			set ver=$lg(data,2)
+			set desc=$lg(data,4)
+			set repo=$lg(data,3)
+		}
 		if '(name[context || (desc[context) || (repo[context)) continue
 		set num=num+1		
 		set err=##class(%ZAPM.ext.zpm).GetErrorLog(name)
 		set num(num)=$lb(name,repo,ver,desc,err,"glo")
 		set num(0,name)=num
 	}
-	do ..PickOexMap(context, .num)
-	do ..PickApp(context,.num)
+	set name=""	
+	for { set name=$o(@gnr@(name),1,data) quit:name=""
+		if '$lg(data,5) continue
+		set ver=$lg(data,2)
+		set desc=$lg(data,4)
+		set repo=$lg(data,3)
+		set err=$lg(data,1)
+		
+		if '(name[context || (desc[context) || (repo[context)) continue
+		set num=num+1		
+		set num(num)=$lb(name,repo,ver,desc,err,"OeX") 
+		set num(0,name)=num
+
+	}
+	;do ..PickOexMap(context, .num)
+	;do ..PickApp(context,.num)
 	quit:$d(num)<10 $$$OK
 	set name=""
 	for n=1:1 { set name=$o(num(0,name),1,nn) quit:name=""
