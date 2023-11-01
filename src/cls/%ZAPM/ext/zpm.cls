@@ -302,7 +302,7 @@ ClassMethod pick(context = "") As %Status
 	if context["-u" KILL @gnr do ..pickupd(gnr,gn) quit $$$OK
 	if context["-a" set all=1,context=""
 	if context["-p" set file=$p(context,"-p ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,1,gnr) quit $$$OK
-	if context["-n" do ..pickupnew(gnr,.num,$p(context,"-n ",2)) do ..pickLoad(.num,gn,gnr) quit $$$OK  ;get new repo 
+	if context["-n" do ..pickupnew(gnr,.num,$p(context,"-n ",2)) do ..pickLoad(.num,gn,gnr,1) quit $$$OK  ;get new repo 
 	if context'="" write !,"Pick *"_context_"* in " 
 	for { set name=$o(@gn@(name)) quit:name=""  if $g(all) quit
 		set ver=$lg($g(@gn@(name,"registry")),1)
@@ -341,21 +341,20 @@ ClassMethod pick(context = "") As %Status
 	quit $$$OK
 }
 
-ClassMethod pickLoad(num, gn, gnr) As %Status
+ClassMethod pickLoad(num, gn, gnr, sort = 0) As %Status
 {
  if $d(num)<10 write !,"Not found" quit $$$OK
  write !,"Pick in ",gn_" Updated "_$g(@gnr)
- set nn="0"
-	for { set nn=$o(num(nn)) quit:nn=""
-		set name=$lg(num(nn),1)
-		set store=$lg(num(nn),6) ;$s($lg(num(nn),6)="oex":".",$lg(num(nn),6)="glo":":",1:";")
-		write !,nn,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escCyan($lg(num(nn),7))_" "_$$$escYellow($lg(num(nn),4))
-		write $$$FormattedLine($s($lg(num(nn),8):$$$Green,1:$$$Red)," IPM:"_$s($lg(num(nn),8):"Yes",1:"No"))
-		write " "_$$$escMagenta(store)
-		write !,"    ",($lg(num(nn),2))
-		if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
-		set nnn(nn)=num(nn)
+ if 'sort {
+ 	set name=""
+	for n=1:1 { set name=$o(num(0,name),1,nn) quit:name=""  d show
 	}
+ }
+ else { ;OEX so
+ 	set nn="0"
+ 	for { set nn=$o(num(nn)) quit:nn=""  set name=$lg(num(nn),1) d show
+ 	}
+ }
 	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n:15 write !
 	if n'="" {
 		if $d(nnn(n)) {set repository=$lg(nnn(n),2)}
@@ -371,6 +370,15 @@ ClassMethod pickLoad(num, gn, gnr) As %Status
 		}
 	}
 	quit $$$OK
+show
+	set store=$lg(num(nn),6) ;$s($lg(num(nn),6)="oex":".",$lg(num(nn),6)="glo":":",1:";")
+	write !,nn,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escCyan($lg(num(nn),7))_" "_$$$escYellow($lg(num(nn),4))
+	write $$$FormattedLine($s($lg(num(nn),8):$$$Green,1:$$$Red)," IPM:"_$s($lg(num(nn),8):"Yes",1:"No"))
+	write " "_$$$escMagenta(store)
+	write !,"    ",($lg(num(nn),2))
+	if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
+	set nnn(nn)=num(nn)
+ quit
 }
 
 ClassMethod WriteShowLog(gn) As %Status
