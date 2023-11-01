@@ -209,20 +209,18 @@ ClassMethod InstallPy(lib)
 }
 
 /// do ##class(%ZAPM.ext.zpm).pickupd(gn) ; -u - update everything
-ClassMethod pickupd(gn) As %Status
+ClassMethod pickupd(gn, gno) As %Status
 {
 	if $d(@gn) quit $$$OK
-	write "...Updating OEX repos ..."_gn set @gn=$zd(+$h,3)
+	set currday=$zd(+$h,3), @gn=currday
+	write "...Updating OEX repos ..."_gn_" "_@gn 
 	set urloex="https://openexchange.intersystems.com/mpapi/packages/find_pagination?term=&cats=&ww=&ind=&sorting=t.asc&pageSize=1000"
 	set urloexget="https://openexchange.intersystems.com/mpapi/packages/get/" ;appmsw-sql2xlsx"
 	try {
         set req = ##class(%SYS.Python).Import("requests") 
-		;set json = ##class(%SYS.Python).Import("json") 
     } catch err {
         do ..InstallPy("requests")
-		;do ..InstallPy("json")
         set req = ##class(%SYS.Python).Import("requests") 
-		;set json = ##class(%SYS.Python).Import("json") 
     }
 	;set verify=0
 	;set headers = {"Accept": "application/json;odata=verbose"}
@@ -231,24 +229,66 @@ ClassMethod pickupd(gn) As %Status
 	set list = resp.json()
 	set total = list."__getitem__"("total")
 	;zwrite list."__getitem__"("items")
-	s items=list."__getitem__"("items")
+	set items=list."__getitem__"("items")
 	for i=0:1:total-1 {
 		set name=items."__getitem__"(i)."__getitem__"("nameWithoutSpaces")
-		w !,i_" "_name_" "
+		write !,i_" "_name_" "
 		set PublishPM=items."__getitem__"(i)."__getitem__"("PublishPM")
 		set DownloadsCount=items."__getitem__"(i)."__getitem__"("DownloadsCount")
 		set Stars=items."__getitem__"(i)."__getitem__"("Stars")
 		set Rating=items."__getitem__"(i)."__getitem__"("Rating")
 		try {
-			set st=##class(%ZAPM.ext.zpm).GetDataURL(urloexget_name,.data)
-			if st {
-				set res = {}.%FromJSON(data)
-				w res.Version_" "_res.Github
-				set @gn@(name)=$lb(1,res.Version,res.Github,res.Description,PublishPM,res.ApprovalDate,res.ProductURL,res.FirstApprovalDate,res.DownloadsCount,DownloadsCount,Stars,Rating)
-			}
+			set resp = req.get(urloexget_name) ;,verify=verify,headers=headers)
+			set list = resp.json()
+			set ApprovalDate = list."__getitem__"("ApprovalDate")
+			set Version = list."__getitem__"("Version")
+			set Github = list."__getitem__"("Github")
+			set Description = list."__getitem__"("Description")
+			set FirstApprovalDate = list."__getitem__"("FirstApprovalDate")
+			set ProductURL = list."__getitem__"("ProductURL")
+			set DownloadsCount = list."__getitem__"("DownloadsCount")
+			write Version_" "_ApprovalDate_" "_Github
+			;set st=##class(%ZAPM.ext.zpm).GetDataURL(urloexget_name,.data)
+			;if 0,st {		set res = {}.%FromJSON(data)		w res.Version_" "_res.Github
+			set @gn@(name)=$lb(1,Version,Github,Description,PublishPM,ApprovalDate,ProductURL,FirstApprovalDate,DownloadsCount,DownloadsCount,Stars,Rating)
+			
 		}
-		catch e {
-			set @gn@(name)=$lb($ze) write $$$escRed($ze)
+		catch ex {
+		   	Set sc = $g(%objlasterror, $$$OK)
+   			Set sc = $$$ADDSC(sc, ex.AsStatus())
+   			set err=$System.Status.GetErrorText(sc)
+   			set err=err_" Error type: "_ex.Name
+   			set err=err_" Error code: "_ex.Code
+   			set err=err_" Error location: "_ex.Location
+			set @gn@(name)=$lb(err) write $$$escRed(err)
+		}
+		set @gno@(name,"oex",currday)=$g(@gn@(name))
+	}
+	quit $$$OK
+}
+
+/// do ##class(%ZAPM.ext.zpm).pickupnew(gn)
+ClassMethod pickupnew(gnr, num, days = "") As %Status
+{
+	kill num
+	set name="",num=0
+	if 'days set days=20001
+	set dat=$tr($zd($h-days,3),"-")
+	for  set name=$o(@gnr@(name),1,data) quit:name=""  set da=$tr($p($lg(data,6)," "),"-") if da>=dat set arr(da,name)=data
+	set da=""
+	for { set da=$o(arr(da),-1) quit:da=""	
+		set name=""
+		for { set name=$o(arr(da,name),1,data) quit:name=""		
+			set zpm=$lg(data,5)
+			set ver=$lg(data,2)
+			set desc=$lg(data,4)
+			set repo=$lg(data,3)
+			set err=$lg(data,1)
+			
+			;if '(name[context || (desc[context) || (repo[context)) continue
+			set num=num+1		
+			set num(num)=$lb(name,repo,ver,desc,err,"OeX",da,zpm) 
+			set num(0,name)=num
 		}
 	}
 	quit $$$OK
@@ -259,12 +299,11 @@ ClassMethod pick(context = "") As %Status
 {
 	set gn=..#GN,name="",num=0
 	set gnr=$na(@gn@("+")) ;,+$h)) ;todo prev kill
-	if context["-u" KILL @gnr
+	if context["-u" KILL @gnr do ..pickupd(gnr,gn) quit $$$OK
 	if context["-a" set all=1,context=""
-	if context["-p" set file=$p(context,"-p ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,1,gnr) quit 1
-	do ..pickupd(gnr)
+	if context["-p" set file=$p(context,"-p ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,1,gnr) quit $$$OK
+	if context["-n" do ..pickupnew(gnr,.num,$p(context,"-n ",2)) do ..pickLoad(.num,gn,gnr) quit $$$OK  ;get new repo 
 	if context'="" write !,"Pick *"_context_"* in " 
-	write !,"Pick in ",gn_" Updated "_$g(@gnr)
 	for { set name=$o(@gn@(name)) quit:name=""  if $g(all) quit
 		set ver=$lg($g(@gn@(name,"registry")),1)
 		set desc=$lg($g(@gn@(name,"registry")),2)
@@ -288,24 +327,34 @@ ClassMethod pick(context = "") As %Status
 		set desc=$lg(data,4)
 		set repo=$lg(data,3)
 		set err=$lg(data,1)
-		
+		set ApprovalDate=$lg(data,6)
+		set zpm=$lg(data,5)
 		if '(name[context || (desc[context) || (repo[context)) continue
 		set num=num+1		
-		set num(num)=$lb(name,repo,ver,desc,err,"OeX") 
+		set num(num)=$lb(name,repo,ver,desc,err,"OeX",ApprovalDate,zpm) 
 		set num(0,name)=num
 
 	}
 	;do ..PickOexMap(context, .num)
 	;do ..PickApp(context,.num)
-	quit:$d(num)<10 $$$OK
-	set name=""
-	for n=1:1 { set name=$o(num(0,name),1,nn) quit:name=""
+	do ..pickLoad(.num,gn,gnr)
+	quit $$$OK
+}
+
+ClassMethod pickLoad(num, gn, gnr) As %Status
+{
+ if $d(num)<10 write !,"Not found" quit $$$OK
+ write !,"Pick in ",gn_" Updated "_$g(@gnr)
+ set nn="0"
+	for { set nn=$o(num(nn)) quit:nn=""
+		set name=$lg(num(nn),1)
 		set store=$lg(num(nn),6) ;$s($lg(num(nn),6)="oex":".",$lg(num(nn),6)="glo":":",1:";")
-		write !,n,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escYellow($lg(num(nn),4))
+		write !,nn,". ",$$$escGreen(name)," "_$lg(num(nn),3)_" "_$$$escCyan($lg(num(nn),7))_" "_$$$escYellow($lg(num(nn),4))
+		write $$$FormattedLine($s($lg(num(nn),8):$$$Green,1:$$$Red)," IPM:"_$s($lg(num(nn),8):"Yes",1:"No"))
 		write " "_$$$escMagenta(store)
 		write !,"    ",($lg(num(nn),2))
 		if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
-		set nnn(n)=num(nn)
+		set nnn(nn)=num(nn)
 	}
 	write !,$$$escMagenta($namespace),"> Load module (number or name): " read n:15 write !
 	if n'="" {
@@ -368,12 +417,17 @@ ClassMethod ShowLog(fn = "", All = 0, gn = "") As %Status
     if fn'="" close fn
     quit $$$OK
 url()
-    if gn["+" {	set data=@gn@(name)
+    if gn["+" {	
+    	set data=@gn@(name)
     	set ver=$lg(data,2)
 		set desc=$lg(data,4)
 		set zpm=$lg(data,5)
 		set repo=$lg(data,3)
-		quit "ipm:"_zpm_" ver. "_ver_" "_desc_$$$NL_repo
+		set d="",txt=""
+		for { set d=$o(@..#GN@(name,"oex",d),1,dd) quit:d="" 
+			set:repo'=$lg(dd,3) txt=txt_$lg(dd,3)_" "_$lg(dd,2)_" "_d_$$$NL
+		}
+		quit "ipm:"_zpm_" ver. "_ver_" "_desc_$$$NL_repo_$$$NL_txt
     }
     quit $p($p($g(@gn@(name,"url")),"href='",2),"'")
 }
@@ -879,9 +933,12 @@ ClassMethod exthelp(cmd = "") As %Status
   if cmd=""||(cmd="pick") {
  	write !!,"pick <context>"
  	write !," Pick modules by name or context and load from repository."
- 	write !," Pick -u Upgrade load from repository."
- 	write !," Pick -a Output all information from the OEX repository."
+ 	write !," Pick -u  Upgrade load from repository."
+ 	write !," Pick -a  Output all information from the OEX repository."
+ 	write !," Pick -n  Displaying all OEX repo information reverse sorted by publication date."
+ 	write !," Pick -n 15  Displaying all repo information from OEX older than 15 days."
  	write !," Pick -p </dir/filename.log> Output all information from the OEX repository to a file."
+ 	
  }
  if cmd=""||(cmd="prod")||(cmd="interoperability") {
 	write !!,"interoperability "
