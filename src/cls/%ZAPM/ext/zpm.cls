@@ -161,6 +161,60 @@ addnum(context,num,name,ver,desc,repo)
  quit
 }
 
+/// if ##class(%ZAPM.ext.zpm).GetPickRepoUrl("csvgen",.repo) write repo
+ClassMethod GetPickRepoUrl(name, ByRef repo) As %Status
+{
+	set gn=..#GN
+	set gnr=$na(@..#GN@("+"))
+	if $d(@gnr@(name),data) set repo=$lg(data,3) quit $$$OK
+	if $d(@gn@(name,"url")) set repo=$p($g(@gn@(name,"url")),"'",4) quit $$$OK
+	quit $$$ERROR($$$GeneralError,"Not found")
+}
+
+/// if ##class(%ZAPM.ext.zpm).GetPickFileRepoUrl("csvgen",.txt) write txt
+/// if ##class(%ZAPM.ext.zpm).GetPickFileRepoUrl("csvgen",.txt,"LICENSE") write txt
+ClassMethod GetPickFileRepoUrl(nameorurl, ByRef xml, filename = "module.xml") As %Status
+{
+	if nameorurl["://" { set repo=nameorurl
+	}
+	elseif ##class(%ZAPM.ext.zpm).GetPickRepoUrl(nameorurl,.repo) {
+	}
+	if $d(repo) {
+		set url="https://raw.githubusercontent.com/"_$p(repo,"//github.com/",2)_"/master/"_filename
+		if ##class(%ZAPM.ext.zpm).GetDataURL(url,.xml) 
+		quit $$$OK
+	}
+	quit $$$ERROR($$$GeneralError,"Not found")
+}
+
+/// if ##class(%ZAPM.ext.zpm).GetPickDepensList("csvgen",.list) zwrite list
+/// if ##class(%ZAPM.ext.zpm).GetPickDepensList("openapi-client-gen",.list) zwrite list
+/// if ##class(%ZAPM.ext.zpm).GetPickDepensList("iris-analytics-notebook",.list) zwrite list
+ClassMethod GetPickDepensList(name, ByRef list) As %Status
+{
+	if ##class(%ZAPM.ext.zpm).GetPickFileRepoUrl(name,.txt) {
+		set modul=$zconvert(txt,"L")
+		for i=2:1:$l(modul,"<dependencies") {
+			set deps=$p($p(modul,"<dependencies",i),"</dependencies",1)
+			if deps["<name" {
+				for ii=2:1:$l(deps,"<name") {
+					set depname=$p($p(deps,"<name>",ii),"</name>",1)
+					set vers=$p($p(deps,"<version>",ii),"</version>",1)
+					if depname'="",'$d(list(0,depname)) {
+						set list(0,depname)=vers
+						if ..GetPickRepoUrl(depname,.repo) {
+							set list($i(list))=$lb(depname,vers,repo)
+							if ..GetPickDepensList(depname,.list) 
+						}
+					}
+				}
+			}
+		}
+		quit $$$OK
+	}
+	quit $$$ERROR($$$GeneralError,"Not found")
+}
+
 /// do ##class(%ZAPM.ext.zpm).PickOexMap("oex-mappi")
 ClassMethod PickOexMap(context, ByRef num) As %Status
 {
@@ -300,11 +354,11 @@ ClassMethod pick(context = "") As %Status
 {
 	set gn=..#GN
 	set gnr=$na(@gn@("+")) ;,+$h)) ;todo prev kill
-	if context["-u" do ..pickupd(gnr,gn) quit $$$OK
-	if context["-a" set all=1,context=""
-	if context["-p" set file=$p(context,"-p ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,1,gnr) quit $$$OK
-	if context["-ro" set file=$p(context,"-ro ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,2,gnr) quit $$$OK
-	if context["-n" do ..pickupnew(gnr,.num,$p(context,"-n ",2)) do ..pickLoad(.num,gn,gnr,1) quit $$$OK  ;get new repo 
+	if $e(context,1,2)="-u" do ..pickupd(gnr,gn) quit $$$OK
+	if $e(context,1,2)="-a" set all=1,context=""
+	if $e(context,1,2)="-p" set file=$p(context,"-p ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,1,gnr) quit $$$OK
+	if $e(context,1,3)="-ro" set file=$p(context,"-ro ",2) do ##class(%ZAPM.ext.zpm).ShowLog(file,2,gnr) quit $$$OK
+	if $e(context,1,2)="-n" do ..pickupnew(gnr,.num,$p(context,"-n ",2)) do ..pickLoad(.num,gn,gnr,1) quit $$$OK  ;get new repo 
 	if context'="" write !,"Pick *"_context_"* in " 
 	; Current latest cast from OEX
 	set name="",num=0
@@ -368,8 +422,22 @@ ClassMethod pickLoad(num, gn, gnr, sort = 0) As %Status
 		if $d(nnn(n)) {set repository=$lg(nnn(n),2)}
 		elseif $d(num(0,n),number) {set repository=$lg($g(num(number)),2)}
 		if $g(repository)'="" {
-			write !,"Load module: "_repository_" Are you sure? <N> " read yes
-			if yes["y"||(yes["Y") {
+			kill Dependencies
+			if ##class(%ZAPM.ext.zpm).GetPickDepensList(repository,.Dependencies) kill Dependencies(0) zw Dependencies
+			write !,"Load module: "_repository_" Are you sure? [Y\N\A] A-Reinstall dependencies <N>" read yes set:yes="" yes="N"
+			if "AaYy"[yes {
+				if $d(Dependencies) {
+					do ##class(%ZAPM.ext.zpm).GetListModule(,.listmode)
+					set ins=""
+					for { set ins=$o(Dependencies(ins),-1,data) quit:ins<1
+						set repo=$lg(data,3)
+						set name=$lg(data,1)
+						if '$d(listmode(name))||("Aa"[yes) {
+							set st=##class(%ZPM.PackageManager).Shell("load "_repo)
+							if 'st s err=$System.Status.GetErrorText(st) w !,err 
+						}
+					}
+				}
 				set sta=##class(%ZPM.PackageManager).Shell("load "_repository)
 				if 'sta s err=$System.Status.GetErrorText(sta) w !,err 
 			}
@@ -385,7 +453,7 @@ show(name,nn)
 	write $$$FormattedLine($s($lg(num(nn),8):$$$Green,1:$$$Red)," IPM:"_$s($lg(num(nn),8):"Yes",1:"No"))
 	write " "_$$$escMagenta(store)
 	write !,"    ",($lg(num(nn),2))
-	if $lg(num(nn),5)'="" write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
+	if "1"'[$lg(num(nn),5) write !,"    ",$$$escRed($e($lg(num(nn),5),1,70)_"...")
 	set nnn(nnn)=num(nn)
  quit
 }
