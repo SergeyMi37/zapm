@@ -119,29 +119,30 @@ ClassMethod reg(context = "") As %Status
 	quit $$$OK
 }
 
-/// do ##class(%ZAPM.ext.zpm).PickApp("zapm",.num, .js)
-ClassMethod PickApp(context, ByRef num, ByRef json) As %Status
+/// do ##class(%ZAPM.ext.zpm).PickApp("zapm",.num, .json, 1, .list) zw list
+ClassMethod PickApp(context, ByRef num, ByRef obj, silent = 0, ByRef urllist) As %Status
 {
 	new $namespace
 	set url="https://appadmin.demo.community.intersystems.com/apptoolsrest/custom-task/user/zpm-repo-" ;_context
 	set st=##class(%ZAPM.ext.zpm).GetDataURL(url,.str,.req,"superuser","SYS")
+	set urllist=""
 	if st { 
 		S obj=##class(%Library.DynamicAbstractObject).%FromJSON(req.HttpResponse.Data)
-		write !,"Find ",url,!
+		if 'silent write !,"Find ",url,!
 		set jtyp=$s(obj.%IsA("%Library.DynamicObject"):"object",1:"array")
 		if jtyp="object" {
 			;w !,"===" zw obj 
-			do addnum(context,.num, obj.name,obj.version,obj.description,obj.repository)
+			do addnum(context,.num, obj.name,obj.version,obj.description,obj.repository,.urllist)
 			;"name":"zapm","version":"1.0.50","description":"Zapm is a shell - extends the zpm shell and adds any other commands.","repository"
 		}
 		else {
 			set ito=obj.%GetIterator()
 		    For {
-	        	I ito.%GetNext(.key,.ob) {
+	        	If ito.%GetNext(.key,.ob) {
          		    ;w !,"---" zw ob
          		    ;{"name":"zprofile","description":"Line by line profiler for ObjectScript with Execution Stack view","repository":"https://github.com/caretdev/zprofile/","origin":"","versions":["1.0.2"],"is_owner":0}
          		    set ver=ob.versions.%Get(ob.versions.%Size()-1)
-         		    do addnum(context,.num, ob.name,ver,ob.description,ob.repository)
+         		    do addnum(context,.num, ob.name,ver,ob.description,ob.repository,.urllist)
 	            }
 	            else {
 		            quit
@@ -150,11 +151,12 @@ ClassMethod PickApp(context, ByRef num, ByRef json) As %Status
 		}
 	}
 	else {
-		w !,url,!,$System.Status.GetErrorText(st),! zw str
+		if 'silent w !,url,!,$System.Status.GetErrorText(st),! zw str
 	}
 	quit $$$OK
-addnum(context,num,name,ver,desc,repo)
-	if '(name[context || (desc[context) || (repo[context)) quit
+addnum(context,num,name,ver,desc,repo,urllist)
+	if '(name[context || (desc[context) || ($zconvert(repo,"L")[$zconvert(context,"L"))) quit
+	set:repo'="" urllist=urllist_repo_$$$NL
 	set num=$g(num)+1
 	set num(num)=$lb(name,repo,ver,desc,err,"app")
 	set num(0,name)=num
@@ -363,7 +365,7 @@ ClassMethod pick(context = "") As %Status
 	; Current latest cast from OEX
 	set name="",num=0
 	for { set name=$o(@gnr@(name),1,data) quit:name=""
-		if '$g(all), '$lg(data,5) continue
+		;if '$g(all), '$lg(data,5) continue
 		set ver=$lg(data,2)
 		set desc=$lg(data,4)
 		set repo=$lg(data,3)
@@ -397,8 +399,8 @@ ClassMethod pick(context = "") As %Status
 			set num(0,name)=num
 		}
 	}
-	;do ..PickOexMap(context, .num)
-	;do ..PickApp(context,.num)
+	do ..PickOexMap(context, .num)
+	do ..PickApp(context,.num)
 	do ..pickLoad(.num,gn,gnr)
 	quit $$$OK
 }
@@ -465,10 +467,17 @@ ClassMethod WriteShowLog(gn) As %Status
 	quit $$$OK
 }
 
+/// do ##class(%ZAPM.ext.zpm).GetOexRepo("rcemper") ;  output urls repos 
+ClassMethod GetOexRepo(filter = "") As %String
+{
+	do ##class(%ZAPM.ext.zpm).ShowLog(,2,$na(@..#GN@("+")),filter)
+	quit ""
+}
+
 /// do ##class(%ZAPM.ext.zpm).ShowLog(,1) - output without errors 
 /// do ##class(%ZAPM.ext.zpm).ShowLog() - output with errors 
 /// ;or  do ##class(%ZAPM.ext.zpm).ShowLog("d:\_proj\!\zapm.log")
-ClassMethod ShowLog(fn = "", All = 0, gn = "") As %Status
+ClassMethod ShowLog(fn = "", All = 0, gn = "", filtr = "") As %Status
 {
     set:gn="" gn=..#GN
     ;zw @gn q 1
@@ -481,7 +490,7 @@ ClassMethod ShowLog(fn = "", All = 0, gn = "") As %Status
 			continue
 		}
 		if All=2 { //repo only output
-			set repo=$$url(2) if repo="" continue
+			set repo=$$url(2,filtr) if repo="" continue
 			if fn'="" use fn write repo,! use 0 continue
 			write repo,!
 			continue
@@ -507,7 +516,7 @@ ClassMethod ShowLog(fn = "", All = 0, gn = "") As %Status
     }
     if fn'="" close fn
     quit $$$OK
-url(mode="")
+url(mode="",filtr="")
     if gn["+" {	
     	set data=@gn@(name)
     	set ver=$lg(data,2)
@@ -515,6 +524,10 @@ url(mode="")
 		set zpm=$lg(data,5)
 		set repo=$lg(data,3)
     	if mode=2 {
+	    	if filtr'="" {
+		    	if $zconvert(repo,"L")[$zconvert(filtr,"L") q repo
+		    	else  q ""
+	    	}
 	    	quit repo
     	}
 		set d="",txt=""
