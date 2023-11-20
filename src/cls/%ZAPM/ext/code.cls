@@ -307,7 +307,7 @@ ClassMethod filename(code)
 		s relpath = dirs _ "/" _ $piece( code, ".", *-1, * ) ;
 		s filename = ##class(%File).NormalizeFilename( relpath, wd )
 	}
-	if filename["%",(ext="gbl")  set filename=$tr(filename,"%","_") ;zpm bug ? (ext'="inc") 
+	if filename["%",(ext="xml")  set filename=$tr(filename,"%","_") ;zpm bug ? (ext'="inc") 
 	Q filename
 }
 

@@ -119,6 +119,73 @@ ClassMethod reg(context = "") As %Status
 	quit $$$OK
 }
 
+/// 
+/// do ##class(%ZAPM.ext.zpm).GetgithubRepo("SergeyMi37=repos?fork=0&name=msw&url=",.list,.co) w !,co ;w list
+/// do ##class(%ZAPM.ext.zpm).GetgithubRepo("rcemper=repos?fork=0&name=global",.list,.co) w !,co ;w list
+/// do ##class(%ZAPM.ext.zpm).GetgithubRepo("evshvarov=repos?fork=0",.list,.co) w !,co ;w list
+ClassMethod GetgithubRepo(context, ByRef urllist, ByRef count) As %Status
+{
+	;https://api.github.com/users/SergeyMi37/repos?per_page=1000
+	new $namespace
+	set user=$replace($p(context,"=",1,2),"=","/")
+	set param=$p(context,"=",3,*)
+	set urllist="" set count=0
+	do ##class(apptools.core.type).ParseURL(param,.par,"&")
+	set url="https://api.github.com/users/"_user_"?page="
+	;w !,url,!,context zw param zw par q 1
+	
+	try {
+        set req = ##class(%SYS.Python).Import("requests") 
+    } catch er {
+        do ..InstallPy("requests")
+        set req = ##class(%SYS.Python).Import("requests") 
+    }
+	
+	;set headers = {"Accept": "application/json;odata=verbose"}
+	kill err
+	for page=1:1:99 {  quit:$d(err)
+		set resp = req.get(url_page) ;,verify=verify,headers=headers)
+		set list = resp.json()
+		try {
+			set name=list."__getitem__"(0)."__getitem__"("name")
+			do page(list,.urllist,,.par,.count)
+		}
+		catch ee {
+			set err=$ze
+			;w !,url_page
+			;w !,page zw resp
+			;w !,page zw err
+		}
+	}
+	quit $$$OK
+page(list,urllist,error,par,count)
+	For i=0:1:1000 { quit:$d(err)
+		try {
+			;W !,i," ",list."__getitem__"(i)."__getitem__"("name")
+			set name=list."__getitem__"(i)."__getitem__"("name")
+			set fork=list."__getitem__"(i)."__getitem__"("fork")
+			set repo=list."__getitem__"(i)."__getitem__"("url")
+			set desc=list."__getitem__"(i)."__getitem__"("description")
+			do add(.par, name,fork,desc,repo,.urllist,.count)
+		}
+		catch e {
+			set error=$g(error)_"Count "_i_". "_$ze
+			quit
+		}
+	}
+ quit
+add(par, name,fork,desc,repo,urllist,count)
+	;w !,name," ",fork," "," desc=",desc,! zw par
+	if $d(par("fork"),context), ($zconvert(fork,"L")'[$zconvert(context,"L")) quit
+	if $d(par("name"),context), ($zconvert(name,"L")'[$zconvert(context,"L")) quit
+	if $d(par("desc"),context), ($zconvert(desc,"L")'[$zconvert(context,"L")) quit
+	;if '(name[context || (desc[context) || ($zconvert(repo,"L")[$zconvert(context,"L"))) quit
+	if $d(par("url"),context), ($zconvert(repo,"L")'[$zconvert(context,"L")) quit
+	set:repo'="" urllist=urllist_repo_$$$NL,count=$g(count)+1
+	
+ quit
+}
+
 /// do ##class(%ZAPM.ext.zpm).PickApp("zapm",.num, .json, 1, .list) zw list
 ClassMethod PickApp(context, ByRef num, ByRef obj, silent = 0, ByRef urllist) As %Status
 {
