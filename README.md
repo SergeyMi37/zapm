@@ -28,16 +28,16 @@ Added command: `pick`
 
 This is an analogue of the `find` and `install` command for viewing and loading packages from alternative sources directly from the repositories.
 
-ZAPM commands extention:
+### ZAPM commands extention:
 -----------------------------
 
- pick <context>
-  Pick modules by name or context and load from repository.
-  Pick -u  Upgrade load from repository.
-  Pick -a  Output all information from the OEX repository.
-  Pick -n  Displaying all OEX repo information reverse sorted by publication date.
-  Pick -n 15  Displaying all repo information from OEX older than 15 days.
-  Pick -p </dir/filename.log> Output all information from the OEX repository to a file.
+- pick <context>
+ - Pick modules by name or context and load from repository.
+ - Pick -u  Upgrade load from repository.
+ - Pick -a  Output all information from the OEX repository.
+ - Pick -n  Displaying all OEX repo information reverse sorted by publication date.
+ - Pick -n 15  Displaying all repo information from OEX older than 15 days.
+ - Pick -p </dir/filename.log> Output all information from the OEX repository to a file.
 
 
 ## Installation with ZPM
