@@ -31,7 +31,7 @@ This is an analogue of the `find` and `install` command for viewing and loading 
 ### ZAPM commands extention:
 -----------------------------
 
-- pick <context>
+`pick <context>`
  - Pick modules by name or context and load from repository.
  - Pick -u  Upgrade load from repository.
  - Pick -a  Output all information from the OEX repository.
