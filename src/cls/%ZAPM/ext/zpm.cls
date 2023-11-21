@@ -164,7 +164,7 @@ page(list,urllist,error,par,count)
 			;W !,i," ",list."__getitem__"(i)."__getitem__"("name")
 			set name=list."__getitem__"(i)."__getitem__"("name")
 			set fork=list."__getitem__"(i)."__getitem__"("fork")
-			set repo=list."__getitem__"(i)."__getitem__"("url")
+			set repo=list."__getitem__"(i)."__getitem__"("clone_url")
 			set desc=list."__getitem__"(i)."__getitem__"("description")
 			do add(.par, name,fork,desc,repo,.urllist,.count)
 		}
