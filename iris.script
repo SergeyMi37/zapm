@@ -29,6 +29,6 @@ if $zf(-1,"echo ':zapm ""pick -a"" //see all projects in OEX and installation fr
 if $zf(-1,"echo ':zn ""%SYS"" zpm ""load https://github.com/SergeyMi37/zapm.git""' >> ~/.iris_history")
 
 zpm "load /opt/irisapp/ -v":1
-;zpm "load https://github.com/SergeyMi37/isc-passwordless.git"
+zpm "load https://github.com/SergeyMi37/isc-passwordless.git"
 
 halt
