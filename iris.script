@@ -17,13 +17,20 @@ zn "USER"
 zpm "load https://github.com/intersystems-community/webterminal.git"
 
 zn "%sys"
-
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SergeyMi37/apptools-infochest.git""' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SergeyMi37/apptools-admin.git""' >> ~/.iris_history")
 if $zf(-1,"echo ':zn ""%SYS"" zpm ""load https://github.com/SergeyMi37/zapm.git""' >> ~/.iris_history")
-if $zf(-1,"echo ':d 1^%SS' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/intersystems-community/webterminal.git"" //My favorite' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SergeyMi37/cache-visual-editor.git"" //My favorite' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SeanConnelly/DevBox.git"" //My favorite' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/rcemper/oex-mapping.git"" //My favorite' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SergeyMi37/isc-dev.git"" //My favorite' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SeanConnelly/DevBox.git"" //My favorite' >> ~/.iris_history")
+if $zf(-1,"echo '://zapm ""newdb https://github.com/SeanConnelly/DevBox.git"" //My favorite' >> ~/.iris_history")
 if $zf(-1,"echo ':zapm' >> ~/.iris_history")
 if $zf(-1,"echo ':zapm ""pick -a""' >> ~/.iris_history")
 
 zpm "load /opt/irisapp/ -v":1
-zpm "load https://github.com/SergeyMi37/isc-passwordless.git"
+;zpm "load https://github.com/SergeyMi37/isc-passwordless.git"
 
 halt
