@@ -27,6 +27,7 @@ if $zf(-1,"echo '://zapm ""newdb https://github.com/evshvarov/csvgen.git"" //cre
 if $zf(-1,"echo ':zapm ""zna"" //view all namespace and modules in them' >> ~/.iris_history")
 if $zf(-1,"echo ':zapm ""pick -a"" //see all projects in OEX and installation from repo' >> ~/.iris_history")
 if $zf(-1,"echo ':zn ""%SYS"" zpm ""load https://github.com/SergeyMi37/zapm.git""' >> ~/.iris_history")
+if $zf(-1,"echo ':!tail /usr/irissys/mgr/messages.log' >> ~/.iris_history")
 
 zpm "load /opt/irisapp/ -v":1
 zpm "load https://github.com/SergeyMi37/isc-passwordless.git"
