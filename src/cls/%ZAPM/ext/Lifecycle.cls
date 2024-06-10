@@ -1,4 +1,4 @@
-Class %ZAPM.ext.Lifecycle Extends %ZPM.PackageManager.Developer.Lifecycle.Module
+Class %ZAPM.ext.Lifecycle Extends %IPM.Lifecycle.Module
 {
 
 ClassMethod RunOnLoad() [ CodeMode = objectgenerator ]
