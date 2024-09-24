@@ -26,7 +26,7 @@ And now ZAPM has survived to the first version and can add any command that I ne
 
 Added command: `pick`
 
-This is an analogue of the `find` and `install` command for viewing and loading packages from alternative sources directly from the repositories.
+This is an analogue of the `find` and `install` command for viewing and loading packages from alternative sources directly from the repositories
 
 ### ZAPM commands extention:
 -----------------------------
