@@ -2,7 +2,7 @@
 [![OEX-zapm](https://img.shields.io/badge/dynamic/json?url=https:%2F%2Fpm.community.intersystems.com%2Fpackages%2Fzapm%2F&label=ZPM-pm.community.intersystems.com&query=$.version&color=green&prefix=zapm)](https://pm.community.intersystems.com/packages/zapm)
 
 [![Docker-ports](https://img.shields.io/badge/dynamic/yaml?color=blue&label=docker-compose&prefix=ports%20-%20&query=%24.services.iris.ports&url=https%3A%2F%2Fraw.githubusercontent.com%2Fsergeymi37%2Fzapm%2Fmaster%2Fdocker-compose.yml)](https://raw.githubusercontent.com/sergeymi37/zapm/master/docker-compose.yml)
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/SergeyMi37/zapm)
 ![](https://github.com/SergeyMi37/zapm/blob/master/doc/zapm-red.png)
 ## zapm
 [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/zapm)
